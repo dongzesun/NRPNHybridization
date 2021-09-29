@@ -34,9 +34,9 @@ def MatchingRegion(W, t1, t2):
     # Calculate angular velocity
     omega=W_matching.copy().angular_velocity()
     omega=np.sqrt(omega[:,0]**2+omega[:,1]**2+omega[:,2]**2)
-    omega=savgol_filter(omega,11,1)
+    omega=savgol_filter(omega,31,1)
     omega_prime=np.diff(omega)
-    omega_prime=savgol_filter(omega_prime,11,1)
+    omega_prime=savgol_filter(omega_prime,31,1)
     return W_matching, omega, omega_prime
 
 def Hybridize(t_start, data_dir, out_dir):
@@ -57,14 +57,16 @@ def Hybridize(t_start, data_dir, out_dir):
     W_PN_corot=scri.to_corotating_frame(W_PN.copy())
 
 # Get the initial angular velocity in matching region
-    temp1, omega_NR, temp2=MatchingRegion(W_NR, t_start-1000, t_start) # Here 1000 is an arbitrary large number
-    omega_0=omega_NR[-1]
+    temp1, omega_NR, temp2=MatchingRegion(W_NR, t_start-1000, t_start+1000) # Here 1000 is an arbitrary large number
+    omega_0=omega_NR[int(len(omega_NR)/2)]
 
 # Set up the matching region data for NR, and get the corresponding angular velocity and frame
     t_pre=t_start-10*np.pi/omega_0
     t_end=t_start+10*np.pi/omega_0
     W_NR_matching_in, omega_NR, temp1=MatchingRegion(W_NR, t_pre, t_end)
+    W_NR_matching_corot, temp1, temp2=MatchingRegion(W_NR_corot, t_pre, t_end)
     W_PN_matching_in, omega_PN, omega_PN_prime=MatchingRegion(W_PN, t_pre, t_end)
+    W_PN_matching_corot, temp1, temp2=MatchingRegion(W_PN_corot, t_pre, t_end)
     print("After interpolate:",time.time()-clock0)
 
 # Get initial guess of time alignment by matching angular velocity
@@ -75,11 +77,17 @@ def Hybridize(t_start, data_dir, out_dir):
         dt=t_start+x-W_PN_matching_in.t[Indices_PN[0]]
         omega_PN_matching=omega_PN[Indices_PN]+omega_PN_prime[Indices_PN]*dt
         return np.sum((omega_NR[t_start_indice:t_start_indice+len(Indices_PN)]-omega_PN_matching)**2)
-    mint=least_squares(minix, 0.0, bounds=(-np.pi/omega_0,np.pi/omega_0),gtol=2.23e-16)
+    mint=least_squares(minix, 0.0, bounds=[-10*np.pi/omega_0,10*np.pi/omega_0], gtol=2.23e-16)
     print(mint)
     t_delta=-mint.x
     print("Initial guess of t:",t_delta)
     clock1=time.time()
+
+# Get initial guess of frame alignment
+    Indices_PN=time_indices(W_PN_matching_in.t, t_start+mint.x, t_start+mint.x+6*np.pi/omega_0)
+    R_delta=quaternion.optimal_alignment_in_chordal_metric(W_PN_matching_corot.frame[Indices_PN].conjugate(), W_NR_matching_corot.frame[t_start_indice:t_start_indice+len(Indices_PN)].conjugate()).conjugate()
+    print("Initial guess of R_delta:",R_delta)
+    R_delta=quaternion.as_float_array(R_delta)
 
 # Alignment of time and frame
     def Optimize4D(x):
@@ -94,7 +102,7 @@ def Hybridize(t_start, data_dir, out_dir):
         return temp, R_delta
     def _Optimize4D(x):
         return Optimize4D(x)[0]
-    mini=least_squares(_Optimize4D, [-t_delta,0.0,0.0,0.0], bounds=([-t_delta-np.pi/omega_0,-1.0,-1.0,-1.0],[-t_delta+np.pi/omega_0,1.0,1.0,1.0]))
+    mini=least_squares(_Optimize4D, [-t_delta,R_delta[1],R_delta[2],R_delta[3]], bounds=([-t_delta-np.pi/omega_0,-1.0,-1.0,-1.0],[-t_delta+np.pi/omega_0,1.0,1.0,1.0]))
     print("Optimization time used:",time.time()-clock1)
     print(mini)
     print("Time shift=", -mini.x[0])
