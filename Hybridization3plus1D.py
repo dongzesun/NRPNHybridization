@@ -92,7 +92,7 @@ def Hybridize(t_start, data_dir, out_dir):
 # Alignment of time and frame
     def Optimize4D(x):
         print(x)
-        R_delta1=np.exp(quaternion.quaternion(0.0,x[0],x[1],x[2]))
+        R_delta1=quaternion.quaternion(np.sqrt(1-x[0]**2.0-x[1]**2.0-x[2]**2.0),x[0],x[1],x[2])
         R_delta2=-R_delta1.conjugate()
         W_temp1=scri.rotate_decomposition_basis(W_NR_matching_in.copy(), R_delta1)
         W_temp2=scri.rotate_decomposition_basis(W_NR_matching_in.copy(), R_delta2)
