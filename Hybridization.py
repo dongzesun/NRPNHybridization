@@ -3,41 +3,21 @@ import numpy as np
 import quaternion
 import h5py
 import time
-from scipy.signal import savgol_filter
 from scipy.optimize import least_squares
+from scipy.interpolate import InterpolatedUnivariateSpline as Spline
 
-def time_indices(T, t1, t2):
-    """
-    Given an array of times, return the indices between t1 and t2
-    """
 
-    Ind = range(len(T))
-    Size = len(Ind)
-    i = 1
-    while i < Size:
-        if T[Ind[i]] <= t1 and T[Ind[i+1]] > t1:
-            Ind = np.delete(Ind, range(i))
-            Size = len(Ind)
-            i = 1
-        if T[Ind[i]] >= t2 and T[Ind[i-1]] < t2:
-            Ind = np.delete(Ind, range(i+1, Size))
-            Size = len(Ind)
-        i += 1
-    return Ind
-
-def MatchingRegion(W, t1, t2):
-    """
-    Interpolate waveform_base object W between t1 and t2, and calculate angular velocity
-    """
-
-    W_matching=W.copy().interpolate(np.arange(t1, t2, 1.0))
-    # Calculate angular velocity
-    omega=W_matching.copy().angular_velocity()
-    omega=np.sqrt(omega[:,0]**2+omega[:,1]**2+omega[:,2]**2)
-    omega=savgol_filter(omega,31,1)
-    omega_prime=np.diff(omega)
-    omega_prime=savgol_filter(omega_prime,31,1)
-    return W_matching, omega, omega_prime
+class SplineArray:
+    def __init__(self, x, y):
+        self.complex = np.iscomplexobj(y)
+        if self.complex:
+            y = y.view(dtype=float)
+        self.splines = [Spline(x, y[:, i]) for i in range(y.shape[1])]
+    def __call__(self, xprime):
+        yprime = np.concatenate([spl(xprime)[:, np.newaxis] for spl in self.splines], axis=1)
+        if self.complex:
+            yprime = yprime.view(dtype=complex)
+        return yprime
 
 def Hybridize(t_start, data_dir, out_dir):
     """
@@ -48,89 +28,115 @@ def Hybridize(t_start, data_dir, out_dir):
 # Get NR waveform
     NRFileName=data_dir+'/rhOverM_Asymptotic_GeometricUnits.h5/Extrapolated_N2.dir'
     W_NR=scri.SpEC.read_from_h5(NRFileName)
+    #W_NR.to_coprecessing_frame()####################################################################################3
     W_NR.t=W_NR.t-W_NR.max_norm_time()
     W_NR.data=-W_NR.data
     W_NR_corot=scri.to_corotating_frame(W_NR.copy())
+
 # Get PN waveform
     PNFileName=data_dir+'/rhOverM_Inertial_PN.h5'
     W_PN=scri.SpEC.read_from_h5(PNFileName)
+    #W_PN.to_coprecessing_frame()####################################################################################
     W_PN_corot=scri.to_corotating_frame(W_PN.copy())
 
 # Get the initial angular velocity in matching region
-    temp1, omega_NR, temp2=MatchingRegion(W_NR, t_start-1000, t_start+1000) # Here 1000 is an arbitrary large number
-    omega_0=omega_NR[int(len(omega_NR)/2)]
+    omega_NR=W_NR.copy().angular_velocity()
+    omega_NR_mag = np.linalg.norm(omega_NR, axis=1)
+    omega_0=omega_NR_mag[(W_NR.t>=t_start-10)&(W_NR.t<=t_start+10)]
+    omega_0=np.mean(omega_0)
 
-# Set up the matching region data for NR, and get the corresponding angular velocity and frame
+# Set up the matching region data for PN, and get the corresponding angular velocity and frame
     t_pre=t_start-10*np.pi/omega_0
     t_end=t_start+10*np.pi/omega_0
-    W_NR_matching_in, omega_NR, temp1=MatchingRegion(W_NR, t_pre, t_end)
-    W_NR_matching_corot, temp1, temp2=MatchingRegion(W_NR_corot, t_pre, t_end)
-    W_PN_matching_in, omega_PN, omega_PN_prime=MatchingRegion(W_PN, t_pre, t_end)
-    W_PN_matching_corot, temp1, temp2=MatchingRegion(W_PN_corot, t_pre, t_end)
-    print("After interpolate:",time.time()-clock0)
+    t_end0=t_start+6*np.pi/omega_0
+    omega_PN=W_PN.copy().angular_velocity()
+    omega_PN_spline=SplineArray(W_PN.t, omega_PN)
+    omega_PN_mag=np.linalg.norm(omega_PN, axis=1)
+    omega_PN_mag_spline=Spline(W_PN.t, omega_PN_mag)
+    PNData_spline=SplineArray(W_PN.t, W_PN.data)
 
 # Get initial guess of time alignment by matching angular velocity
-    t_start_indice=time_indices(W_NR_matching_in.t, t_start, t_start+0.01)[0]
-    def minix(x):
+    matchingt=W_NR.t[(W_NR.t>=t_start)&(W_NR.t<=t_end0)]
+    temp=np.append(np.diff(W_NR.t),0.0)
+    dt=temp[(W_NR.t>=t_start)&(W_NR.t<=t_end0)]
+    omega_NR_mag_matching=omega_NR_mag[(W_NR.t>=t_start)&(W_NR.t<=t_end0)]
+    def InitialT(x):
         print(x)
-        Indices_PN=time_indices(W_PN_matching_in.t, t_start+x, t_start+x+6*np.pi/omega_0)
-        dt=t_start+x-W_PN_matching_in.t[Indices_PN[0]]
-        omega_PN_matching=omega_PN[Indices_PN]+omega_PN_prime[Indices_PN]*dt
-        return np.sum((omega_NR[t_start_indice:t_start_indice+len(Indices_PN)]-omega_PN_matching)**2)
-    mint=least_squares(minix, 0.0, bounds=[-10*np.pi/omega_0,10*np.pi/omega_0], gtol=2.23e-16)
+        return np.sum((omega_NR_mag_matching-omega_PN_mag_spline(matchingt+x))**2*dt)/(omega_0**2.0)
+    mint=least_squares(InitialT, 0.0, bounds=[-10*np.pi/omega_0,10*np.pi/omega_0])
     print(mint)
-    t_delta=-mint.x
-    print("Initial guess of t:",t_delta)
-    clock1=time.time()
+    print("Initial guess of t:", mint.x)
 
 # Get initial guess of frame alignment
-    Indices_PN=time_indices(W_PN_matching_in.t, t_start+mint.x, t_start+mint.x+6*np.pi/omega_0)
-    R_delta=quaternion.optimal_alignment_in_chordal_metric(W_PN_matching_corot.frame[Indices_PN].conjugate(), W_NR_matching_corot.frame[t_start_indice:t_start_indice+len(Indices_PN)].conjugate()).conjugate()
+    R_delta = quaternion.optimal_alignment_in_Euclidean_metric(omega_NR[(W_NR.t>=t_start)&(W_NR.t<=t_end0)], omega_PN_spline(matchingt+mint.x), matchingt)
+    W_NR_matching_in=W_NR.copy().interpolate(matchingt)
+    omega_NR_matching = omega_NR[(W_NR.t>=t_start) & (W_NR.t<=t_end0)]
+    omega_NR_hat = omega_NR_matching / np.linalg.norm(omega_NR_matching, axis=1)[:, np.newaxis]
+    def InitialR(theta):
+        print(theta)
+        R_temp=R_delta*np.exp(theta/2*quaternion.quaternion(0.0, omega_NR_hat[0,0], omega_NR_hat[0,1],omega_NR_hat[0,2]))
+        W_temp=scri.rotate_decomposition_basis(W_NR_matching_in.copy(), R_temp)
+        temp=(np.angle(W_temp.data[int(len(matchingt)/2),4])-np.angle(PNData_spline(mint.x+W_temp.t[int(len(matchingt)/2)])[0,4]))**2
+        print(temp)
+        return temp
+    minf=least_squares(InitialR, 0.0, bounds=[-np.pi,np.pi])
+    print(minf)
+    # Get rid of pi degeneracy
+    R_delta=R_delta*np.exp(minf.x/2*quaternion.quaternion(0.0, omega_NR_hat[0,0], omega_NR_hat[0,1],omega_NR_hat[0,2]))
+    R_delta2=R_delta*np.exp(np.pi/2*quaternion.quaternion(0.0, omega_NR_hat[0,0], omega_NR_hat[0,1],omega_NR_hat[0,2]))
+    W_temp1=scri.rotate_decomposition_basis(W_NR_matching_in.copy(), R_delta)
+    W_temp2=scri.rotate_decomposition_basis(W_NR_matching_in.copy(), R_delta2)
+    temp1=np.linalg.norm(PNData_spline(matchingt+mint.x)-W_temp1.data[(W_temp1.t>=t_start)&(W_temp1.t<=t_end0)],axis=1)**2.0*dt
+    temp2=np.linalg.norm(PNData_spline(matchingt+mint.x)-W_temp2.data[(W_temp2.t>=t_start)&(W_temp2.t<=t_end0)],axis=1)**2.0*dt
+    temp1=np.real(sum(temp1))
+    temp2=np.real(sum(temp2))
+    if temp2<temp1:
+        R_delta=R_delta2
     print("Initial guess of R_delta:",R_delta)
-    R_delta=quaternion.as_float_array(R_delta)
+    logR_delta=quaternion.as_float_array(np.log(R_delta))
+    print(logR_delta)
 
 # Alignment of time and frame
+    clock1=time.time()
     def Optimize4D(x):
         print(x)
-        temp=0j;
-        R_delta=np.exp(quaternion.quaternion(0.0,x[1],x[2],x[3]))
-        Indices_PN=time_indices(W_PN_matching_in.t, t_start+x[0], t_start+x[0]+6*np.pi/omega_0)
-        W_temp=W_NR_matching_in.copy()
-        W_temp=scri.rotate_decomposition_basis(W_temp, R_delta)
-        temp=np.linalg.norm(W_PN_matching_in.data[Indices_PN]-W_temp.data[t_start_indice:t_start_indice+len(Indices_PN)],axis=1)**2.0
-        temp=np.real(sum(temp))
-        return temp, R_delta
+        R_delta=np.exp(quaternion.quaternion(0.0,x[0],x[1],x[2]))
+        W_temp=scri.rotate_decomposition_basis(W_NR_matching_in.copy(), R_delta)
+        def Optimize1D(x):
+            print(x)
+            temp=np.linalg.norm(PNData_spline(matchingt+x)-W_temp.data[(W_temp.t>=t_start)&(W_temp.t<=t_end0)],axis=1)**2.0*dt
+            temp1=np.linalg.norm(PNData_spline(matchingt+x),axis=1)*np.linalg.norm(W_temp.data[(W_temp.t>=t_start)&(W_temp.t<=t_end0)],axis=1) # Normalization factor
+            temp1=sum(temp1)
+            temp=np.real(sum(temp))/temp1
+            print(temp)
+            return temp
+        optimizeT=least_squares(Optimize1D, mint.x, bounds=(mint.x-np.pi/omega_0,mint.x+np.pi/omega_0))
+        return optimizeT.fun, optimizeT.x
     def _Optimize4D(x):
         return Optimize4D(x)[0]
-    mini=least_squares(_Optimize4D, [-t_delta,R_delta[1],R_delta[2],R_delta[3]], bounds=([-t_delta-np.pi/omega_0,-1.0,-1.0,-1.0],[-t_delta+np.pi/omega_0,1.0,1.0,1.0]))
-    print("Optimization time used:",time.time()-clock1)
-    print(mini)
-    print("Time shift=", -mini.x[0])
-    R_delta=Optimize4D(mini.x)[1]
+    minima=least_squares(_Optimize4D, [logR_delta[0][1],logR_delta[0][2],logR_delta[0][3]], bounds=([-np.pi,-np.pi,-np.pi], [np.pi,np.pi,np.pi]))
+    print(minima)
+    t_delta=Optimize4D(minima.x)[1]
+    print("Time shift=", t_delta)
+    R_delta=np.exp(quaternion.quaternion(0.0,minima.x[0],minima.x[1],minima.x[2]))
     print("R_delta=",R_delta)
-    W_PN.t=W_PN.t-mini.x[0]
+    print("Optimization time used:",time.time()-clock1)
+    W_PN.t=W_PN.t-t_delta
     W_NR=scri.rotate_decomposition_basis(W_NR, R_delta)
 
 # Hybridize waveform
-    t_end0=t_start+6*np.pi/omega_0
-    W_matching_NR, temp1, temp2=MatchingRegion(W_NR, t_pre, t_end)
-    W_matching_PN, temp1, temp2=MatchingRegion(W_PN, t_pre, t_end)
-    t_start_indicePN=time_indices(W_PN.t, t_start, t_start+0.01)[0]
-    t_start_indiceNR=time_indices(W_NR.t, t_end0, t_end0+0.01)[1]
-    t_start_indiceMatching=time_indices(W_matching_NR.t, t_start, t_start+0.01)[0]
-    t_end_indiceMatching=time_indices(W_matching_NR.t, t_end0, t_end0+0.01)[1]
-    Ind=np.arange(t_start_indiceMatching,t_end_indiceMatching)
+    PNData_spline=SplineArray(W_PN.t, W_PN.data)
     W_H=scri.WaveformModes()
-    W_H.t=np.append(np.append(W_PN.t[0:t_start_indicePN], W_matching_NR.t[Ind]), W_NR.t[t_start_indiceNR:-1])
+    W_H.t=np.append(W_PN.t[W_PN.t<t_start], W_NR.t[W_NR.t>=t_start])
     W_H.data=1j*np.empty((len(W_H.t), len(W_NR.LM)))
     ell_min, ell_max = min(W_NR.LM[:, 0]), max(W_NR.LM[:, 0])
     W_H.ells = ell_min, ell_max
-    N=len(Ind)
+    N=len(matchingt)
     xx=np.arange(N)/N
     # Hybridize data
     for i_m in range(W_NR.LM.shape[0]):
-        matching_data=(1-scri.utilities.transition_function(xx,0.0,1.0,0.0,1.0))*W_matching_PN.data[Ind,i_m]+scri.utilities.transition_function(xx,0.0,1.0,0.0,1.0)*W_matching_NR.data[Ind,i_m]
-        W_H.data[:,i_m]=np.append(np.append(W_PN.data[0:t_start_indicePN,i_m],matching_data),W_NR.data[t_start_indiceNR:-1,i_m])
+        matching_data=(1-scri.utilities.transition_function(xx,0.0,1.0,0.0,1.0))*PNData_spline(matchingt)[:,i_m]+scri.utilities.transition_function(xx,0.0,1.0,0.0,1.0)*W_NR.data[(W_NR.t>=t_start)&(W_NR.t<=t_end0),i_m]
+        W_H.data[:,i_m]=np.append(np.append(W_PN.data[W_PN.t<t_start,i_m],matching_data),W_NR.data[W_NR.t>t_end0,i_m])
     print("finished")
 
 # Output results
@@ -143,5 +149,9 @@ def Hybridize(t_start, data_dir, out_dir):
     print("Total time:",time.time()-clock0)
 
 def Run():
+    import os
     for i in [-30000]:
-           Hybridize(i,'/home/dzsun/SimAnnex/Public/HybTest/006/Lev3','/home/dzsun') 
+        Hybridize(i,'/home/dzsun/SimAnnex/Public/HybTest/006/Lev3','/home/dzsun')
+        os.rename('/home/dzsun/rhOverM_hybridNR'+str(i)+'.h5','/home/dzsun/hybridNR'+str(i)+'.h5')
+        os.rename('/home/dzsun/rhOverM_hybridPN'+str(i)+'.h5','/home/dzsun/hybridPN'+str(i)+'.h5')
+        os.rename('/home/dzsun/UnknownDataType_hybridHybrid'+str(i)+'.h5','/home/dzsun/hybridHybrid'+str(i)+'.h5')
