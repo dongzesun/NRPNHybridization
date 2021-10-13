@@ -6,7 +6,6 @@ import time
 from scipy.optimize import least_squares
 from scipy.interpolate import InterpolatedUnivariateSpline as Spline
 
-
 class SplineArray:
     def __init__(self, x, y):
         self.complex = np.iscomplexobj(y)
