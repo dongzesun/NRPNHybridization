@@ -136,6 +136,23 @@ def Hybridize(t_start, data_dir, out_dir, debug=0):
     print("Optimization time used:",time.time()-clock1)
     W_PN.t=W_PN.t-t_delta
     W_NR=scri.rotate_physical_system(W_NR, R_delta)
+    if debug:
+        from mpl_toolkits.mplot3d import Axes3D
+        xx = np.linspace(t_delta-10, t_delta+10, 40)
+        yy = np.linspace(minima.x[3]-0.05, minima.x[3]+0.05, 40)
+        X, Y = np.meshgrid(xx, yy)
+        Z=np.empty((len(xx),len(yy)))
+        for i in range(len(xx)):
+            for j in range(len(yy)):
+                Z[i,j] = Optimize4D([xx[i], minima.x[1], minima.x[2], yy[j]])
+        fig=plt.figure()
+        ax3 = Axes3D(fig)
+        ax3.view_init(elev=90,azim=0)
+        ax3.plot_surface(X,Y,np.exp(Z),cmap='rainbow')
+        plt.xlabel("Time")
+        plt.ylabel("One component of quarternion")
+        plt.savefig(out_dir+"/hybridCheck4DOptimization")
+        plt.clf()
 
 # Hybridize waveform
     PNData_spline=SplineArray(W_PN.t, W_PN.data)
