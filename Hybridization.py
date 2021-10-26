@@ -5,6 +5,7 @@ import h5py
 import time
 import matplotlib.pyplot as plt
 from scipy.optimize import least_squares
+from scipy.optimize import minimize
 from scipy.integrate import simpson
 from scipy.interpolate import InterpolatedUnivariateSpline as Spline
 
@@ -64,14 +65,14 @@ def Hybridize(t_start, data_dir, out_dir, debug=0):
     omega_PN_mag_spline=Spline(W_PN.t, omega_PN_mag)
     PNData_spline=SplineArray(W_PN.t, W_PN.data)
     PN22Data_spline=Spline(W_PN.t, W_PN.data[:,4])
-
-# Get initial guess of time alignment by matching angular velocity
     matchingt=W_NR.t[(W_NR.t>=t_start)&(W_NR.t<=t_end0)]
     omega_NR_mag_matching=omega_NR_mag[(W_NR.t>=t_start)&(W_NR.t<=t_end0)]
     if debug:
         plt.plot(matchingt, omega_NR_mag_matching, label='Angular velocity')
         plt.savefig(out_dir+"/hybridCheckOmega")
         plt.clf()
+
+# Get initial guess of time alignment by matching angular velocity
     def InitialT(x):
         print(x)
         return simpson((omega_NR_mag_matching-omega_PN_mag_spline(matchingt+x))**2, x=matchingt)/(omega_0**2.0)
@@ -88,43 +89,42 @@ def Hybridize(t_start, data_dir, out_dir, debug=0):
     def InitialR(theta):
         print(theta)
         R_temp=R_delta*np.exp(theta/2*quaternion.quaternion(0.0, omega_NR_hat[0,0], omega_NR_hat[0,1],omega_NR_hat[0,2]))
-        W_temp=scri.rotate_decomposition_basis(W_NR_matching_in.copy(), R_temp)
-        temp=(np.angle(W_temp.data[int(len(matchingt)/2),4])-np.angle(PNData_spline(mint.x+W_temp.t[int(len(matchingt)/2)])[0,4]))**2
-        print(temp)
-        return temp
+        W_temp=scri.rotate_physical_system(W_NR_matching_in.copy(), R_temp)
+        cost=(np.angle(W_temp.data[int(len(matchingt)/2),4])-np.angle(PNData_spline(mint.x+W_temp.t[int(len(matchingt)/2)])[0,4]))**2
+        print(cost)
+        return cost
     minf=least_squares(InitialR, 0.0, bounds=[-np.pi,np.pi])
     print(minf)
     # Get rid of pi degeneracy
     R_delta=R_delta*np.exp(minf.x/2*quaternion.quaternion(0.0, omega_NR_hat[0,0], omega_NR_hat[0,1],omega_NR_hat[0,2]))
     R_delta2=R_delta*np.exp(np.pi/2*quaternion.quaternion(0.0, omega_NR_hat[0,0], omega_NR_hat[0,1],omega_NR_hat[0,2]))
-    W_temp1=scri.rotate_decomposition_basis(W_NR_matching_in.copy(), R_delta)
-    W_temp2=scri.rotate_decomposition_basis(W_NR_matching_in.copy(), R_delta2)
-    temp1=np.linalg.norm(PNData_spline(matchingt+mint.x)-W_temp1.data[(W_temp1.t>=t_start)&(W_temp1.t<=t_end0)],axis=1)**2.0
-    temp2=np.linalg.norm(PNData_spline(matchingt+mint.x)-W_temp2.data[(W_temp2.t>=t_start)&(W_temp2.t<=t_end0)],axis=1)**2.0
-    temp1=np.real(simpson(temp1, matchingt))
-    temp2=np.real(simpson(temp2, matchingt))
-    if temp2<temp1:
+    W_temp1=scri.rotate_physical_system(W_NR_matching_in.copy(), R_delta)
+    W_temp2=scri.rotate_physical_system(W_NR_matching_in.copy(), R_delta2)
+    cost1=np.linalg.norm(PNData_spline(matchingt+mint.x)-W_temp1.data,axis=1)**2.0
+    cost2=np.linalg.norm(PNData_spline(matchingt+mint.x)-W_temp2.data,axis=1)**2.0
+    cost1=np.real(simpson(cost1, matchingt))
+    cost2=np.real(simpson(cost2, matchingt))
+    if cost2<cost1:
         R_delta=R_delta2
     print("Initial guess of R_delta:",R_delta)
     logR_delta=quaternion.as_float_array(np.log(R_delta))
 
 # Alignment of time and frame
     clock1=time.time()
+    Normalization=simpson(np.linalg.norm(W_NR_matching_in.data,axis=1)**2.0, matchingt)
     def Optimize4D(x):
         print(x)
         R_delta=np.exp(quaternion.quaternion(0.0,x[1],x[2],x[3]))
-        W_temp=scri.rotate_decomposition_basis(W_NR_matching_in.copy(), R_delta)
-        temp=np.linalg.norm(PNData_spline(matchingt+x[0])-W_temp.data[(W_temp.t>=t_start)&(W_temp.t<=t_end0)],axis=1)**2.0
-        temp1=np.linalg.norm(PNData_spline(matchingt+x[0]),axis=1)\
-            *np.linalg.norm(W_temp.data[(W_temp.t>=t_start)&(W_temp.t<=t_end0)],axis=1) # Normalization factor
-        temp1=sum(temp1)
-        temp=np.real(simpson(temp, matchingt))/temp1
-        print(temp)
-        return temp
+        W_temp=scri.rotate_physical_system(W_NR_matching_in.copy(), R_delta)
+        cost=np.linalg.norm(PNData_spline(matchingt+x[0])-W_temp.data,axis=1)**2.0
+        cost=np.real(simpson(cost, matchingt))/Normalization
+        print(cost)
+        return cost
     lowbound=np.append(mint.x-np.pi/omega_0/2.0, logR_delta[0][1:]-np.pi/8)
     upbound=np.append(mint.x+np.pi/omega_0/2.0,logR_delta[0][1:]+np.pi/8)
     scale=[np.pi/omega_0,np.pi/4.0,np.pi/4.0,np.pi/4.0]
-    minima=least_squares(Optimize4D, np.append(mint.x, logR_delta[0][1:]), bounds=(lowbound, upbound), x_scale=scale)
+    minima=minimize(Optimize4D, np.append(mint.x, logR_delta[0][1:]), bounds=((lowbound[0], upbound[0]),\
+        (lowbound[1], upbound[1]), (lowbound[2], upbound[2]), (lowbound[3], upbound[3])), method='Powell', tol=1e-8)
     if min((minima.x-lowbound)/scale)<1e-2 or min((upbound-minima.x)/scale)<1e-2:
         message=("Minima {0} near bounds {1}, {2}.")
         raise ValueError(message.format(Minima.x, lowbound, upbound))
@@ -135,18 +135,15 @@ def Hybridize(t_start, data_dir, out_dir, debug=0):
     print("R_delta=",R_delta)
     print("Optimization time used:",time.time()-clock1)
     W_PN.t=W_PN.t-t_delta
-    W_NR=scri.rotate_decomposition_basis(W_NR, R_delta)
+    W_NR=scri.rotate_physical_system(W_NR, R_delta)
 
 # Hybridize waveform
     PNData_spline=SplineArray(W_PN.t, W_PN.data)
     tTemp=np.array(np.append(W_PN.t[W_PN.t<t_start], W_NR.t[W_NR.t>=t_start]))
     dataTemp=np.empty((len(tTemp), len(W_NR.LM)), dtype=complex)
-    xx1=np.ones((len(matchingt),len(W_NR.LM)))
-    xx=np.empty((len(matchingt),len(W_NR.LM)))
-    for i in range(len(W_NR.LM)):
-        xx[:,i]=scri.utilities.transition_function(matchingt, t_start, t_end0)
+    Smooth=np.resize(scri.utilities.transition_function(matchingt, t_start, t_end0), (len(W_NR.LM), len(matchingt))).T
     # Hybridize data
-    matching_data=(xx1-xx)*PNData_spline(matchingt)+xx*W_NR.data[(W_NR.t>=t_start)&(W_NR.t<=t_end0),:]
+    matching_data=(1-Smooth)*PNData_spline(matchingt)+Smooth*W_NR.data[(W_NR.t>=t_start)&(W_NR.t<=t_end0),:]
     dataTemp[tTemp<t_start,:]=W_PN.data[W_PN.t<t_start,:]
     dataTemp[(tTemp>=t_start)&(tTemp<=t_end0),:]=matching_data
     dataTemp[tTemp>t_end0,:]=W_NR.data[W_NR.t>t_end0,:]
