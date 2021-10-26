@@ -124,7 +124,7 @@ def Hybridize(t_start, data_dir, out_dir, debug=0):
     upbound=np.append(mint.x+np.pi/omega_0/2.0,logR_delta[0][1:]+np.pi/8)
     scale=[np.pi/omega_0,np.pi/4.0,np.pi/4.0,np.pi/4.0]
     minima=minimize(Optimize4D, np.append(mint.x, logR_delta[0][1:]), bounds=((lowbound[0], upbound[0]),\
-        (lowbound[1], upbound[1]), (lowbound[2], upbound[2]), (lowbound[3], upbound[3])), method='Powell', tol=1e-8)
+        (lowbound[1], upbound[1]), (lowbound[2], upbound[2]), (lowbound[3], upbound[3])), method='BFGS', tol=1e-8)
     if min((minima.x-lowbound)/scale)<1e-2 or min((upbound-minima.x)/scale)<1e-2:
         message=("Minima {0} near bounds {1}, {2}.")
         raise ValueError(message.format(Minima.x, lowbound, upbound))
@@ -200,7 +200,7 @@ def Hybridize(t_start, data_dir, out_dir, debug=0):
 def Run():
     import os
     for i in [-30000]:
-        Hybridize(i,'/home/dzsun/SimAnnex/Public/HybTest/006/Lev3','/home/dzsun', debug=1)
+        Hybridize(i,'/home/dzsun/SimAnnex/Public/HybTest/006/Lev3','/home/dzsun', debug=0)
         os.rename('/home/dzsun/rhOverM_hybridNR'+str(i)+'.h5','/home/dzsun/hybridNR'+str(i)+'.h5')
         os.rename('/home/dzsun/rhOverM_hybridPN'+str(i)+'.h5','/home/dzsun/hybridPN'+str(i)+'.h5')
         os.rename('/home/dzsun/UnknownDataType_hybridHybrid'+str(i)+'.h5','/home/dzsun/hybridHybrid'+str(i)+'.h5')
