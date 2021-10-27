@@ -136,19 +136,17 @@ def Hybridize(t_start, data_dir, out_dir, debug=0):
     W_NR=scri.rotate_physical_system(W_NR, R_delta)
     if debug:
         from mpl_toolkits.mplot3d import Axes3D
-        xx = np.linspace(t_delta-10, t_delta+10, 40)
-        yy = np.linspace(minima.x[3]-0.05, minima.x[3]+0.05, 40)
+        xx = np.linspace(minima.x[0]-np.pi/omega_0, minima.x[0]+np.pi/omega_0, 40)
+        yy = np.linspace(minima.x[3]-0.5, minima.x[3]+0.5, 40)
         X, Y = np.meshgrid(xx, yy)
         Z=np.empty((len(xx),len(yy)))
         for i in range(len(xx)):
             for j in range(len(yy)):
                 Z[i,j] = Optimize4D([xx[i], minima.x[1], minima.x[2], yy[j]])
-        fig=plt.figure()
-        ax3 = Axes3D(fig)
-        ax3.view_init(elev=90,azim=0)
-        ax3.plot_surface(X,Y,np.exp(Z),cmap='rainbow')
+        fig=plt.pcolor(X,Y,Z,cmap='rainbow')
         plt.xlabel("Time")
         plt.ylabel("One component of quarternion")
+        plt.colorbar(fig)
         plt.savefig(out_dir+"/hybridCheck4DOptimization")
         plt.clf()
 
@@ -197,9 +195,9 @@ def Hybridize(t_start, data_dir, out_dir, debug=0):
 
 def Run():
     import os
-    for i in [-30000]:
-        Hybridize(i,'/home/dzsun/SimAnnex/Public/HybTest/006/Lev3','/home/dzsun', debug=0)
-#        Hybridize(i,'/home/dzsun/SimAnnex/Public/NonSpinningSurrogate/BBH_SKS_d17.5_q2_sA_0_0_0_sB_0_0_0/Lev4','/home/dzsun', debug=0)
+    for i in [-7000]:
+#        Hybridize(i,'/home/dzsun/SimAnnex/Public/HybTest/006/Lev3','/home/dzsun', debug=0)
+        Hybridize(i,'/home/dzsun/SimAnnex/Public/NonSpinningSurrogate/BBH_SKS_d17.5_q2_sA_0_0_0_sB_0_0_0/Lev4','/home/dzsun', debug=1)
         os.rename('/home/dzsun/rhOverM_hybridNR'+str(i)+'.h5','/home/dzsun/hybridNR'+str(i)+'.h5')
         os.rename('/home/dzsun/rhOverM_hybridPN'+str(i)+'.h5','/home/dzsun/hybridPN'+str(i)+'.h5')
         os.rename('/home/dzsun/UnknownDataType_hybridHybrid'+str(i)+'.h5','/home/dzsun/hybridHybrid'+str(i)+'.h5')
