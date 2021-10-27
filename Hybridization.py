@@ -30,7 +30,6 @@ def Hybridize(t_start, data_dir, out_dir, debug=0):
 # Get NR waveform
     NRFileName=data_dir+'/rhOverM_Asymptotic_GeometricUnits_CoM.h5/Extrapolated_N2.dir'
     W_NR=scri.SpEC.read_from_h5(NRFileName)
-    #W_NR.to_coprecessing_frame()####################################################################################3
     W_NR.t=W_NR.t-W_NR.max_norm_time()
     W_NR.data=-W_NR.data
     W_NR_corot=scri.to_corotating_frame(W_NR.copy())
@@ -38,7 +37,6 @@ def Hybridize(t_start, data_dir, out_dir, debug=0):
 # Get PN waveform
     PNFileName=data_dir+'/rhOverM_Inertial_PN.h5'
     W_PN=scri.SpEC.read_from_h5(PNFileName)
-    #W_PN.to_coprecessing_frame()####################################################################################
     W_PN_corot=scri.to_corotating_frame(W_PN.copy())
 
 # Get the initial angular velocity in matching region
@@ -195,7 +193,7 @@ def Hybridize(t_start, data_dir, out_dir, debug=0):
     scri.SpEC.write_to_h5(W_NR, outname, file_write_mode='w')
     outname=out_dir+'/hybridPN'+str(t_start)+'.h5'
     scri.SpEC.write_to_h5(W_PN, outname, file_write_mode='w')
-    print("Finished, total time:",time.time()-clock0)
+    print("All done, total time:",time.time()-clock0)
 
 def Run():
     import os
