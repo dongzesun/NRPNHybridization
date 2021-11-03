@@ -5,7 +5,7 @@ import h5py
 import time
 import matplotlib.pyplot as plt
 from scipy.optimize import least_squares
-from scipy.optimize import minimize
+#from scipy.optimize import minimize
 from scipy.integrate import simpson
 from scipy.interpolate import InterpolatedUnivariateSpline as Spline
 
@@ -83,6 +83,7 @@ def Hybridize(t_start, data_dir, out_dir, debug=0):
         omega_PN_spline(matchingt+mint.x), matchingt)
     W_NR_matching_in=W_NR.interpolate(matchingt)
     omega_NR_matching = omega_NR[(W_NR.t>=t_start) & (W_NR.t<=t_end0)]
+    omega_mean = np.mean(omega_NR_matching, axis=0)
     omega_NR_hat = omega_NR_matching / np.linalg.norm(omega_NR_matching, axis=1)[:, np.newaxis]
     def InitialR(theta):
         print(theta)
@@ -105,47 +106,49 @@ def Hybridize(t_start, data_dir, out_dir, debug=0):
     if cost2<cost1:
         R_delta=R_delta2
     print("Initial guess of R_delta:",R_delta)
-    logR_delta=quaternion.as_float_array(np.log(R_delta))
+    logR_delta=quaternion.as_float_array(np.log(R_delta))-np.append(0.0, omega_mean*mint.x/2)
 
 # Alignment of time and frame
     clock1=time.time()
     Normalization=simpson(np.linalg.norm(W_NR_matching_in.data,axis=1)**2.0, matchingt)
     def Optimize4D(x):
         print(x)
-        R_delta=np.exp(quaternion.quaternion(0.0,x[1],x[2],x[3]))
+        phase=quaternion.quaternion(0.0, omega_mean[0]*x[0]/2, omega_mean[1]*x[0]/2, omega_mean[2]*x[0]/2)
+        R_delta=np.exp(quaternion.quaternion(0.0,x[1],x[2],x[3])+phase)
         W_temp=scri.rotate_physical_system(W_NR_matching_in.copy(), R_delta)
         cost=np.linalg.norm(PNData_spline(matchingt+x[0])-W_temp.data,axis=1)**2.0
         cost=np.real(simpson(cost, matchingt))/Normalization
         print(cost)
         return cost
-    lowbound=np.append(mint.x-np.pi/omega_0/2.0, logR_delta[0][1:]-np.pi/8)
-    upbound=np.append(mint.x+np.pi/omega_0/2.0,logR_delta[0][1:]+np.pi/8)
+    lowbound=np.append(mint.x-np.pi/omega_0/2.0, logR_delta[0][1:]-np.pi/4)
+    upbound=np.append(mint.x+np.pi/omega_0/2.0, logR_delta[0][1:]+np.pi/4)
     scale=[np.pi/omega_0,np.pi/4.0,np.pi/4.0,np.pi/4.0]
-    minima=minimize(Optimize4D, np.append(mint.x, logR_delta[0][1:]), bounds=((lowbound[0], upbound[0]),\
-        (lowbound[1], upbound[1]), (lowbound[2], upbound[2]), (lowbound[3], upbound[3])), method='BFGS', tol=1e-8)
+    #minima=minimize(Optimize4D, np.append(mint.x, logR_delta[0][1:]), bounds=((lowbound[0], upbound[0]),\
+    #    (lowbound[1], upbound[1]), (lowbound[2], upbound[2]), (lowbound[3], upbound[3])), method='BFGS', tol=1e-8)
+    minima=least_squares(Optimize4D, np.append(mint.x, logR_delta[0][1:]), bounds=(lowbound,upbound),x_scale='jac')
     if min((minima.x-lowbound)/scale)<1e-2 or min((upbound-minima.x)/scale)<1e-2:
         message=("Minima {0} near bounds {1}, {2}.")
-        raise ValueError(message.format(Minima.x, lowbound, upbound))
+        raise ValueError(message.format(minima.x, lowbound, upbound))
     print(minima)
     t_delta=minima.x[0]
     print("Time shift=", t_delta)
-    R_delta=np.exp(quaternion.quaternion(0.0,minima.x[1],minima.x[2],minima.x[3]))
+    phase=quaternion.quaternion(0.0, omega_mean[0]*minima.x[0]/2, omega_mean[1]*minima.x[0]/2, omega_mean[2]*minima.x[0]/2)
+    R_delta=np.exp(quaternion.quaternion(0.0,minima.x[1],minima.x[2],minima.x[3])+phase)
     print("R_delta=",R_delta)
     print("Optimization time used:",time.time()-clock1)
     W_PN.t=W_PN.t-t_delta
     W_NR=scri.rotate_physical_system(W_NR, R_delta)
     if debug:
-        from mpl_toolkits.mplot3d import Axes3D
-        xx = np.linspace(minima.x[0]-np.pi/omega_0, minima.x[0]+np.pi/omega_0, 40)
-        yy = np.linspace(minima.x[3]-0.5, minima.x[3]+0.5, 40)
+        xx = np.linspace(minima.x[0]-30*np.pi/omega_0, minima.x[0]+30*np.pi/omega_0, 40)
+        yy = np.linspace(minima.x[3]-2.5, minima.x[3]+2.5, 40)
         X, Y = np.meshgrid(xx, yy)
         Z=np.empty((len(xx),len(yy)))
         for i in range(len(xx)):
             for j in range(len(yy)):
-                Z[i,j] = Optimize4D([xx[i], minima.x[1], minima.x[2], yy[j]])
+                Z[j,i] = Optimize4D([xx[i], minima.x[1], minima.x[2], yy[j]])
         fig=plt.pcolor(X,Y,Z,cmap='rainbow')
         plt.xlabel("Time")
-        plt.ylabel("One component of quarternion")
+        plt.ylabel("One component of log of quarternion")
         plt.colorbar(fig)
         plt.savefig(out_dir+"/hybridCheck4DOptimization")
         plt.clf()
@@ -195,9 +198,9 @@ def Hybridize(t_start, data_dir, out_dir, debug=0):
 
 def Run():
     import os
-    for i in [-7000]:
-#        Hybridize(i,'/home/dzsun/SimAnnex/Public/HybTest/006/Lev3','/home/dzsun', debug=0)
-        Hybridize(i,'/home/dzsun/SimAnnex/Public/NonSpinningSurrogate/BBH_SKS_d17.5_q2_sA_0_0_0_sB_0_0_0/Lev4','/home/dzsun', debug=1)
+    for i in [-30000]:
+        Hybridize(i,'/home/dzsun/SimAnnex/Public/HybTest/006/Lev3','/home/dzsun', debug=0)
+#        Hybridize(i,'/home/dzsun/SimAnnex/Public/NonSpinningSurrogate/BBH_SKS_d17.5_q2_sA_0_0_0_sB_0_0_0/Lev4','/home/dzsun', debug=1)
         os.rename('/home/dzsun/rhOverM_hybridNR'+str(i)+'.h5','/home/dzsun/hybridNR'+str(i)+'.h5')
         os.rename('/home/dzsun/rhOverM_hybridPN'+str(i)+'.h5','/home/dzsun/hybridPN'+str(i)+'.h5')
         os.rename('/home/dzsun/UnknownDataType_hybridHybrid'+str(i)+'.h5','/home/dzsun/hybridHybrid'+str(i)+'.h5')
