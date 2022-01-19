@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from scipy.optimize import least_squares
 from scipy.integrate import simpson
 from scipy.interpolate import InterpolatedUnivariateSpline as Spline
+from scipy.integrate import solve_ivp
 
 class SplineArray:
     def __init__(self, x, y):
@@ -33,8 +34,31 @@ def Hybridize(t_start, data_dir, out_dir, debug=0):
     W_NR_corot=scri.to_corotating_frame(W_NR.copy())
 
 # Get PN waveform
-    PNFileName=data_dir+'/rhOverM_Inertial_PN.h5'
-    W_PN=scri.SpEC.read_from_h5(PNFileName)
+    with h5py.File(data_dir+'/Horizons.h5', 'r') as f:
+        tA = f['AhA.dir/CoordCenterInertial.dat'][:,0]-W_NR.max_norm_time()
+        xA = f['AhA.dir/CoordCenterInertial.dat'][:,1:]
+        mA = f['AhA.dir/ArealMass.dat'][:,1]
+        chiA = f['AhA.dir/chiInertial.dat'][:,1:]
+        tB = f['AhB.dir/CoordCenterInertial.dat'][:,0]-W_NR.max_norm_time()
+        xB = f['AhB.dir/CoordCenterInertial.dat'][:,1:]
+        mB = f['AhB.dir/ArealMass.dat'][:,1]
+        chiB = f['AhB.dir/chiInertial.dat'][:,1:]
+    i_1 = abs(tA-t_start).argmin()
+    chia_0 = chiA[i_1]
+    chib_0 = chiB[i_1]
+    ma = mA[i_1]
+    mb = mB[i_1]
+    
+
+
+
+
+
+
+
+
+
+
     W_PN_corot=scri.to_corotating_frame(W_PN.copy())
 
 # Get the initial angular velocity in matching region
@@ -189,7 +213,7 @@ def Hybridize(t_start, data_dir, out_dir, debug=0):
     plt.plot(W_NR.t, W_NR.data[:,4].real-W_NR.data[:,4].imag, label='NR', linewidth=1)
     plt.plot(W_PN.t, W_PN.data[:,4].real-W_PN.data[:,4].imag, label='PN', linewidth=1)
     plt.plot(W_H.t, W_H.data[:,4].real-W_H.data[:,4].imag, ls='--', label='Hybrid', linewidth=1)
-    plt.xlim((t_start-5*np.pi/omega_0, t_end0+5*np.pi/omega_0))
+    plt.xlim((t_start-25*np.pi/omega_0, t_end0+25*np.pi/omega_0))
     plt.ylim((-0.15,0.15))
     plt.legend(['NR', 'PN', 'Hybrid'], loc="upper right")
     plt.axvline(t_start, linestyle='dotted')
@@ -198,7 +222,7 @@ def Hybridize(t_start, data_dir, out_dir, debug=0):
     plt.plot(W_NR.t, W_NR.data[:,3].real-W_NR.data[:,3].imag, label='NR', linewidth=1)
     plt.plot(W_PN.t, W_PN.data[:,3].real-W_PN.data[:,3].imag, label='PN', linewidth=1)
     plt.plot(W_H.t, W_H.data[:,3].real-W_H.data[:,3].imag, ls='--', label='Hybrid', linewidth=1)
-    plt.xlim((t_start-5*np.pi/omega_0, t_end0+5*np.pi/omega_0))
+    plt.xlim((t_start-25*np.pi/omega_0, t_end0+25*np.pi/omega_0))
     plt.ylim((-0.03,0.03))
     plt.axvline(t_start, linestyle='dotted')
     plt.axvline(t_end0, linestyle='dotted')
@@ -206,7 +230,7 @@ def Hybridize(t_start, data_dir, out_dir, debug=0):
     plt.plot(W_NR.t, W_NR.data[:,2].real-W_NR.data[:,2].imag, label='NR', linewidth=1)
     plt.plot(W_PN.t, W_PN.data[:,2].real-W_PN.data[:,2].imag, label='PN', linewidth=1)
     plt.plot(W_H.t, W_H.data[:,2].real-W_H.data[:,2].imag, ls='--', label='Hybrid', linewidth=1)
-    plt.xlim((t_start-5*np.pi/omega_0, t_end0+5*np.pi/omega_0))
+    plt.xlim((t_start-25*np.pi/omega_0, t_end0+25*np.pi/omega_0))
     plt.ylim((-0.015,0.01))
     plt.axvline(t_start, linestyle='dotted')
     plt.axvline(t_end0, linestyle='dotted')
@@ -225,9 +249,9 @@ def Hybridize(t_start, data_dir, out_dir, debug=0):
 def Run():
     import os
     for i in [-7000]:
-        Hybridize(i,'/home/dzsun/SimAnnex/Public/HybTest/006/Lev3','/home/dzsun', debug=1)
+        Hybridize(i,'/home/dzsun/SimAnnex/Public/HybTest/020/Lev3','/home/dzsun', debug=0)
 #        Hybridize(i,'/home/dzsun/SimAnnex/Public/NonSpinningSurrogate/BBH_SKS_d17.5_q2_sA_0_0_0_sB_0_0_0/Lev4',\
-#            '/home/dzsun',debug=1)
+#            '/home/dzsun',debug=0)
         os.rename('/home/dzsun/rhOverM_hybridNR'+str(i)+'.h5','/home/dzsun/hybridNR'+str(i)+'.h5')
         os.rename('/home/dzsun/rhOverM_hybridPN'+str(i)+'.h5','/home/dzsun/hybridPN'+str(i)+'.h5')
         os.rename('/home/dzsun/UnknownDataType_hybridHybrid'+str(i)+'.h5','/home/dzsun/hybridHybrid'+str(i)+'.h5')
