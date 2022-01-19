@@ -1,5 +1,8 @@
 import scri
+import PNEvolution
+import PNWaveformModes
 import numpy as np
+import math
 import quaternion
 import h5py
 import time
@@ -7,6 +10,7 @@ import matplotlib.pyplot as plt
 from scipy.optimize import least_squares
 from scipy.integrate import simpson
 from scipy.interpolate import InterpolatedUnivariateSpline as Spline
+from scipy.interpolate import CubicSpline
 from scipy.integrate import solve_ivp
 
 class SplineArray:
@@ -29,37 +33,10 @@ def Hybridize(t_start, data_dir, out_dir, debug=0):
 # Get NR waveform
     NRFileName=data_dir+'/rhOverM_Asymptotic_GeometricUnits_CoM.h5/Extrapolated_N2.dir'
     W_NR=scri.SpEC.read_from_h5(NRFileName)
-    W_NR.t=W_NR.t-W_NR.max_norm_time()
+    t0=-W_NR.max_norm_time()
+    W_NR.t=W_NR.t+t0
     W_NR.data=-W_NR.data
     W_NR_corot=scri.to_corotating_frame(W_NR.copy())
-
-# Get PN waveform
-    with h5py.File(data_dir+'/Horizons.h5', 'r') as f:
-        tA = f['AhA.dir/CoordCenterInertial.dat'][:,0]-W_NR.max_norm_time()
-        xA = f['AhA.dir/CoordCenterInertial.dat'][:,1:]
-        mA = f['AhA.dir/ArealMass.dat'][:,1]
-        chiA = f['AhA.dir/chiInertial.dat'][:,1:]
-        tB = f['AhB.dir/CoordCenterInertial.dat'][:,0]-W_NR.max_norm_time()
-        xB = f['AhB.dir/CoordCenterInertial.dat'][:,1:]
-        mB = f['AhB.dir/ArealMass.dat'][:,1]
-        chiB = f['AhB.dir/chiInertial.dat'][:,1:]
-    i_1 = abs(tA-t_start).argmin()
-    chia_0 = chiA[i_1]
-    chib_0 = chiB[i_1]
-    ma = mA[i_1]
-    mb = mB[i_1]
-    
-
-
-
-
-
-
-
-
-
-
-    W_PN_corot=scri.to_corotating_frame(W_PN.copy())
 
 # Get the initial angular velocity in matching region
     omega_NR=W_NR.angular_velocity()
@@ -71,12 +48,73 @@ def Hybridize(t_start, data_dir, out_dir, debug=0):
     omega_0=omega_NR_mag[(W_NR.t>=t_start-10)&(W_NR.t<=t_start+10)]
     omega_0=np.mean(omega_0)
 
+# Get PN waveform
+    xHat=quaternion.quaternion(0.0,1.0,0.0,0.0)
+    yHat=quaternion.quaternion(0.0,0.0,1.0,0.0)
+    zHat=quaternion.quaternion(0.0,0.0,0.0,1.0)
+    with h5py.File(data_dir+'/Horizons.h5', 'r') as f:
+        tA=f['AhA.dir/CoordCenterInertial.dat'][:,0]+t0
+        xA=f['AhA.dir/CoordCenterInertial.dat'][:,1:]
+        mA=f['AhA.dir/ArealMass.dat'][:,1]
+        chiA=f['AhA.dir/chiInertial.dat'][:,1:]
+        tB=f['AhB.dir/CoordCenterInertial.dat'][:,0]+t0
+        xB=f['AhB.dir/CoordCenterInertial.dat'][:,1:]
+        mB=f['AhB.dir/ArealMass.dat'][:,1]
+        chiB=f['AhB.dir/chiInertial.dat'][:,1:]
+    i_1=abs(tA-t_start).argmin()
+    m1=mA[i_1]
+    m2=mB[i_1]
+    v_i=omega_0**(1/3)
+    chi1_i=chiA[i_1]
+    chi2_i=chiB[i_1]
+    chi1Mag=quaternion.quaternion(0,chi1_i[0],chi1_i[1],chi1_i[2]).abs()
+    chi2Mag=quaternion.quaternion(0,chi2_i[0],chi2_i[1],chi2_i[2]).abs()
+    S_chi1_i=quaternion.quaternion(0.0,0.0,0.0,0.0)
+    S_chi2_i=S_chi1_i
+    if chi1Mag>1e-12:
+        S_chi1_i=np.sqrt(chi1Mag)*np.sqrt(\
+            -quaternion.quaternion(0,chi1_i[0],chi1_i[1],chi1_i[2]).normalized()*zHat).normalized()
+    if chi2Mag>1e-12:
+        S_chi2_i=np.sqrt(chi2Mag)*np.sqrt(\
+            -quaternion.quaternion(0,chi2_i[0],chi2_i[1],chi2_i[2]).normalized()*zHat).normalized()
+    d=xA-xB
+    nHat=np.empty((len(d),4))
+    for i in range(len(d)):
+        nHat[i]=np.append(0,d[i])
+    nHatArray=nHat
+    nHat=quaternion.from_float_array(nHat)
+    for i in range(len(d)):
+        nHat[i]=nHat[i].normalized()
+    dnHatdt=CubicSpline(tA, nHatArray).derivative()(tA)
+    lambdaHat=quaternion.from_float_array(dnHatdt)
+    for i in range(len(d)):
+        lambdaHat[i]=lambdaHat[i].normalized()
+    Ra=np.sqrt(-nHat[i_1]*xHat)
+    beta=math.atan2(np.dot((Ra*zHat*Ra.inverse()).vec,lambdaHat[i_1].vec),\
+        np.dot((Ra*yHat*Ra.inverse()).vec,lambdaHat[i_1].vec))
+    R_frame_i=Ra*np.exp((beta)/2*xHat)
+    rfrak_frame_i=np.log(R_frame_i).vec
+    PN=PNEvolution.TaylorTn_4p0PN_Q.TaylorTn_4p0PN_Q(xHat, yHat, zHat, m1, m2, v_i,S_chi1_i, S_chi2_i,\
+        0.0, 0.0, 0.0, 0.0,rfrak_frame_i[0], rfrak_frame_i[1], rfrak_frame_i[2])
+    W_PN_corot=scri.WaveformModes()   
+    W_PN_corot.t=PN.t+t_start
+    frame=np.empty(len(PN.t), dtype=quaternion.quaternion)
+    for i in range (len(PN.t)):
+        frame[i]=np.exp(quaternion.quaternion(0.0,PN.y[5,i],PN.y[6,i],PN.y[7,i]))
+    W_PN_corot.frame=frame
+    W_PN_corot.data=PNWaveformModes.WaveformModes_3p5PN.WaveformModes_3p5PN(xHat, yHat, zHat,\
+        m1, m2, v_i,S_chi1_i, S_chi2_i,0.0, 0.0, 0.0, 0.0,\
+        rfrak_frame_i[0], rfrak_frame_i[1], rfrak_frame_i[2],PN.y)
+    ell_min, ell_max = 2, 8
+    W_PN_corot.ells = ell_min, ell_max
+    W_PN=scri.to_inertial_frame(W_PN_corot.copy())
+
 # Set up the matching region data for PN, and get the corresponding angular velocity and frame
     if W_NR.t[0]>=t_start-10*np.pi/omega_0 or W_NR.t[-1]<=t_start+10*np.pi/omega_0\
         or W_PN.t[0]>=t_start-10*np.pi/omega_0 or W_PN.t[-1]<=t_start+10*np.pi/omega_0:
         message=("t_start {0} should be at least {1} larger than the start time of NR waveform {2}"
             +" and start of PN waveform {3}, and smaller than the ending time of NR waveform {4} and PN waveform {5}.")
-        raise ValueError(message.format(t_start, 10*np.pi/omega_0, W_NR.t[0], W_NR.t[-1], W_PN.t[0], W_PN.t[-1]))
+        raise ValueError(message.format(t_start, 10*np.pi/omega_0, W_NR.t[0], W_PN.t[0], W_NR.t[-1], W_PN.t[-1]))
     elif omega_NR_mag[W_NR.t[-1]-W_NR.t>10*np.pi/omega_0][-1]<=1.11*omega_0\
         or omega_NR_mag[W_NR.t-W_NR.t[0]>10*np.pi/omega_0][0]>=0.99*omega_0:
         message=("The range of angular velocity magnitude should at least contain (0.99,1.11)*omega_0, where omega_0"
@@ -87,7 +125,6 @@ def Hybridize(t_start, data_dir, out_dir, debug=0):
     t_end0=W_NR.t[(omega_NR_mag>1.1*omega_0)&(W_NR.t-W_NR.t[0]>10*np.pi/omega_0)&(W_NR.t[-1]-W_NR.t>10*np.pi/omega_0)][0]
     t_pre=W_NR.t[(omega_NR_mag<0.99*omega_0)&(W_NR.t-W_NR.t[0]>10*np.pi/omega_0)&(W_NR.t[-1]-W_NR.t>10*np.pi/omega_0)][-1]
     t_end=W_NR.t[(omega_NR_mag>1.11*omega_0)&(W_NR.t-W_NR.t[0]>10*np.pi/omega_0)&(W_NR.t[-1]-W_NR.t>10*np.pi/omega_0)][0]
-    print(t_end0,t_end,t_pre)
     omega_PN=W_PN.angular_velocity()
     omega_PN_spline=SplineArray(W_PN.t, omega_PN)
     omega_PN_mag=np.linalg.norm(omega_PN, axis=1)
@@ -97,6 +134,10 @@ def Hybridize(t_start, data_dir, out_dir, debug=0):
     omega_NR_mag_matching=omega_NR_mag[(W_NR.t>=t_start)&(W_NR.t<=t_end0)]
     if debug:
         plt.plot(matchingt, omega_NR_mag_matching, label='Angular velocity')
+        plt.plot(matchingt, omega_PN_mag_spline(matchingt-2182), label='Angular velocity')
+        plt.legend(['NR', 'PN'], loc="upper right")
+        plt.ylabel("Omega Magnititude")
+        plt.xlabel("Time")
         plt.savefig(out_dir+"/hybridCheckOmega")
         plt.clf()
 
@@ -215,6 +256,7 @@ def Hybridize(t_start, data_dir, out_dir, debug=0):
     plt.plot(W_H.t, W_H.data[:,4].real-W_H.data[:,4].imag, ls='--', label='Hybrid', linewidth=1)
     plt.xlim((t_start-25*np.pi/omega_0, t_end0+25*np.pi/omega_0))
     plt.ylim((-0.15,0.15))
+    plt.ylabel("(2,2) mode")
     plt.legend(['NR', 'PN', 'Hybrid'], loc="upper right")
     plt.axvline(t_start, linestyle='dotted')
     plt.axvline(t_end0, linestyle='dotted')
@@ -224,6 +266,7 @@ def Hybridize(t_start, data_dir, out_dir, debug=0):
     plt.plot(W_H.t, W_H.data[:,3].real-W_H.data[:,3].imag, ls='--', label='Hybrid', linewidth=1)
     plt.xlim((t_start-25*np.pi/omega_0, t_end0+25*np.pi/omega_0))
     plt.ylim((-0.03,0.03))
+    plt.ylabel("(2,1) mode")
     plt.axvline(t_start, linestyle='dotted')
     plt.axvline(t_end0, linestyle='dotted')
     plt.subplot(313)
@@ -232,6 +275,8 @@ def Hybridize(t_start, data_dir, out_dir, debug=0):
     plt.plot(W_H.t, W_H.data[:,2].real-W_H.data[:,2].imag, ls='--', label='Hybrid', linewidth=1)
     plt.xlim((t_start-25*np.pi/omega_0, t_end0+25*np.pi/omega_0))
     plt.ylim((-0.015,0.01))
+    plt.ylabel("(2,2) mode")
+    plt.xlabel("Time")
     plt.axvline(t_start, linestyle='dotted')
     plt.axvline(t_end0, linestyle='dotted')
     plt.savefig(out_dir+"/hybridCheckResults",dpi=1000)
@@ -246,12 +291,12 @@ def Hybridize(t_start, data_dir, out_dir, debug=0):
     scri.SpEC.write_to_h5(W_PN, outname, file_write_mode='w')
     print("All done, total time:",time.time()-clock0)
 
-def Run():
-    import os
-    for i in [-7000]:
-        Hybridize(i,'/home/dzsun/SimAnnex/Public/HybTest/020/Lev3','/home/dzsun', debug=0)
-#        Hybridize(i,'/home/dzsun/SimAnnex/Public/NonSpinningSurrogate/BBH_SKS_d17.5_q2_sA_0_0_0_sB_0_0_0/Lev4',\
-#            '/home/dzsun',debug=0)
-        os.rename('/home/dzsun/rhOverM_hybridNR'+str(i)+'.h5','/home/dzsun/hybridNR'+str(i)+'.h5')
-        os.rename('/home/dzsun/rhOverM_hybridPN'+str(i)+'.h5','/home/dzsun/hybridPN'+str(i)+'.h5')
-        os.rename('/home/dzsun/UnknownDataType_hybridHybrid'+str(i)+'.h5','/home/dzsun/hybridHybrid'+str(i)+'.h5')
+# Run the code
+import os
+for i in [-30000]:
+    Hybridize(i,'/home/dzsun/SimAnnex/Public/HybTest/006/Lev3','/home/dzsun', debug=0)
+    #Hybridize(i,'/home/dzsun/SimAnnex/Public/NonSpinningSurrogate/BBH_SKS_d17.5_q2_sA_0_0_0_sB_0_0_0/Lev4',\
+    #    '/home/dzsun',debug=0)
+    os.rename('/home/dzsun/rhOverM_hybridNR'+str(i)+'.h5','/home/dzsun/hybridNR'+str(i)+'.h5')
+    os.rename('/home/dzsun/rhOverM_hybridPN'+str(i)+'.h5','/home/dzsun/hybridPN'+str(i)+'.h5')
+    os.rename('/home/dzsun/UnknownDataType_hybridHybrid'+str(i)+'.h5','/home/dzsun/hybridHybrid'+str(i)+'.h5')

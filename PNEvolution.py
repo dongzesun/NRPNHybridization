@@ -7,7 +7,7 @@ from scipy.interpolate import InterpolatedUnivariateSpline as Spline
 import quaternion
 
 class TaylorTn_0PN_Q : 
-    def TaylorTn_0PN_Q(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_chi1_x_i, rfrak_chi1_y_i, rfrak_chi2_x_i, rfrak_chi2_y_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i, StepsPerOrbit=32, ForwardInTime=True, tol=1e-12) :
+    def TaylorTn_0PN_Q(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_chi1_x_i, rfrak_chi1_y_i, rfrak_chi2_x_i, rfrak_chi2_y_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i, StepsPerOrbit=32, ForwardInTime=True, tol=1e-12, MinStep=1e-7) :
         global v, rfrak_chi1_x, rfrak_chi1_y, rfrak_chi2_x, rfrak_chi2_y
         global rfrak_frame_x, rfrak_frame_y, rfrak_frame_z, Phi
         global terminal1,terminal2,NotForward
@@ -135,8 +135,8 @@ class TaylorTn_0PN_Q :
             return Omega2_coeff*ellHat*(0.75*delta + 0.5*nu + 0.75)
 
         def OmegaVec():
-            gamma_PN_0 = 1.00000000000000
             a_ell_0 = 7.0*S_n + 3.0*Sigma_n*delta
+            gamma_PN_0 = 1.00000000000000
             return ellHat*v**3/M + a_ell_0*gamma_PN_0*nHat*v**6/M**3
 
         def OrbitalAngularMomentum():
@@ -211,9 +211,9 @@ class TaylorTn_0PN_Q :
         def terminate(t,y):
             return 1.0*terminal1*terminal2
         terminate.terminal=True
-        TMerger=5.0/(256.0*nu*v**8)
+        TMerger=5.0/(256.0*nu*v_i**8)
         time=[0.0]
-        while time[-1]<TMerger:
+        while time[-1]<TMerger and 2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit>MinStep:
             time.append(time[-1]+2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit)
         time=np.delete(time, -1)
         
@@ -224,7 +224,7 @@ class TaylorTn_0PN_Q :
             t_eval=time, dense_output=True, events=terminate, rtol=tol, atol=tol)           
         if ForwardInTime:
             NotForward=False
-            time=[-2*M*(256*nu*TMerger/5)**(3/8)/StepsPerOrbit]
+            time=[0.0]
             TStart=-3*TMerger
             while time[-1]>TStart:
                 time.append(time[-1]-2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit)
@@ -232,16 +232,16 @@ class TaylorTn_0PN_Q :
                 rfrak_chi1_y_i,rfrak_chi2_x_i,rfrak_chi2_y_i,rfrak_frame_x_i,\
                 rfrak_frame_y_i,rfrak_frame_z_i,0.0], method='DOP853',\
                 t_eval=time, dense_output=True, rtol=tol, atol=tol)
-            yy.t=np.append(yyForward.t[::-1],yy.t)
+            yy.t=np.append(yyForward.t[1:][::-1],yy.t)
             data=np.empty((9,len(yy.t)))
             for i in range(9):
-                data[i]=np.append(yyForward.y[i][::-1],yy.y[i])
+                data[i]=np.append(yyForward.y[i][1:][::-1],yy.y[i])
             yy.y=data
             
         return yy
 
 class TaylorTn_0p50PN_Q : 
-    def TaylorTn_0p50PN_Q(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_chi1_x_i, rfrak_chi1_y_i, rfrak_chi2_x_i, rfrak_chi2_y_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i, StepsPerOrbit=32, ForwardInTime=True, tol=1e-12) :
+    def TaylorTn_0p50PN_Q(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_chi1_x_i, rfrak_chi1_y_i, rfrak_chi2_x_i, rfrak_chi2_y_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i, StepsPerOrbit=32, ForwardInTime=True, tol=1e-12, MinStep=1e-7) :
         global v, rfrak_chi1_x, rfrak_chi1_y, rfrak_chi2_x, rfrak_chi2_y
         global rfrak_frame_x, rfrak_frame_y, rfrak_frame_z, Phi
         global terminal1,terminal2,NotForward
@@ -369,8 +369,8 @@ class TaylorTn_0p50PN_Q :
             return Omega2_coeff*(ellHat*(0.75*delta + 0.5*nu + 0.75) + nHat*v*(3.0*chi2_n*nu + 3.0*M1**2*chi1_n/M**2) - M1**2*chiVec1*v/M**2)
 
         def OmegaVec():
-            gamma_PN_0 = 1.00000000000000
             a_ell_0 = 7.0*S_n + 3.0*Sigma_n*delta
+            gamma_PN_0 = 1.00000000000000
             return ellHat*v**3/M + a_ell_0*gamma_PN_0*nHat*v**6/M**3
 
         def OrbitalAngularMomentum():
@@ -445,9 +445,9 @@ class TaylorTn_0p50PN_Q :
         def terminate(t,y):
             return 1.0*terminal1*terminal2
         terminate.terminal=True
-        TMerger=5.0/(256.0*nu*v**8)
+        TMerger=5.0/(256.0*nu*v_i**8)
         time=[0.0]
-        while time[-1]<TMerger:
+        while time[-1]<TMerger and 2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit>MinStep:
             time.append(time[-1]+2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit)
         time=np.delete(time, -1)
         
@@ -458,7 +458,7 @@ class TaylorTn_0p50PN_Q :
             t_eval=time, dense_output=True, events=terminate, rtol=tol, atol=tol)           
         if ForwardInTime:
             NotForward=False
-            time=[-2*M*(256*nu*TMerger/5)**(3/8)/StepsPerOrbit]
+            time=[0.0]
             TStart=-3*TMerger
             while time[-1]>TStart:
                 time.append(time[-1]-2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit)
@@ -466,16 +466,16 @@ class TaylorTn_0p50PN_Q :
                 rfrak_chi1_y_i,rfrak_chi2_x_i,rfrak_chi2_y_i,rfrak_frame_x_i,\
                 rfrak_frame_y_i,rfrak_frame_z_i,0.0], method='DOP853',\
                 t_eval=time, dense_output=True, rtol=tol, atol=tol)
-            yy.t=np.append(yyForward.t[::-1],yy.t)
+            yy.t=np.append(yyForward.t[1:][::-1],yy.t)
             data=np.empty((9,len(yy.t)))
             for i in range(9):
-                data[i]=np.append(yyForward.y[i][::-1],yy.y[i])
+                data[i]=np.append(yyForward.y[i][1:][::-1],yy.y[i])
             yy.y=data
             
         return yy
 
 class TaylorTn_1p0PN_Q : 
-    def TaylorTn_1p0PN_Q(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_chi1_x_i, rfrak_chi1_y_i, rfrak_chi2_x_i, rfrak_chi2_y_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i, StepsPerOrbit=32, ForwardInTime=True, tol=1e-12) :
+    def TaylorTn_1p0PN_Q(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_chi1_x_i, rfrak_chi1_y_i, rfrak_chi2_x_i, rfrak_chi2_y_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i, StepsPerOrbit=32, ForwardInTime=True, tol=1e-12, MinStep=1e-7) :
         global v, rfrak_chi1_x, rfrak_chi1_y, rfrak_chi2_x, rfrak_chi2_y
         global rfrak_frame_x, rfrak_frame_y, rfrak_frame_z, Phi
         global terminal1,terminal2,NotForward
@@ -605,16 +605,16 @@ class TaylorTn_1p0PN_Q :
             return Omega2_coeff*(ellHat*(0.75*delta + 0.5*nu + v**2*(delta*(0.5625 - 0.625*nu) + nu*(1.25 - 0.0416666666666667*nu) + 0.5625) + 0.75) + nHat*v*(3.0*chi2_n*nu + 3.0*M1**2*chi1_n/M**2) - M1**2*chiVec1*v/M**2)
 
         def OmegaVec():
-            gamma_PN_0 = 1.00000000000000
-            gamma_PN_2 = 1.0 - 0.333333333333333*nu
             a_ell_0 = 7.0*S_n + 3.0*Sigma_n*delta
             a_ell_2 = S_n*(-9.66666666666667*nu - 10.0) + Sigma_n*delta*(-4.5*nu - 6.0)
+            gamma_PN_0 = 1.00000000000000
+            gamma_PN_2 = 1.0 - 0.333333333333333*nu
             return ellHat*v**3/M + nHat*v**6*(a_ell_0 + a_ell_2*v**2)*(gamma_PN_0 + gamma_PN_2*v**2)/M**3
 
         def OrbitalAngularMomentum():
-            L_2 = ellHat*(0.166666666666667*nu + 1.5)
             L_0 = ellHat
             L_coeff = M**2*nu/v
+            L_2 = ellHat*(0.166666666666667*nu + 1.5)
             return L_coeff*(L_0 + L_2*v**2)
 
 
@@ -684,9 +684,9 @@ class TaylorTn_1p0PN_Q :
         def terminate(t,y):
             return 1.0*terminal1*terminal2
         terminate.terminal=True
-        TMerger=5.0/(256.0*nu*v**8)
+        TMerger=5.0/(256.0*nu*v_i**8)
         time=[0.0]
-        while time[-1]<TMerger:
+        while time[-1]<TMerger and 2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit>MinStep:
             time.append(time[-1]+2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit)
         time=np.delete(time, -1)
         
@@ -697,7 +697,7 @@ class TaylorTn_1p0PN_Q :
             t_eval=time, dense_output=True, events=terminate, rtol=tol, atol=tol)           
         if ForwardInTime:
             NotForward=False
-            time=[-2*M*(256*nu*TMerger/5)**(3/8)/StepsPerOrbit]
+            time=[0.0]
             TStart=-3*TMerger
             while time[-1]>TStart:
                 time.append(time[-1]-2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit)
@@ -705,16 +705,16 @@ class TaylorTn_1p0PN_Q :
                 rfrak_chi1_y_i,rfrak_chi2_x_i,rfrak_chi2_y_i,rfrak_frame_x_i,\
                 rfrak_frame_y_i,rfrak_frame_z_i,0.0], method='DOP853',\
                 t_eval=time, dense_output=True, rtol=tol, atol=tol)
-            yy.t=np.append(yyForward.t[::-1],yy.t)
+            yy.t=np.append(yyForward.t[1:][::-1],yy.t)
             data=np.empty((9,len(yy.t)))
             for i in range(9):
-                data[i]=np.append(yyForward.y[i][::-1],yy.y[i])
+                data[i]=np.append(yyForward.y[i][1:][::-1],yy.y[i])
             yy.y=data
             
         return yy
 
 class TaylorTn_1p5PN_Q : 
-    def TaylorTn_1p5PN_Q(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_chi1_x_i, rfrak_chi1_y_i, rfrak_chi2_x_i, rfrak_chi2_y_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i, StepsPerOrbit=32, ForwardInTime=True, tol=1e-12) :
+    def TaylorTn_1p5PN_Q(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_chi1_x_i, rfrak_chi1_y_i, rfrak_chi2_x_i, rfrak_chi2_y_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i, StepsPerOrbit=32, ForwardInTime=True, tol=1e-12, MinStep=1e-7) :
         global v, rfrak_chi1_x, rfrak_chi1_y, rfrak_chi2_x, rfrak_chi2_y
         global rfrak_frame_x, rfrak_frame_y, rfrak_frame_z, Phi
         global terminal1,terminal2,NotForward
@@ -873,18 +873,18 @@ class TaylorTn_1p5PN_Q :
             return Omega2_coeff*(ellHat*(0.75*delta + 0.5*nu + v**2*(delta*(0.5625 - 0.625*nu) + nu*(1.25 - 0.0416666666666667*nu) + 0.5625) + 0.75) + nHat*v*(3.0*chi2_n*nu + 3.0*M1**2*chi1_n/M**2) - M1**2*chiVec1*v/M**2)
 
         def OmegaVec():
-            gamma_PN_0 = 1.00000000000000
-            gamma_PN_2 = 1.0 - 0.333333333333333*nu
+            gamma_PN_3 = (1.66666666666667*S_ell + Sigma_ell*delta)/M**2
             a_ell_0 = 7.0*S_n + 3.0*Sigma_n*delta
             a_ell_2 = S_n*(-9.66666666666667*nu - 10.0) + Sigma_n*delta*(-4.5*nu - 6.0)
-            gamma_PN_3 = (1.66666666666667*S_ell + Sigma_ell*delta)/M**2
+            gamma_PN_0 = 1.00000000000000
+            gamma_PN_2 = 1.0 - 0.333333333333333*nu
             return ellHat*v**3/M + nHat*v**6*(a_ell_0 + a_ell_2*v**2)*(gamma_PN_0 + v**2*(gamma_PN_2 + gamma_PN_3*v))/M**3
 
         def OrbitalAngularMomentum():
-            L_SO_3 = 0.166666666666667*ellHat*(-35.0*S_ell - 15.0*Sigma_ell*delta)/M**2 + lambdaHat*(-3.0*S_lambda - Sigma_lambda*delta)/M**2 + 0.5*nHat*(S_n + Sigma_n*delta)/M**2
+            L_coeff = M**2*nu/v
             L_0 = ellHat
             L_2 = ellHat*(0.166666666666667*nu + 1.5)
-            L_coeff = M**2*nu/v
+            L_SO_3 = 0.166666666666667*ellHat*(-35.0*S_ell - 15.0*Sigma_ell*delta)/M**2 + lambdaHat*(-3.0*S_lambda - Sigma_lambda*delta)/M**2 + 0.5*nHat*(S_n + Sigma_n*delta)/M**2
             return L_coeff*(L_0 + v**2*(L_2 + L_SO_3*v))
 
 
@@ -954,9 +954,9 @@ class TaylorTn_1p5PN_Q :
         def terminate(t,y):
             return 1.0*terminal1*terminal2
         terminate.terminal=True
-        TMerger=5.0/(256.0*nu*v**8)
+        TMerger=5.0/(256.0*nu*v_i**8)
         time=[0.0]
-        while time[-1]<TMerger:
+        while time[-1]<TMerger and 2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit>MinStep:
             time.append(time[-1]+2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit)
         time=np.delete(time, -1)
         
@@ -967,7 +967,7 @@ class TaylorTn_1p5PN_Q :
             t_eval=time, dense_output=True, events=terminate, rtol=tol, atol=tol)           
         if ForwardInTime:
             NotForward=False
-            time=[-2*M*(256*nu*TMerger/5)**(3/8)/StepsPerOrbit]
+            time=[0.0]
             TStart=-3*TMerger
             while time[-1]>TStart:
                 time.append(time[-1]-2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit)
@@ -975,16 +975,16 @@ class TaylorTn_1p5PN_Q :
                 rfrak_chi1_y_i,rfrak_chi2_x_i,rfrak_chi2_y_i,rfrak_frame_x_i,\
                 rfrak_frame_y_i,rfrak_frame_z_i,0.0], method='DOP853',\
                 t_eval=time, dense_output=True, rtol=tol, atol=tol)
-            yy.t=np.append(yyForward.t[::-1],yy.t)
+            yy.t=np.append(yyForward.t[1:][::-1],yy.t)
             data=np.empty((9,len(yy.t)))
             for i in range(9):
-                data[i]=np.append(yyForward.y[i][::-1],yy.y[i])
+                data[i]=np.append(yyForward.y[i][1:][::-1],yy.y[i])
             yy.y=data
             
         return yy
 
 class TaylorTn_2p0PN_Q : 
-    def TaylorTn_2p0PN_Q(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_chi1_x_i, rfrak_chi1_y_i, rfrak_chi2_x_i, rfrak_chi2_y_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i, StepsPerOrbit=32, ForwardInTime=True, tol=1e-12) :
+    def TaylorTn_2p0PN_Q(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_chi1_x_i, rfrak_chi1_y_i, rfrak_chi2_x_i, rfrak_chi2_y_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i, StepsPerOrbit=32, ForwardInTime=True, tol=1e-12, MinStep=1e-7) :
         global v, rfrak_chi1_x, rfrak_chi1_y, rfrak_chi2_x, rfrak_chi2_y
         global rfrak_frame_x, rfrak_frame_y, rfrak_frame_z, Phi
         global terminal1,terminal2,NotForward
@@ -1154,20 +1154,20 @@ class TaylorTn_2p0PN_Q :
 
         def OmegaVec():
             gamma_PN_4 = 1.0 - 5.41666666666667*nu
+            a_ell_4 = S_n*(5.77777777777778*nu**2 + 14.75*nu + 1.5) + Sigma_n*delta*(2.83333333333333*nu**2 + 9.125*nu + 1.5)
+            a_ell_0 = 7.0*S_n + 3.0*Sigma_n*delta
+            gamma_PN_3 = (1.66666666666667*S_ell + Sigma_ell*delta)/M**2
+            a_ell_2 = S_n*(-9.66666666666667*nu - 10.0) + Sigma_n*delta*(-4.5*nu - 6.0)
             gamma_PN_0 = 1.00000000000000
             gamma_PN_2 = 1.0 - 0.333333333333333*nu
-            a_ell_0 = 7.0*S_n + 3.0*Sigma_n*delta
-            a_ell_4 = S_n*(5.77777777777778*nu**2 + 14.75*nu + 1.5) + Sigma_n*delta*(2.83333333333333*nu**2 + 9.125*nu + 1.5)
-            a_ell_2 = S_n*(-9.66666666666667*nu - 10.0) + Sigma_n*delta*(-4.5*nu - 6.0)
-            gamma_PN_3 = (1.66666666666667*S_ell + Sigma_ell*delta)/M**2
             return ellHat*v**3/M + nHat*v**6*(a_ell_0 + v**2*(a_ell_2 + a_ell_4*v**2))*(gamma_PN_0 + v**2*(gamma_PN_2 + v*(gamma_PN_3 + gamma_PN_4*v)))/M**3
 
         def OrbitalAngularMomentum():
-            L_SO_3 = 0.166666666666667*ellHat*(-35.0*S_ell - 15.0*Sigma_ell*delta)/M**2 + lambdaHat*(-3.0*S_lambda - Sigma_lambda*delta)/M**2 + 0.5*nHat*(S_n + Sigma_n*delta)/M**2
-            L_0 = ellHat
-            L_2 = ellHat*(0.166666666666667*nu + 1.5)
             L_4 = ellHat*(0.0416666666666667*nu**2 - 2.375*nu + 3.375)
+            L_0 = ellHat
             L_coeff = M**2*nu/v
+            L_2 = ellHat*(0.166666666666667*nu + 1.5)
+            L_SO_3 = 0.166666666666667*ellHat*(-35.0*S_ell - 15.0*Sigma_ell*delta)/M**2 + lambdaHat*(-3.0*S_lambda - Sigma_lambda*delta)/M**2 + 0.5*nHat*(S_n + Sigma_n*delta)/M**2
             return L_coeff*(L_0 + v**2*(L_2 + v*(L_4*v + L_SO_3)))
 
 
@@ -1237,9 +1237,9 @@ class TaylorTn_2p0PN_Q :
         def terminate(t,y):
             return 1.0*terminal1*terminal2
         terminate.terminal=True
-        TMerger=5.0/(256.0*nu*v**8)
+        TMerger=5.0/(256.0*nu*v_i**8)
         time=[0.0]
-        while time[-1]<TMerger:
+        while time[-1]<TMerger and 2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit>MinStep:
             time.append(time[-1]+2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit)
         time=np.delete(time, -1)
         
@@ -1250,7 +1250,7 @@ class TaylorTn_2p0PN_Q :
             t_eval=time, dense_output=True, events=terminate, rtol=tol, atol=tol)           
         if ForwardInTime:
             NotForward=False
-            time=[-2*M*(256*nu*TMerger/5)**(3/8)/StepsPerOrbit]
+            time=[0.0]
             TStart=-3*TMerger
             while time[-1]>TStart:
                 time.append(time[-1]-2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit)
@@ -1258,16 +1258,16 @@ class TaylorTn_2p0PN_Q :
                 rfrak_chi1_y_i,rfrak_chi2_x_i,rfrak_chi2_y_i,rfrak_frame_x_i,\
                 rfrak_frame_y_i,rfrak_frame_z_i,0.0], method='DOP853',\
                 t_eval=time, dense_output=True, rtol=tol, atol=tol)
-            yy.t=np.append(yyForward.t[::-1],yy.t)
+            yy.t=np.append(yyForward.t[1:][::-1],yy.t)
             data=np.empty((9,len(yy.t)))
             for i in range(9):
-                data[i]=np.append(yyForward.y[i][::-1],yy.y[i])
+                data[i]=np.append(yyForward.y[i][1:][::-1],yy.y[i])
             yy.y=data
             
         return yy
 
 class TaylorTn_2p5PN_Q : 
-    def TaylorTn_2p5PN_Q(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_chi1_x_i, rfrak_chi1_y_i, rfrak_chi2_x_i, rfrak_chi2_y_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i, StepsPerOrbit=32, ForwardInTime=True, tol=1e-12) :
+    def TaylorTn_2p5PN_Q(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_chi1_x_i, rfrak_chi1_y_i, rfrak_chi2_x_i, rfrak_chi2_y_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i, StepsPerOrbit=32, ForwardInTime=True, tol=1e-12, MinStep=1e-7) :
         global v, rfrak_chi1_x, rfrak_chi1_y, rfrak_chi2_x, rfrak_chi2_y
         global rfrak_frame_x, rfrak_frame_y, rfrak_frame_z, Phi
         global terminal1,terminal2,NotForward
@@ -1446,22 +1446,22 @@ class TaylorTn_2p5PN_Q :
 
         def OmegaVec():
             gamma_PN_4 = 1.0 - 5.41666666666667*nu
-            gamma_PN_0 = 1.00000000000000
-            gamma_PN_5 = (S_ell*(0.888888888888889*nu + 3.33333333333333) + 2.0*Sigma_ell*delta)/M**2
-            gamma_PN_2 = 1.0 - 0.333333333333333*nu
-            a_ell_0 = 7.0*S_n + 3.0*Sigma_n*delta
             a_ell_4 = S_n*(5.77777777777778*nu**2 + 14.75*nu + 1.5) + Sigma_n*delta*(2.83333333333333*nu**2 + 9.125*nu + 1.5)
-            a_ell_2 = S_n*(-9.66666666666667*nu - 10.0) + Sigma_n*delta*(-4.5*nu - 6.0)
+            a_ell_0 = 7.0*S_n + 3.0*Sigma_n*delta
             gamma_PN_3 = (1.66666666666667*S_ell + Sigma_ell*delta)/M**2
+            gamma_PN_5 = (S_ell*(0.888888888888889*nu + 3.33333333333333) + 2.0*Sigma_ell*delta)/M**2
+            a_ell_2 = S_n*(-9.66666666666667*nu - 10.0) + Sigma_n*delta*(-4.5*nu - 6.0)
+            gamma_PN_0 = 1.00000000000000
+            gamma_PN_2 = 1.0 - 0.333333333333333*nu
             return ellHat*v**3/M + nHat*v**6*(a_ell_0 + v**2*(a_ell_2 + a_ell_4*v**2))*(gamma_PN_0 + v**2*(gamma_PN_2 + v*(gamma_PN_3 + v*(gamma_PN_4 + gamma_PN_5*v))))/M**3
 
         def OrbitalAngularMomentum():
-            L_SO_3 = 0.166666666666667*ellHat*(-35.0*S_ell - 15.0*Sigma_ell*delta)/M**2 + lambdaHat*(-3.0*S_lambda - Sigma_lambda*delta)/M**2 + 0.5*nHat*(S_n + Sigma_n*delta)/M**2
-            L_0 = ellHat
-            L_SO_5 = 0.0138888888888889*ellHat*(427.0*S_ell*nu - 693.0*S_ell + 210.0*Sigma_ell*delta*nu - 189.0*Sigma_ell*delta)/M**2 + 0.166666666666667*lambdaHat*(18.0*S_lambda*nu - 21.0*S_lambda + 8.0*Sigma_lambda*delta*nu - 3.0*Sigma_lambda*delta)/M**2 + 0.0416666666666667*nHat*(-19.0*S_n*nu + 33.0*S_n - 10.0*Sigma_n*delta*nu + 33.0*Sigma_n*delta)/M**2
-            L_2 = ellHat*(0.166666666666667*nu + 1.5)
             L_4 = ellHat*(0.0416666666666667*nu**2 - 2.375*nu + 3.375)
+            L_SO_5 = 0.0138888888888889*ellHat*(427.0*S_ell*nu - 693.0*S_ell + 210.0*Sigma_ell*delta*nu - 189.0*Sigma_ell*delta)/M**2 + 0.166666666666667*lambdaHat*(18.0*S_lambda*nu - 21.0*S_lambda + 8.0*Sigma_lambda*delta*nu - 3.0*Sigma_lambda*delta)/M**2 + 0.0416666666666667*nHat*(-19.0*S_n*nu + 33.0*S_n - 10.0*Sigma_n*delta*nu + 33.0*Sigma_n*delta)/M**2
+            L_0 = ellHat
             L_coeff = M**2*nu/v
+            L_2 = ellHat*(0.166666666666667*nu + 1.5)
+            L_SO_3 = 0.166666666666667*ellHat*(-35.0*S_ell - 15.0*Sigma_ell*delta)/M**2 + lambdaHat*(-3.0*S_lambda - Sigma_lambda*delta)/M**2 + 0.5*nHat*(S_n + Sigma_n*delta)/M**2
             return L_coeff*(L_0 + v**2*(L_2 + v*(L_SO_3 + v*(L_4 + L_SO_5*v))))
 
 
@@ -1531,9 +1531,9 @@ class TaylorTn_2p5PN_Q :
         def terminate(t,y):
             return 1.0*terminal1*terminal2
         terminate.terminal=True
-        TMerger=5.0/(256.0*nu*v**8)
+        TMerger=5.0/(256.0*nu*v_i**8)
         time=[0.0]
-        while time[-1]<TMerger:
+        while time[-1]<TMerger and 2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit>MinStep:
             time.append(time[-1]+2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit)
         time=np.delete(time, -1)
         
@@ -1544,7 +1544,7 @@ class TaylorTn_2p5PN_Q :
             t_eval=time, dense_output=True, events=terminate, rtol=tol, atol=tol)           
         if ForwardInTime:
             NotForward=False
-            time=[-2*M*(256*nu*TMerger/5)**(3/8)/StepsPerOrbit]
+            time=[0.0]
             TStart=-3*TMerger
             while time[-1]>TStart:
                 time.append(time[-1]-2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit)
@@ -1552,16 +1552,16 @@ class TaylorTn_2p5PN_Q :
                 rfrak_chi1_y_i,rfrak_chi2_x_i,rfrak_chi2_y_i,rfrak_frame_x_i,\
                 rfrak_frame_y_i,rfrak_frame_z_i,0.0], method='DOP853',\
                 t_eval=time, dense_output=True, rtol=tol, atol=tol)
-            yy.t=np.append(yyForward.t[::-1],yy.t)
+            yy.t=np.append(yyForward.t[1:][::-1],yy.t)
             data=np.empty((9,len(yy.t)))
             for i in range(9):
-                data[i]=np.append(yyForward.y[i][::-1],yy.y[i])
+                data[i]=np.append(yyForward.y[i][1:][::-1],yy.y[i])
             yy.y=data
             
         return yy
 
 class TaylorTn_3p0PN_Q : 
-    def TaylorTn_3p0PN_Q(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_chi1_x_i, rfrak_chi1_y_i, rfrak_chi2_x_i, rfrak_chi2_y_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i, StepsPerOrbit=32, ForwardInTime=True, tol=1e-12) :
+    def TaylorTn_3p0PN_Q(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_chi1_x_i, rfrak_chi1_y_i, rfrak_chi2_x_i, rfrak_chi2_y_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i, StepsPerOrbit=32, ForwardInTime=True, tol=1e-12, MinStep=1e-7) :
         global v, rfrak_chi1_x, rfrak_chi1_y, rfrak_chi2_x, rfrak_chi2_y
         global rfrak_frame_x, rfrak_frame_y, rfrak_frame_z, Phi
         global terminal1,terminal2,NotForward
@@ -1751,24 +1751,24 @@ class TaylorTn_3p0PN_Q :
 
         def OmegaVec():
             gamma_PN_4 = 1.0 - 5.41666666666667*nu
+            a_ell_4 = S_n*(5.77777777777778*nu**2 + 14.75*nu + 1.5) + Sigma_n*delta*(2.83333333333333*nu**2 + 9.125*nu + 1.5)
+            a_ell_0 = 7.0*S_n + 3.0*Sigma_n*delta
+            gamma_PN_3 = (1.66666666666667*S_ell + Sigma_ell*delta)/M**2
             gamma_PN_0 = 1.00000000000000
             gamma_PN_5 = (S_ell*(0.888888888888889*nu + 3.33333333333333) + 2.0*Sigma_ell*delta)/M**2
-            gamma_PN_2 = 1.0 - 0.333333333333333*nu
-            a_ell_0 = 7.0*S_n + 3.0*Sigma_n*delta
-            a_ell_4 = S_n*(5.77777777777778*nu**2 + 14.75*nu + 1.5) + Sigma_n*delta*(2.83333333333333*nu**2 + 9.125*nu + 1.5)
             a_ell_2 = S_n*(-9.66666666666667*nu - 10.0) + Sigma_n*delta*(-4.5*nu - 6.0)
             gamma_PN_6 = 0.0123456790123457*nu**3 + 6.36111111111111*nu**2 - 2.98177812235564*nu + 1.0
-            gamma_PN_3 = (1.66666666666667*S_ell + Sigma_ell*delta)/M**2
+            gamma_PN_2 = 1.0 - 0.333333333333333*nu
             return ellHat*v**3/M + nHat*v**6*(a_ell_0 + v**2*(a_ell_2 + a_ell_4*v**2))*(gamma_PN_0 + v**2*(gamma_PN_2 + v*(gamma_PN_3 + v*(gamma_PN_4 + v*(gamma_PN_5 + gamma_PN_6*v)))))/M**3
 
         def OrbitalAngularMomentum():
-            L_SO_3 = 0.166666666666667*ellHat*(-35.0*S_ell - 15.0*Sigma_ell*delta)/M**2 + lambdaHat*(-3.0*S_lambda - Sigma_lambda*delta)/M**2 + 0.5*nHat*(S_n + Sigma_n*delta)/M**2
-            L_0 = ellHat
-            L_SO_5 = 0.0138888888888889*ellHat*(427.0*S_ell*nu - 693.0*S_ell + 210.0*Sigma_ell*delta*nu - 189.0*Sigma_ell*delta)/M**2 + 0.166666666666667*lambdaHat*(18.0*S_lambda*nu - 21.0*S_lambda + 8.0*Sigma_lambda*delta*nu - 3.0*Sigma_lambda*delta)/M**2 + 0.0416666666666667*nHat*(-19.0*S_n*nu + 33.0*S_n - 10.0*Sigma_n*delta*nu + 33.0*Sigma_n*delta)/M**2
-            L_6 = ellHat*(0.00540123456790123*nu**3 + 1.29166666666667*nu**2 - 30.9797035925835*nu + 8.4375)
-            L_2 = ellHat*(0.166666666666667*nu + 1.5)
             L_4 = ellHat*(0.0416666666666667*nu**2 - 2.375*nu + 3.375)
+            L_SO_5 = 0.0138888888888889*ellHat*(427.0*S_ell*nu - 693.0*S_ell + 210.0*Sigma_ell*delta*nu - 189.0*Sigma_ell*delta)/M**2 + 0.166666666666667*lambdaHat*(18.0*S_lambda*nu - 21.0*S_lambda + 8.0*Sigma_lambda*delta*nu - 3.0*Sigma_lambda*delta)/M**2 + 0.0416666666666667*nHat*(-19.0*S_n*nu + 33.0*S_n - 10.0*Sigma_n*delta*nu + 33.0*Sigma_n*delta)/M**2
+            L_0 = ellHat
             L_coeff = M**2*nu/v
+            L_2 = ellHat*(0.166666666666667*nu + 1.5)
+            L_SO_3 = 0.166666666666667*ellHat*(-35.0*S_ell - 15.0*Sigma_ell*delta)/M**2 + lambdaHat*(-3.0*S_lambda - Sigma_lambda*delta)/M**2 + 0.5*nHat*(S_n + Sigma_n*delta)/M**2
+            L_6 = ellHat*(0.00540123456790123*nu**3 + 1.29166666666667*nu**2 - 30.9797035925835*nu + 8.4375)
             return L_coeff*(L_0 + v**2*(L_2 + v*(L_SO_3 + v*(L_4 + v*(L_6*v + L_SO_5)))))
 
 
@@ -1838,9 +1838,9 @@ class TaylorTn_3p0PN_Q :
         def terminate(t,y):
             return 1.0*terminal1*terminal2
         terminate.terminal=True
-        TMerger=5.0/(256.0*nu*v**8)
+        TMerger=5.0/(256.0*nu*v_i**8)
         time=[0.0]
-        while time[-1]<TMerger:
+        while time[-1]<TMerger and 2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit>MinStep:
             time.append(time[-1]+2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit)
         time=np.delete(time, -1)
         
@@ -1851,7 +1851,7 @@ class TaylorTn_3p0PN_Q :
             t_eval=time, dense_output=True, events=terminate, rtol=tol, atol=tol)           
         if ForwardInTime:
             NotForward=False
-            time=[-2*M*(256*nu*TMerger/5)**(3/8)/StepsPerOrbit]
+            time=[0.0]
             TStart=-3*TMerger
             while time[-1]>TStart:
                 time.append(time[-1]-2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit)
@@ -1859,16 +1859,16 @@ class TaylorTn_3p0PN_Q :
                 rfrak_chi1_y_i,rfrak_chi2_x_i,rfrak_chi2_y_i,rfrak_frame_x_i,\
                 rfrak_frame_y_i,rfrak_frame_z_i,0.0], method='DOP853',\
                 t_eval=time, dense_output=True, rtol=tol, atol=tol)
-            yy.t=np.append(yyForward.t[::-1],yy.t)
+            yy.t=np.append(yyForward.t[1:][::-1],yy.t)
             data=np.empty((9,len(yy.t)))
             for i in range(9):
-                data[i]=np.append(yyForward.y[i][::-1],yy.y[i])
+                data[i]=np.append(yyForward.y[i][1:][::-1],yy.y[i])
             yy.y=data
             
         return yy
 
 class TaylorTn_3p5PN_Q : 
-    def TaylorTn_3p5PN_Q(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_chi1_x_i, rfrak_chi1_y_i, rfrak_chi2_x_i, rfrak_chi2_y_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i, StepsPerOrbit=32, ForwardInTime=True, tol=1e-12) :
+    def TaylorTn_3p5PN_Q(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_chi1_x_i, rfrak_chi1_y_i, rfrak_chi2_x_i, rfrak_chi2_y_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i, StepsPerOrbit=32, ForwardInTime=True, tol=1e-12, MinStep=1e-7) :
         global v, rfrak_chi1_x, rfrak_chi1_y, rfrak_chi2_x, rfrak_chi2_y
         global rfrak_frame_x, rfrak_frame_y, rfrak_frame_z, Phi
         global terminal1,terminal2,NotForward
@@ -2067,26 +2067,26 @@ class TaylorTn_3p5PN_Q :
 
         def OmegaVec():
             gamma_PN_4 = 1.0 - 5.41666666666667*nu
+            gamma_PN_7 = (S_ell*(-6.0*nu**2 - 10.5833333333333*nu + 5.0) - 2.66666666666667*Sigma_ell*delta*nu**2 + Sigma_ell*delta*(3.0 - 10.1666666666667*nu))/M**2
+            a_ell_4 = S_n*(5.77777777777778*nu**2 + 14.75*nu + 1.5) + Sigma_n*delta*(2.83333333333333*nu**2 + 9.125*nu + 1.5)
+            a_ell_0 = 7.0*S_n + 3.0*Sigma_n*delta
+            gamma_PN_3 = (1.66666666666667*S_ell + Sigma_ell*delta)/M**2
             gamma_PN_0 = 1.00000000000000
             gamma_PN_5 = (S_ell*(0.888888888888889*nu + 3.33333333333333) + 2.0*Sigma_ell*delta)/M**2
-            gamma_PN_2 = 1.0 - 0.333333333333333*nu
-            a_ell_0 = 7.0*S_n + 3.0*Sigma_n*delta
-            a_ell_4 = S_n*(5.77777777777778*nu**2 + 14.75*nu + 1.5) + Sigma_n*delta*(2.83333333333333*nu**2 + 9.125*nu + 1.5)
             a_ell_2 = S_n*(-9.66666666666667*nu - 10.0) + Sigma_n*delta*(-4.5*nu - 6.0)
             gamma_PN_6 = 0.0123456790123457*nu**3 + 6.36111111111111*nu**2 - 2.98177812235564*nu + 1.0
-            gamma_PN_3 = (1.66666666666667*S_ell + Sigma_ell*delta)/M**2
-            gamma_PN_7 = (S_ell*(-6.0*nu**2 - 10.5833333333333*nu + 5.0) - 2.66666666666667*Sigma_ell*delta*nu**2 + Sigma_ell*delta*(3.0 - 10.1666666666667*nu))/M**2
+            gamma_PN_2 = 1.0 - 0.333333333333333*nu
             return ellHat*v**3/M + nHat*v**6*(a_ell_0 + v**2*(a_ell_2 + a_ell_4*v**2))*(gamma_PN_0 + v**2*(gamma_PN_2 + v*(gamma_PN_3 + v*(gamma_PN_4 + v*(gamma_PN_5 + v*(gamma_PN_6 + gamma_PN_7*v))))))/M**3
 
         def OrbitalAngularMomentum():
-            L_SO_3 = 0.166666666666667*ellHat*(-35.0*S_ell - 15.0*Sigma_ell*delta)/M**2 + lambdaHat*(-3.0*S_lambda - Sigma_lambda*delta)/M**2 + 0.5*nHat*(S_n + Sigma_n*delta)/M**2
-            L_0 = ellHat
-            L_SO_7 = 0.0625*ellHat*(-29.0*S_ell*nu**2 + 1101.0*S_ell*nu - 405.0*S_ell - 15.0*Sigma_ell*delta*nu**2 + 468.0*Sigma_ell*delta*nu - 81.0*Sigma_ell*delta)/M**2 + 0.0416666666666667*lambdaHat*(-32.0*S_lambda*nu**2 + 2.0*S_lambda*nu - 174.0*S_lambda - 16.0*Sigma_lambda*delta*nu**2 - 79.0*Sigma_lambda*delta*nu - 12.0*Sigma_lambda*delta)/M**2 + 0.0208333333333333*nHat*(11.0*S_n*nu**2 - 1331.0*S_n*nu + 183.0*S_n + 5.0*Sigma_n*delta*nu**2 - 734.0*Sigma_n*delta*nu + 183.0*Sigma_n*delta)/M**2
-            L_SO_5 = 0.0138888888888889*ellHat*(427.0*S_ell*nu - 693.0*S_ell + 210.0*Sigma_ell*delta*nu - 189.0*Sigma_ell*delta)/M**2 + 0.166666666666667*lambdaHat*(18.0*S_lambda*nu - 21.0*S_lambda + 8.0*Sigma_lambda*delta*nu - 3.0*Sigma_lambda*delta)/M**2 + 0.0416666666666667*nHat*(-19.0*S_n*nu + 33.0*S_n - 10.0*Sigma_n*delta*nu + 33.0*Sigma_n*delta)/M**2
-            L_6 = ellHat*(0.00540123456790123*nu**3 + 1.29166666666667*nu**2 - 30.9797035925835*nu + 8.4375)
-            L_2 = ellHat*(0.166666666666667*nu + 1.5)
             L_4 = ellHat*(0.0416666666666667*nu**2 - 2.375*nu + 3.375)
+            L_SO_5 = 0.0138888888888889*ellHat*(427.0*S_ell*nu - 693.0*S_ell + 210.0*Sigma_ell*delta*nu - 189.0*Sigma_ell*delta)/M**2 + 0.166666666666667*lambdaHat*(18.0*S_lambda*nu - 21.0*S_lambda + 8.0*Sigma_lambda*delta*nu - 3.0*Sigma_lambda*delta)/M**2 + 0.0416666666666667*nHat*(-19.0*S_n*nu + 33.0*S_n - 10.0*Sigma_n*delta*nu + 33.0*Sigma_n*delta)/M**2
+            L_0 = ellHat
             L_coeff = M**2*nu/v
+            L_2 = ellHat*(0.166666666666667*nu + 1.5)
+            L_SO_7 = 0.0625*ellHat*(-29.0*S_ell*nu**2 + 1101.0*S_ell*nu - 405.0*S_ell - 15.0*Sigma_ell*delta*nu**2 + 468.0*Sigma_ell*delta*nu - 81.0*Sigma_ell*delta)/M**2 + 0.0416666666666667*lambdaHat*(-32.0*S_lambda*nu**2 + 2.0*S_lambda*nu - 174.0*S_lambda - 16.0*Sigma_lambda*delta*nu**2 - 79.0*Sigma_lambda*delta*nu - 12.0*Sigma_lambda*delta)/M**2 + 0.0208333333333333*nHat*(11.0*S_n*nu**2 - 1331.0*S_n*nu + 183.0*S_n + 5.0*Sigma_n*delta*nu**2 - 734.0*Sigma_n*delta*nu + 183.0*Sigma_n*delta)/M**2
+            L_SO_3 = 0.166666666666667*ellHat*(-35.0*S_ell - 15.0*Sigma_ell*delta)/M**2 + lambdaHat*(-3.0*S_lambda - Sigma_lambda*delta)/M**2 + 0.5*nHat*(S_n + Sigma_n*delta)/M**2
+            L_6 = ellHat*(0.00540123456790123*nu**3 + 1.29166666666667*nu**2 - 30.9797035925835*nu + 8.4375)
             return L_coeff*(L_0 + v**2*(L_2 + v*(L_SO_3 + v*(L_4 + v*(L_SO_5 + v*(L_6 + L_SO_7*v))))))
 
 
@@ -2156,9 +2156,9 @@ class TaylorTn_3p5PN_Q :
         def terminate(t,y):
             return 1.0*terminal1*terminal2
         terminate.terminal=True
-        TMerger=5.0/(256.0*nu*v**8)
+        TMerger=5.0/(256.0*nu*v_i**8)
         time=[0.0]
-        while time[-1]<TMerger:
+        while time[-1]<TMerger and 2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit>MinStep:
             time.append(time[-1]+2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit)
         time=np.delete(time, -1)
         
@@ -2169,7 +2169,7 @@ class TaylorTn_3p5PN_Q :
             t_eval=time, dense_output=True, events=terminate, rtol=tol, atol=tol)           
         if ForwardInTime:
             NotForward=False
-            time=[-2*M*(256*nu*TMerger/5)**(3/8)/StepsPerOrbit]
+            time=[0.0]
             TStart=-3*TMerger
             while time[-1]>TStart:
                 time.append(time[-1]-2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit)
@@ -2177,16 +2177,16 @@ class TaylorTn_3p5PN_Q :
                 rfrak_chi1_y_i,rfrak_chi2_x_i,rfrak_chi2_y_i,rfrak_frame_x_i,\
                 rfrak_frame_y_i,rfrak_frame_z_i,0.0], method='DOP853',\
                 t_eval=time, dense_output=True, rtol=tol, atol=tol)
-            yy.t=np.append(yyForward.t[::-1],yy.t)
+            yy.t=np.append(yyForward.t[1:][::-1],yy.t)
             data=np.empty((9,len(yy.t)))
             for i in range(9):
-                data[i]=np.append(yyForward.y[i][::-1],yy.y[i])
+                data[i]=np.append(yyForward.y[i][1:][::-1],yy.y[i])
             yy.y=data
             
         return yy
 
 class TaylorTn_4p0PN_Q : 
-    def TaylorTn_4p0PN_Q(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_chi1_x_i, rfrak_chi1_y_i, rfrak_chi2_x_i, rfrak_chi2_y_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i, StepsPerOrbit=32, ForwardInTime=True, tol=1e-12) :
+    def TaylorTn_4p0PN_Q(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_chi1_x_i, rfrak_chi1_y_i, rfrak_chi2_x_i, rfrak_chi2_y_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i, StepsPerOrbit=32, ForwardInTime=True, tol=1e-12, MinStep=1e-7) :
         global v, rfrak_chi1_x, rfrak_chi1_y, rfrak_chi2_x, rfrak_chi2_y
         global rfrak_frame_x, rfrak_frame_y, rfrak_frame_z, Phi
         global terminal1,terminal2,NotForward
@@ -2393,28 +2393,28 @@ class TaylorTn_4p0PN_Q :
 
         def OmegaVec():
             gamma_PN_4 = 1.0 - 5.41666666666667*nu
+            gamma_PN_7 = (S_ell*(-6.0*nu**2 - 10.5833333333333*nu + 5.0) - 2.66666666666667*Sigma_ell*delta*nu**2 + Sigma_ell*delta*(3.0 - 10.1666666666667*nu))/M**2
+            a_ell_4 = S_n*(5.77777777777778*nu**2 + 14.75*nu + 1.5) + Sigma_n*delta*(2.83333333333333*nu**2 + 9.125*nu + 1.5)
+            a_ell_0 = 7.0*S_n + 3.0*Sigma_n*delta
+            gamma_PN_3 = (1.66666666666667*S_ell + Sigma_ell*delta)/M**2
             gamma_PN_0 = 1.00000000000000
             gamma_PN_5 = (S_ell*(0.888888888888889*nu + 3.33333333333333) + 2.0*Sigma_ell*delta)/M**2
-            gamma_PN_2 = 1.0 - 0.333333333333333*nu
-            a_ell_0 = 7.0*S_n + 3.0*Sigma_n*delta
-            a_ell_4 = S_n*(5.77777777777778*nu**2 + 14.75*nu + 1.5) + Sigma_n*delta*(2.83333333333333*nu**2 + 9.125*nu + 1.5)
             a_ell_2 = S_n*(-9.66666666666667*nu - 10.0) + Sigma_n*delta*(-4.5*nu - 6.0)
             gamma_PN_6 = 0.0123456790123457*nu**3 + 6.36111111111111*nu**2 - 2.98177812235564*nu + 1.0
-            gamma_PN_3 = (1.66666666666667*S_ell + Sigma_ell*delta)/M**2
-            gamma_PN_7 = (S_ell*(-6.0*nu**2 - 10.5833333333333*nu + 5.0) - 2.66666666666667*Sigma_ell*delta*nu**2 + Sigma_ell*delta*(3.0 - 10.1666666666667*nu))/M**2
+            gamma_PN_2 = 1.0 - 0.333333333333333*nu
             return ellHat*v**3/M + nHat*v**6*(a_ell_0 + v**2*(a_ell_2 + a_ell_4*v**2))*(gamma_PN_0 + v**2*(gamma_PN_2 + v*(gamma_PN_3 + v*(gamma_PN_4 + v*(gamma_PN_5 + v*(gamma_PN_6 + gamma_PN_7*v))))))/M**3
 
         def OrbitalAngularMomentum():
             L_8 = ellHat*(-0.714285714285714*nu*(0.0024755658436214*nu**3 + 0.174189814814815*nu**2 - 90.1327990262052*nu + 153.88379682994) + 1.82857142857143*nu + 22.1484375)
-            L_SO_3 = 0.166666666666667*ellHat*(-35.0*S_ell - 15.0*Sigma_ell*delta)/M**2 + lambdaHat*(-3.0*S_lambda - Sigma_lambda*delta)/M**2 + 0.5*nHat*(S_n + Sigma_n*delta)/M**2
-            L_0 = ellHat
-            L_SO_7 = 0.0625*ellHat*(-29.0*S_ell*nu**2 + 1101.0*S_ell*nu - 405.0*S_ell - 15.0*Sigma_ell*delta*nu**2 + 468.0*Sigma_ell*delta*nu - 81.0*Sigma_ell*delta)/M**2 + 0.0416666666666667*lambdaHat*(-32.0*S_lambda*nu**2 + 2.0*S_lambda*nu - 174.0*S_lambda - 16.0*Sigma_lambda*delta*nu**2 - 79.0*Sigma_lambda*delta*nu - 12.0*Sigma_lambda*delta)/M**2 + 0.0208333333333333*nHat*(11.0*S_n*nu**2 - 1331.0*S_n*nu + 183.0*S_n + 5.0*Sigma_n*delta*nu**2 - 734.0*Sigma_n*delta*nu + 183.0*Sigma_n*delta)/M**2
             L_SO_5 = 0.0138888888888889*ellHat*(427.0*S_ell*nu - 693.0*S_ell + 210.0*Sigma_ell*delta*nu - 189.0*Sigma_ell*delta)/M**2 + 0.166666666666667*lambdaHat*(18.0*S_lambda*nu - 21.0*S_lambda + 8.0*Sigma_lambda*delta*nu - 3.0*Sigma_lambda*delta)/M**2 + 0.0416666666666667*nHat*(-19.0*S_n*nu + 33.0*S_n - 10.0*Sigma_n*delta*nu + 33.0*Sigma_n*delta)/M**2
-            L_lnv_8 = -42.6666666666667*ellHat*nu
-            L_6 = ellHat*(0.00540123456790123*nu**3 + 1.29166666666667*nu**2 - 30.9797035925835*nu + 8.4375)
-            L_2 = ellHat*(0.166666666666667*nu + 1.5)
             L_4 = ellHat*(0.0416666666666667*nu**2 - 2.375*nu + 3.375)
+            L_lnv_8 = -42.6666666666667*ellHat*nu
+            L_0 = ellHat
             L_coeff = M**2*nu/v
+            L_2 = ellHat*(0.166666666666667*nu + 1.5)
+            L_SO_7 = 0.0625*ellHat*(-29.0*S_ell*nu**2 + 1101.0*S_ell*nu - 405.0*S_ell - 15.0*Sigma_ell*delta*nu**2 + 468.0*Sigma_ell*delta*nu - 81.0*Sigma_ell*delta)/M**2 + 0.0416666666666667*lambdaHat*(-32.0*S_lambda*nu**2 + 2.0*S_lambda*nu - 174.0*S_lambda - 16.0*Sigma_lambda*delta*nu**2 - 79.0*Sigma_lambda*delta*nu - 12.0*Sigma_lambda*delta)/M**2 + 0.0208333333333333*nHat*(11.0*S_n*nu**2 - 1331.0*S_n*nu + 183.0*S_n + 5.0*Sigma_n*delta*nu**2 - 734.0*Sigma_n*delta*nu + 183.0*Sigma_n*delta)/M**2
+            L_SO_3 = 0.166666666666667*ellHat*(-35.0*S_ell - 15.0*Sigma_ell*delta)/M**2 + lambdaHat*(-3.0*S_lambda - Sigma_lambda*delta)/M**2 + 0.5*nHat*(S_n + Sigma_n*delta)/M**2
+            L_6 = ellHat*(0.00540123456790123*nu**3 + 1.29166666666667*nu**2 - 30.9797035925835*nu + 8.4375)
             return L_coeff*(L_0 + v**2*(L_2 + v*(L_SO_3 + v*(L_4 + v*(L_SO_5 + v*(L_6 + v*(L_SO_7 + v*(L_8 + L_lnv_8*math.log(v)))))))))
 
 
@@ -2484,9 +2484,9 @@ class TaylorTn_4p0PN_Q :
         def terminate(t,y):
             return 1.0*terminal1*terminal2
         terminate.terminal=True
-        TMerger=5.0/(256.0*nu*v**8)
+        TMerger=5.0/(256.0*nu*v_i**8)
         time=[0.0]
-        while time[-1]<TMerger:
+        while time[-1]<TMerger and 2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit>MinStep:
             time.append(time[-1]+2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit)
         time=np.delete(time, -1)
         
@@ -2497,7 +2497,7 @@ class TaylorTn_4p0PN_Q :
             t_eval=time, dense_output=True, events=terminate, rtol=tol, atol=tol)           
         if ForwardInTime:
             NotForward=False
-            time=[-2*M*(256*nu*TMerger/5)**(3/8)/StepsPerOrbit]
+            time=[0.0]
             TStart=-3*TMerger
             while time[-1]>TStart:
                 time.append(time[-1]-2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit)
@@ -2505,16 +2505,16 @@ class TaylorTn_4p0PN_Q :
                 rfrak_chi1_y_i,rfrak_chi2_x_i,rfrak_chi2_y_i,rfrak_frame_x_i,\
                 rfrak_frame_y_i,rfrak_frame_z_i,0.0], method='DOP853',\
                 t_eval=time, dense_output=True, rtol=tol, atol=tol)
-            yy.t=np.append(yyForward.t[::-1],yy.t)
+            yy.t=np.append(yyForward.t[1:][::-1],yy.t)
             data=np.empty((9,len(yy.t)))
             for i in range(9):
-                data[i]=np.append(yyForward.y[i][::-1],yy.y[i])
+                data[i]=np.append(yyForward.y[i][1:][::-1],yy.y[i])
             yy.y=data
             
         return yy
 
 class TaylorTn_4p5PN_Q : 
-    def TaylorTn_4p5PN_Q(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_chi1_x_i, rfrak_chi1_y_i, rfrak_chi2_x_i, rfrak_chi2_y_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i, StepsPerOrbit=32, ForwardInTime=True, tol=1e-12) :
+    def TaylorTn_4p5PN_Q(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_chi1_x_i, rfrak_chi1_y_i, rfrak_chi2_x_i, rfrak_chi2_y_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i, StepsPerOrbit=32, ForwardInTime=True, tol=1e-12, MinStep=1e-7) :
         global v, rfrak_chi1_x, rfrak_chi1_y, rfrak_chi2_x, rfrak_chi2_y
         global rfrak_frame_x, rfrak_frame_y, rfrak_frame_z, Phi
         global terminal1,terminal2,NotForward
@@ -2723,28 +2723,28 @@ class TaylorTn_4p5PN_Q :
 
         def OmegaVec():
             gamma_PN_4 = 1.0 - 5.41666666666667*nu
+            gamma_PN_7 = (S_ell*(-6.0*nu**2 - 10.5833333333333*nu + 5.0) - 2.66666666666667*Sigma_ell*delta*nu**2 + Sigma_ell*delta*(3.0 - 10.1666666666667*nu))/M**2
+            a_ell_4 = S_n*(5.77777777777778*nu**2 + 14.75*nu + 1.5) + Sigma_n*delta*(2.83333333333333*nu**2 + 9.125*nu + 1.5)
+            a_ell_0 = 7.0*S_n + 3.0*Sigma_n*delta
+            gamma_PN_3 = (1.66666666666667*S_ell + Sigma_ell*delta)/M**2
             gamma_PN_0 = 1.00000000000000
             gamma_PN_5 = (S_ell*(0.888888888888889*nu + 3.33333333333333) + 2.0*Sigma_ell*delta)/M**2
-            gamma_PN_2 = 1.0 - 0.333333333333333*nu
-            a_ell_0 = 7.0*S_n + 3.0*Sigma_n*delta
-            a_ell_4 = S_n*(5.77777777777778*nu**2 + 14.75*nu + 1.5) + Sigma_n*delta*(2.83333333333333*nu**2 + 9.125*nu + 1.5)
             a_ell_2 = S_n*(-9.66666666666667*nu - 10.0) + Sigma_n*delta*(-4.5*nu - 6.0)
             gamma_PN_6 = 0.0123456790123457*nu**3 + 6.36111111111111*nu**2 - 2.98177812235564*nu + 1.0
-            gamma_PN_3 = (1.66666666666667*S_ell + Sigma_ell*delta)/M**2
-            gamma_PN_7 = (S_ell*(-6.0*nu**2 - 10.5833333333333*nu + 5.0) - 2.66666666666667*Sigma_ell*delta*nu**2 + Sigma_ell*delta*(3.0 - 10.1666666666667*nu))/M**2
+            gamma_PN_2 = 1.0 - 0.333333333333333*nu
             return ellHat*v**3/M + nHat*v**6*(a_ell_0 + v**2*(a_ell_2 + a_ell_4*v**2))*(gamma_PN_0 + v**2*(gamma_PN_2 + v*(gamma_PN_3 + v*(gamma_PN_4 + v*(gamma_PN_5 + v*(gamma_PN_6 + gamma_PN_7*v))))))/M**3
 
         def OrbitalAngularMomentum():
             L_8 = ellHat*(-0.714285714285714*nu*(0.0024755658436214*nu**3 + 0.174189814814815*nu**2 - 90.1327990262052*nu + 153.88379682994) + 1.82857142857143*nu + 22.1484375)
-            L_SO_3 = 0.166666666666667*ellHat*(-35.0*S_ell - 15.0*Sigma_ell*delta)/M**2 + lambdaHat*(-3.0*S_lambda - Sigma_lambda*delta)/M**2 + 0.5*nHat*(S_n + Sigma_n*delta)/M**2
-            L_0 = ellHat
-            L_SO_7 = 0.0625*ellHat*(-29.0*S_ell*nu**2 + 1101.0*S_ell*nu - 405.0*S_ell - 15.0*Sigma_ell*delta*nu**2 + 468.0*Sigma_ell*delta*nu - 81.0*Sigma_ell*delta)/M**2 + 0.0416666666666667*lambdaHat*(-32.0*S_lambda*nu**2 + 2.0*S_lambda*nu - 174.0*S_lambda - 16.0*Sigma_lambda*delta*nu**2 - 79.0*Sigma_lambda*delta*nu - 12.0*Sigma_lambda*delta)/M**2 + 0.0208333333333333*nHat*(11.0*S_n*nu**2 - 1331.0*S_n*nu + 183.0*S_n + 5.0*Sigma_n*delta*nu**2 - 734.0*Sigma_n*delta*nu + 183.0*Sigma_n*delta)/M**2
             L_SO_5 = 0.0138888888888889*ellHat*(427.0*S_ell*nu - 693.0*S_ell + 210.0*Sigma_ell*delta*nu - 189.0*Sigma_ell*delta)/M**2 + 0.166666666666667*lambdaHat*(18.0*S_lambda*nu - 21.0*S_lambda + 8.0*Sigma_lambda*delta*nu - 3.0*Sigma_lambda*delta)/M**2 + 0.0416666666666667*nHat*(-19.0*S_n*nu + 33.0*S_n - 10.0*Sigma_n*delta*nu + 33.0*Sigma_n*delta)/M**2
-            L_lnv_8 = -42.6666666666667*ellHat*nu
-            L_6 = ellHat*(0.00540123456790123*nu**3 + 1.29166666666667*nu**2 - 30.9797035925835*nu + 8.4375)
-            L_2 = ellHat*(0.166666666666667*nu + 1.5)
             L_4 = ellHat*(0.0416666666666667*nu**2 - 2.375*nu + 3.375)
+            L_lnv_8 = -42.6666666666667*ellHat*nu
+            L_0 = ellHat
             L_coeff = M**2*nu/v
+            L_2 = ellHat*(0.166666666666667*nu + 1.5)
+            L_SO_7 = 0.0625*ellHat*(-29.0*S_ell*nu**2 + 1101.0*S_ell*nu - 405.0*S_ell - 15.0*Sigma_ell*delta*nu**2 + 468.0*Sigma_ell*delta*nu - 81.0*Sigma_ell*delta)/M**2 + 0.0416666666666667*lambdaHat*(-32.0*S_lambda*nu**2 + 2.0*S_lambda*nu - 174.0*S_lambda - 16.0*Sigma_lambda*delta*nu**2 - 79.0*Sigma_lambda*delta*nu - 12.0*Sigma_lambda*delta)/M**2 + 0.0208333333333333*nHat*(11.0*S_n*nu**2 - 1331.0*S_n*nu + 183.0*S_n + 5.0*Sigma_n*delta*nu**2 - 734.0*Sigma_n*delta*nu + 183.0*Sigma_n*delta)/M**2
+            L_SO_3 = 0.166666666666667*ellHat*(-35.0*S_ell - 15.0*Sigma_ell*delta)/M**2 + lambdaHat*(-3.0*S_lambda - Sigma_lambda*delta)/M**2 + 0.5*nHat*(S_n + Sigma_n*delta)/M**2
+            L_6 = ellHat*(0.00540123456790123*nu**3 + 1.29166666666667*nu**2 - 30.9797035925835*nu + 8.4375)
             return L_coeff*(L_0 + v**2*(L_2 + v*(L_SO_3 + v*(L_4 + v*(L_SO_5 + v*(L_6 + v*(L_SO_7 + v*(L_8 + L_lnv_8*math.log(v)))))))))
 
 
@@ -2814,9 +2814,9 @@ class TaylorTn_4p5PN_Q :
         def terminate(t,y):
             return 1.0*terminal1*terminal2
         terminate.terminal=True
-        TMerger=5.0/(256.0*nu*v**8)
+        TMerger=5.0/(256.0*nu*v_i**8)
         time=[0.0]
-        while time[-1]<TMerger:
+        while time[-1]<TMerger and 2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit>MinStep:
             time.append(time[-1]+2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit)
         time=np.delete(time, -1)
         
@@ -2827,7 +2827,7 @@ class TaylorTn_4p5PN_Q :
             t_eval=time, dense_output=True, events=terminate, rtol=tol, atol=tol)           
         if ForwardInTime:
             NotForward=False
-            time=[-2*M*(256*nu*TMerger/5)**(3/8)/StepsPerOrbit]
+            time=[0.0]
             TStart=-3*TMerger
             while time[-1]>TStart:
                 time.append(time[-1]-2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit)
@@ -2835,16 +2835,16 @@ class TaylorTn_4p5PN_Q :
                 rfrak_chi1_y_i,rfrak_chi2_x_i,rfrak_chi2_y_i,rfrak_frame_x_i,\
                 rfrak_frame_y_i,rfrak_frame_z_i,0.0], method='DOP853',\
                 t_eval=time, dense_output=True, rtol=tol, atol=tol)
-            yy.t=np.append(yyForward.t[::-1],yy.t)
+            yy.t=np.append(yyForward.t[1:][::-1],yy.t)
             data=np.empty((9,len(yy.t)))
             for i in range(9):
-                data[i]=np.append(yyForward.y[i][::-1],yy.y[i])
+                data[i]=np.append(yyForward.y[i][1:][::-1],yy.y[i])
             yy.y=data
             
         return yy
 
 class TaylorTn_5p0PN_Q : 
-    def TaylorTn_5p0PN_Q(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_chi1_x_i, rfrak_chi1_y_i, rfrak_chi2_x_i, rfrak_chi2_y_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i, StepsPerOrbit=32, ForwardInTime=True, tol=1e-12) :
+    def TaylorTn_5p0PN_Q(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_chi1_x_i, rfrak_chi1_y_i, rfrak_chi2_x_i, rfrak_chi2_y_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i, StepsPerOrbit=32, ForwardInTime=True, tol=1e-12, MinStep=1e-7) :
         global v, rfrak_chi1_x, rfrak_chi1_y, rfrak_chi2_x, rfrak_chi2_y
         global rfrak_frame_x, rfrak_frame_y, rfrak_frame_z, Phi
         global terminal1,terminal2,NotForward
@@ -3057,30 +3057,30 @@ class TaylorTn_5p0PN_Q :
 
         def OmegaVec():
             gamma_PN_4 = 1.0 - 5.41666666666667*nu
+            gamma_PN_7 = (S_ell*(-6.0*nu**2 - 10.5833333333333*nu + 5.0) - 2.66666666666667*Sigma_ell*delta*nu**2 + Sigma_ell*delta*(3.0 - 10.1666666666667*nu))/M**2
+            a_ell_4 = S_n*(5.77777777777778*nu**2 + 14.75*nu + 1.5) + Sigma_n*delta*(2.83333333333333*nu**2 + 9.125*nu + 1.5)
+            a_ell_0 = 7.0*S_n + 3.0*Sigma_n*delta
+            gamma_PN_3 = (1.66666666666667*S_ell + Sigma_ell*delta)/M**2
             gamma_PN_0 = 1.00000000000000
             gamma_PN_5 = (S_ell*(0.888888888888889*nu + 3.33333333333333) + 2.0*Sigma_ell*delta)/M**2
-            gamma_PN_2 = 1.0 - 0.333333333333333*nu
-            a_ell_0 = 7.0*S_n + 3.0*Sigma_n*delta
-            a_ell_4 = S_n*(5.77777777777778*nu**2 + 14.75*nu + 1.5) + Sigma_n*delta*(2.83333333333333*nu**2 + 9.125*nu + 1.5)
             a_ell_2 = S_n*(-9.66666666666667*nu - 10.0) + Sigma_n*delta*(-4.5*nu - 6.0)
             gamma_PN_6 = 0.0123456790123457*nu**3 + 6.36111111111111*nu**2 - 2.98177812235564*nu + 1.0
-            gamma_PN_3 = (1.66666666666667*S_ell + Sigma_ell*delta)/M**2
-            gamma_PN_7 = (S_ell*(-6.0*nu**2 - 10.5833333333333*nu + 5.0) - 2.66666666666667*Sigma_ell*delta*nu**2 + Sigma_ell*delta*(3.0 - 10.1666666666667*nu))/M**2
+            gamma_PN_2 = 1.0 - 0.333333333333333*nu
             return ellHat*v**3/M + nHat*v**6*(a_ell_0 + v**2*(a_ell_2 + a_ell_4*v**2))*(gamma_PN_0 + v**2*(gamma_PN_2 + v*(gamma_PN_3 + v*(gamma_PN_4 + v*(gamma_PN_5 + v*(gamma_PN_6 + gamma_PN_7*v))))))/M**3
 
         def OrbitalAngularMomentum():
             L_8 = ellHat*(-0.714285714285714*nu*(0.0024755658436214*nu**3 + 0.174189814814815*nu**2 - 90.1327990262052*nu + 153.88379682994) + 1.82857142857143*nu + 22.1484375)
-            L_SO_3 = 0.166666666666667*ellHat*(-35.0*S_ell - 15.0*Sigma_ell*delta)/M**2 + lambdaHat*(-3.0*S_lambda - Sigma_lambda*delta)/M**2 + 0.5*nHat*(S_n + Sigma_n*delta)/M**2
-            L_0 = ellHat
-            L_SO_7 = 0.0625*ellHat*(-29.0*S_ell*nu**2 + 1101.0*S_ell*nu - 405.0*S_ell - 15.0*Sigma_ell*delta*nu**2 + 468.0*Sigma_ell*delta*nu - 81.0*Sigma_ell*delta)/M**2 + 0.0416666666666667*lambdaHat*(-32.0*S_lambda*nu**2 + 2.0*S_lambda*nu - 174.0*S_lambda - 16.0*Sigma_lambda*delta*nu**2 - 79.0*Sigma_lambda*delta*nu - 12.0*Sigma_lambda*delta)/M**2 + 0.0208333333333333*nHat*(11.0*S_n*nu**2 - 1331.0*S_n*nu + 183.0*S_n + 5.0*Sigma_n*delta*nu**2 - 734.0*Sigma_n*delta*nu + 183.0*Sigma_n*delta)/M**2
             L_SO_5 = 0.0138888888888889*ellHat*(427.0*S_ell*nu - 693.0*S_ell + 210.0*Sigma_ell*delta*nu - 189.0*Sigma_ell*delta)/M**2 + 0.166666666666667*lambdaHat*(18.0*S_lambda*nu - 21.0*S_lambda + 8.0*Sigma_lambda*delta*nu - 3.0*Sigma_lambda*delta)/M**2 + 0.0416666666666667*nHat*(-19.0*S_n*nu + 33.0*S_n - 10.0*Sigma_n*delta*nu + 33.0*Sigma_n*delta)/M**2
-            L_lnv_8 = -42.6666666666667*ellHat*nu
-            L_6 = ellHat*(0.00540123456790123*nu**3 + 1.29166666666667*nu**2 - 30.9797035925835*nu + 8.4375)
-            L_2 = ellHat*(0.166666666666667*nu + 1.5)
             L_4 = ellHat*(0.0416666666666667*nu**2 - 2.375*nu + 3.375)
-            L_10 = ellHat*(nu*(-4.85925925925926*nu - 5.27830687830688) + 59.80078125)
-            L_lnv_10 = 2.0*ellHat*nu*(87.4666666666667*nu + 95.0095238095238)
+            L_lnv_8 = -42.6666666666667*ellHat*nu
+            L_0 = ellHat
             L_coeff = M**2*nu/v
+            L_lnv_10 = 2.0*ellHat*nu*(87.4666666666667*nu + 95.0095238095238)
+            L_10 = ellHat*(nu*(-4.85925925925926*nu - 5.27830687830688) + 59.80078125)
+            L_2 = ellHat*(0.166666666666667*nu + 1.5)
+            L_SO_7 = 0.0625*ellHat*(-29.0*S_ell*nu**2 + 1101.0*S_ell*nu - 405.0*S_ell - 15.0*Sigma_ell*delta*nu**2 + 468.0*Sigma_ell*delta*nu - 81.0*Sigma_ell*delta)/M**2 + 0.0416666666666667*lambdaHat*(-32.0*S_lambda*nu**2 + 2.0*S_lambda*nu - 174.0*S_lambda - 16.0*Sigma_lambda*delta*nu**2 - 79.0*Sigma_lambda*delta*nu - 12.0*Sigma_lambda*delta)/M**2 + 0.0208333333333333*nHat*(11.0*S_n*nu**2 - 1331.0*S_n*nu + 183.0*S_n + 5.0*Sigma_n*delta*nu**2 - 734.0*Sigma_n*delta*nu + 183.0*Sigma_n*delta)/M**2
+            L_SO_3 = 0.166666666666667*ellHat*(-35.0*S_ell - 15.0*Sigma_ell*delta)/M**2 + lambdaHat*(-3.0*S_lambda - Sigma_lambda*delta)/M**2 + 0.5*nHat*(S_n + Sigma_n*delta)/M**2
+            L_6 = ellHat*(0.00540123456790123*nu**3 + 1.29166666666667*nu**2 - 30.9797035925835*nu + 8.4375)
             return L_coeff*(L_0 + v**2*(L_2 + v*(L_SO_3 + v*(L_4 + v*(L_SO_5 + v*(L_6 + v*(L_SO_7 + v*(L_8 + L_lnv_8*math.log(v) + v**2*(L_10 + L_lnv_10*math.log(v))))))))))
 
 
@@ -3150,9 +3150,9 @@ class TaylorTn_5p0PN_Q :
         def terminate(t,y):
             return 1.0*terminal1*terminal2
         terminate.terminal=True
-        TMerger=5.0/(256.0*nu*v**8)
+        TMerger=5.0/(256.0*nu*v_i**8)
         time=[0.0]
-        while time[-1]<TMerger:
+        while time[-1]<TMerger and 2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit>MinStep:
             time.append(time[-1]+2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit)
         time=np.delete(time, -1)
         
@@ -3163,7 +3163,7 @@ class TaylorTn_5p0PN_Q :
             t_eval=time, dense_output=True, events=terminate, rtol=tol, atol=tol)           
         if ForwardInTime:
             NotForward=False
-            time=[-2*M*(256*nu*TMerger/5)**(3/8)/StepsPerOrbit]
+            time=[0.0]
             TStart=-3*TMerger
             while time[-1]>TStart:
                 time.append(time[-1]-2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit)
@@ -3171,16 +3171,16 @@ class TaylorTn_5p0PN_Q :
                 rfrak_chi1_y_i,rfrak_chi2_x_i,rfrak_chi2_y_i,rfrak_frame_x_i,\
                 rfrak_frame_y_i,rfrak_frame_z_i,0.0], method='DOP853',\
                 t_eval=time, dense_output=True, rtol=tol, atol=tol)
-            yy.t=np.append(yyForward.t[::-1],yy.t)
+            yy.t=np.append(yyForward.t[1:][::-1],yy.t)
             data=np.empty((9,len(yy.t)))
             for i in range(9):
-                data[i]=np.append(yyForward.y[i][::-1],yy.y[i])
+                data[i]=np.append(yyForward.y[i][1:][::-1],yy.y[i])
             yy.y=data
             
         return yy
 
 class TaylorTn_5p5PN_Q : 
-    def TaylorTn_5p5PN_Q(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_chi1_x_i, rfrak_chi1_y_i, rfrak_chi2_x_i, rfrak_chi2_y_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i, StepsPerOrbit=32, ForwardInTime=True, tol=1e-12) :
+    def TaylorTn_5p5PN_Q(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_chi1_x_i, rfrak_chi1_y_i, rfrak_chi2_x_i, rfrak_chi2_y_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i, StepsPerOrbit=32, ForwardInTime=True, tol=1e-12, MinStep=1e-7) :
         global v, rfrak_chi1_x, rfrak_chi1_y, rfrak_chi2_x, rfrak_chi2_y
         global rfrak_frame_x, rfrak_frame_y, rfrak_frame_z, Phi
         global terminal1,terminal2,NotForward
@@ -3396,30 +3396,30 @@ class TaylorTn_5p5PN_Q :
 
         def OmegaVec():
             gamma_PN_4 = 1.0 - 5.41666666666667*nu
+            gamma_PN_7 = (S_ell*(-6.0*nu**2 - 10.5833333333333*nu + 5.0) - 2.66666666666667*Sigma_ell*delta*nu**2 + Sigma_ell*delta*(3.0 - 10.1666666666667*nu))/M**2
+            a_ell_4 = S_n*(5.77777777777778*nu**2 + 14.75*nu + 1.5) + Sigma_n*delta*(2.83333333333333*nu**2 + 9.125*nu + 1.5)
+            a_ell_0 = 7.0*S_n + 3.0*Sigma_n*delta
+            gamma_PN_3 = (1.66666666666667*S_ell + Sigma_ell*delta)/M**2
             gamma_PN_0 = 1.00000000000000
             gamma_PN_5 = (S_ell*(0.888888888888889*nu + 3.33333333333333) + 2.0*Sigma_ell*delta)/M**2
-            gamma_PN_2 = 1.0 - 0.333333333333333*nu
-            a_ell_0 = 7.0*S_n + 3.0*Sigma_n*delta
-            a_ell_4 = S_n*(5.77777777777778*nu**2 + 14.75*nu + 1.5) + Sigma_n*delta*(2.83333333333333*nu**2 + 9.125*nu + 1.5)
             a_ell_2 = S_n*(-9.66666666666667*nu - 10.0) + Sigma_n*delta*(-4.5*nu - 6.0)
             gamma_PN_6 = 0.0123456790123457*nu**3 + 6.36111111111111*nu**2 - 2.98177812235564*nu + 1.0
-            gamma_PN_3 = (1.66666666666667*S_ell + Sigma_ell*delta)/M**2
-            gamma_PN_7 = (S_ell*(-6.0*nu**2 - 10.5833333333333*nu + 5.0) - 2.66666666666667*Sigma_ell*delta*nu**2 + Sigma_ell*delta*(3.0 - 10.1666666666667*nu))/M**2
+            gamma_PN_2 = 1.0 - 0.333333333333333*nu
             return ellHat*v**3/M + nHat*v**6*(a_ell_0 + v**2*(a_ell_2 + a_ell_4*v**2))*(gamma_PN_0 + v**2*(gamma_PN_2 + v*(gamma_PN_3 + v*(gamma_PN_4 + v*(gamma_PN_5 + v*(gamma_PN_6 + gamma_PN_7*v))))))/M**3
 
         def OrbitalAngularMomentum():
             L_8 = ellHat*(-0.714285714285714*nu*(0.0024755658436214*nu**3 + 0.174189814814815*nu**2 - 90.1327990262052*nu + 153.88379682994) + 1.82857142857143*nu + 22.1484375)
-            L_SO_3 = 0.166666666666667*ellHat*(-35.0*S_ell - 15.0*Sigma_ell*delta)/M**2 + lambdaHat*(-3.0*S_lambda - Sigma_lambda*delta)/M**2 + 0.5*nHat*(S_n + Sigma_n*delta)/M**2
-            L_0 = ellHat
-            L_SO_7 = 0.0625*ellHat*(-29.0*S_ell*nu**2 + 1101.0*S_ell*nu - 405.0*S_ell - 15.0*Sigma_ell*delta*nu**2 + 468.0*Sigma_ell*delta*nu - 81.0*Sigma_ell*delta)/M**2 + 0.0416666666666667*lambdaHat*(-32.0*S_lambda*nu**2 + 2.0*S_lambda*nu - 174.0*S_lambda - 16.0*Sigma_lambda*delta*nu**2 - 79.0*Sigma_lambda*delta*nu - 12.0*Sigma_lambda*delta)/M**2 + 0.0208333333333333*nHat*(11.0*S_n*nu**2 - 1331.0*S_n*nu + 183.0*S_n + 5.0*Sigma_n*delta*nu**2 - 734.0*Sigma_n*delta*nu + 183.0*Sigma_n*delta)/M**2
             L_SO_5 = 0.0138888888888889*ellHat*(427.0*S_ell*nu - 693.0*S_ell + 210.0*Sigma_ell*delta*nu - 189.0*Sigma_ell*delta)/M**2 + 0.166666666666667*lambdaHat*(18.0*S_lambda*nu - 21.0*S_lambda + 8.0*Sigma_lambda*delta*nu - 3.0*Sigma_lambda*delta)/M**2 + 0.0416666666666667*nHat*(-19.0*S_n*nu + 33.0*S_n - 10.0*Sigma_n*delta*nu + 33.0*Sigma_n*delta)/M**2
-            L_lnv_8 = -42.6666666666667*ellHat*nu
-            L_6 = ellHat*(0.00540123456790123*nu**3 + 1.29166666666667*nu**2 - 30.9797035925835*nu + 8.4375)
-            L_2 = ellHat*(0.166666666666667*nu + 1.5)
             L_4 = ellHat*(0.0416666666666667*nu**2 - 2.375*nu + 3.375)
-            L_10 = ellHat*(nu*(-4.85925925925926*nu - 5.27830687830688) + 59.80078125)
-            L_lnv_10 = 2.0*ellHat*nu*(87.4666666666667*nu + 95.0095238095238)
+            L_lnv_8 = -42.6666666666667*ellHat*nu
+            L_0 = ellHat
             L_coeff = M**2*nu/v
+            L_lnv_10 = 2.0*ellHat*nu*(87.4666666666667*nu + 95.0095238095238)
+            L_10 = ellHat*(nu*(-4.85925925925926*nu - 5.27830687830688) + 59.80078125)
+            L_2 = ellHat*(0.166666666666667*nu + 1.5)
+            L_SO_7 = 0.0625*ellHat*(-29.0*S_ell*nu**2 + 1101.0*S_ell*nu - 405.0*S_ell - 15.0*Sigma_ell*delta*nu**2 + 468.0*Sigma_ell*delta*nu - 81.0*Sigma_ell*delta)/M**2 + 0.0416666666666667*lambdaHat*(-32.0*S_lambda*nu**2 + 2.0*S_lambda*nu - 174.0*S_lambda - 16.0*Sigma_lambda*delta*nu**2 - 79.0*Sigma_lambda*delta*nu - 12.0*Sigma_lambda*delta)/M**2 + 0.0208333333333333*nHat*(11.0*S_n*nu**2 - 1331.0*S_n*nu + 183.0*S_n + 5.0*Sigma_n*delta*nu**2 - 734.0*Sigma_n*delta*nu + 183.0*Sigma_n*delta)/M**2
+            L_SO_3 = 0.166666666666667*ellHat*(-35.0*S_ell - 15.0*Sigma_ell*delta)/M**2 + lambdaHat*(-3.0*S_lambda - Sigma_lambda*delta)/M**2 + 0.5*nHat*(S_n + Sigma_n*delta)/M**2
+            L_6 = ellHat*(0.00540123456790123*nu**3 + 1.29166666666667*nu**2 - 30.9797035925835*nu + 8.4375)
             return L_coeff*(L_0 + v**2*(L_2 + v*(L_SO_3 + v*(L_4 + v*(L_SO_5 + v*(L_6 + v*(L_SO_7 + v*(L_8 + L_lnv_8*math.log(v) + v**2*(L_10 + L_lnv_10*math.log(v))))))))))
 
 
@@ -3489,9 +3489,9 @@ class TaylorTn_5p5PN_Q :
         def terminate(t,y):
             return 1.0*terminal1*terminal2
         terminate.terminal=True
-        TMerger=5.0/(256.0*nu*v**8)
+        TMerger=5.0/(256.0*nu*v_i**8)
         time=[0.0]
-        while time[-1]<TMerger:
+        while time[-1]<TMerger and 2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit>MinStep:
             time.append(time[-1]+2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit)
         time=np.delete(time, -1)
         
@@ -3502,7 +3502,7 @@ class TaylorTn_5p5PN_Q :
             t_eval=time, dense_output=True, events=terminate, rtol=tol, atol=tol)           
         if ForwardInTime:
             NotForward=False
-            time=[-2*M*(256*nu*TMerger/5)**(3/8)/StepsPerOrbit]
+            time=[0.0]
             TStart=-3*TMerger
             while time[-1]>TStart:
                 time.append(time[-1]-2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit)
@@ -3510,16 +3510,16 @@ class TaylorTn_5p5PN_Q :
                 rfrak_chi1_y_i,rfrak_chi2_x_i,rfrak_chi2_y_i,rfrak_frame_x_i,\
                 rfrak_frame_y_i,rfrak_frame_z_i,0.0], method='DOP853',\
                 t_eval=time, dense_output=True, rtol=tol, atol=tol)
-            yy.t=np.append(yyForward.t[::-1],yy.t)
+            yy.t=np.append(yyForward.t[1:][::-1],yy.t)
             data=np.empty((9,len(yy.t)))
             for i in range(9):
-                data[i]=np.append(yyForward.y[i][::-1],yy.y[i])
+                data[i]=np.append(yyForward.y[i][1:][::-1],yy.y[i])
             yy.y=data
             
         return yy
 
 class TaylorTn_6p0PN_Q : 
-    def TaylorTn_6p0PN_Q(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_chi1_x_i, rfrak_chi1_y_i, rfrak_chi2_x_i, rfrak_chi2_y_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i, StepsPerOrbit=32, ForwardInTime=True, tol=1e-12) :
+    def TaylorTn_6p0PN_Q(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_chi1_x_i, rfrak_chi1_y_i, rfrak_chi2_x_i, rfrak_chi2_y_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i, StepsPerOrbit=32, ForwardInTime=True, tol=1e-12, MinStep=1e-7) :
         global v, rfrak_chi1_x, rfrak_chi1_y, rfrak_chi2_x, rfrak_chi2_y
         global rfrak_frame_x, rfrak_frame_y, rfrak_frame_z, Phi
         global terminal1,terminal2,NotForward
@@ -3740,30 +3740,30 @@ class TaylorTn_6p0PN_Q :
 
         def OmegaVec():
             gamma_PN_4 = 1.0 - 5.41666666666667*nu
+            gamma_PN_7 = (S_ell*(-6.0*nu**2 - 10.5833333333333*nu + 5.0) - 2.66666666666667*Sigma_ell*delta*nu**2 + Sigma_ell*delta*(3.0 - 10.1666666666667*nu))/M**2
+            a_ell_4 = S_n*(5.77777777777778*nu**2 + 14.75*nu + 1.5) + Sigma_n*delta*(2.83333333333333*nu**2 + 9.125*nu + 1.5)
+            a_ell_0 = 7.0*S_n + 3.0*Sigma_n*delta
+            gamma_PN_3 = (1.66666666666667*S_ell + Sigma_ell*delta)/M**2
             gamma_PN_0 = 1.00000000000000
             gamma_PN_5 = (S_ell*(0.888888888888889*nu + 3.33333333333333) + 2.0*Sigma_ell*delta)/M**2
-            gamma_PN_2 = 1.0 - 0.333333333333333*nu
-            a_ell_0 = 7.0*S_n + 3.0*Sigma_n*delta
-            a_ell_4 = S_n*(5.77777777777778*nu**2 + 14.75*nu + 1.5) + Sigma_n*delta*(2.83333333333333*nu**2 + 9.125*nu + 1.5)
             a_ell_2 = S_n*(-9.66666666666667*nu - 10.0) + Sigma_n*delta*(-4.5*nu - 6.0)
             gamma_PN_6 = 0.0123456790123457*nu**3 + 6.36111111111111*nu**2 - 2.98177812235564*nu + 1.0
-            gamma_PN_3 = (1.66666666666667*S_ell + Sigma_ell*delta)/M**2
-            gamma_PN_7 = (S_ell*(-6.0*nu**2 - 10.5833333333333*nu + 5.0) - 2.66666666666667*Sigma_ell*delta*nu**2 + Sigma_ell*delta*(3.0 - 10.1666666666667*nu))/M**2
+            gamma_PN_2 = 1.0 - 0.333333333333333*nu
             return ellHat*v**3/M + nHat*v**6*(a_ell_0 + v**2*(a_ell_2 + a_ell_4*v**2))*(gamma_PN_0 + v**2*(gamma_PN_2 + v*(gamma_PN_3 + v*(gamma_PN_4 + v*(gamma_PN_5 + v*(gamma_PN_6 + gamma_PN_7*v))))))/M**3
 
         def OrbitalAngularMomentum():
             L_8 = ellHat*(-0.714285714285714*nu*(0.0024755658436214*nu**3 + 0.174189814814815*nu**2 - 90.1327990262052*nu + 153.88379682994) + 1.82857142857143*nu + 22.1484375)
-            L_SO_3 = 0.166666666666667*ellHat*(-35.0*S_ell - 15.0*Sigma_ell*delta)/M**2 + lambdaHat*(-3.0*S_lambda - Sigma_lambda*delta)/M**2 + 0.5*nHat*(S_n + Sigma_n*delta)/M**2
-            L_0 = ellHat
-            L_SO_7 = 0.0625*ellHat*(-29.0*S_ell*nu**2 + 1101.0*S_ell*nu - 405.0*S_ell - 15.0*Sigma_ell*delta*nu**2 + 468.0*Sigma_ell*delta*nu - 81.0*Sigma_ell*delta)/M**2 + 0.0416666666666667*lambdaHat*(-32.0*S_lambda*nu**2 + 2.0*S_lambda*nu - 174.0*S_lambda - 16.0*Sigma_lambda*delta*nu**2 - 79.0*Sigma_lambda*delta*nu - 12.0*Sigma_lambda*delta)/M**2 + 0.0208333333333333*nHat*(11.0*S_n*nu**2 - 1331.0*S_n*nu + 183.0*S_n + 5.0*Sigma_n*delta*nu**2 - 734.0*Sigma_n*delta*nu + 183.0*Sigma_n*delta)/M**2
             L_SO_5 = 0.0138888888888889*ellHat*(427.0*S_ell*nu - 693.0*S_ell + 210.0*Sigma_ell*delta*nu - 189.0*Sigma_ell*delta)/M**2 + 0.166666666666667*lambdaHat*(18.0*S_lambda*nu - 21.0*S_lambda + 8.0*Sigma_lambda*delta*nu - 3.0*Sigma_lambda*delta)/M**2 + 0.0416666666666667*nHat*(-19.0*S_n*nu + 33.0*S_n - 10.0*Sigma_n*delta*nu + 33.0*Sigma_n*delta)/M**2
-            L_lnv_8 = -42.6666666666667*ellHat*nu
-            L_6 = ellHat*(0.00540123456790123*nu**3 + 1.29166666666667*nu**2 - 30.9797035925835*nu + 8.4375)
-            L_2 = ellHat*(0.166666666666667*nu + 1.5)
             L_4 = ellHat*(0.0416666666666667*nu**2 - 2.375*nu + 3.375)
-            L_10 = ellHat*(nu*(-4.85925925925926*nu - 5.27830687830688) + 59.80078125)
-            L_lnv_10 = 2.0*ellHat*nu*(87.4666666666667*nu + 95.0095238095238)
+            L_lnv_8 = -42.6666666666667*ellHat*nu
+            L_0 = ellHat
             L_coeff = M**2*nu/v
+            L_lnv_10 = 2.0*ellHat*nu*(87.4666666666667*nu + 95.0095238095238)
+            L_10 = ellHat*(nu*(-4.85925925925926*nu - 5.27830687830688) + 59.80078125)
+            L_2 = ellHat*(0.166666666666667*nu + 1.5)
+            L_SO_7 = 0.0625*ellHat*(-29.0*S_ell*nu**2 + 1101.0*S_ell*nu - 405.0*S_ell - 15.0*Sigma_ell*delta*nu**2 + 468.0*Sigma_ell*delta*nu - 81.0*Sigma_ell*delta)/M**2 + 0.0416666666666667*lambdaHat*(-32.0*S_lambda*nu**2 + 2.0*S_lambda*nu - 174.0*S_lambda - 16.0*Sigma_lambda*delta*nu**2 - 79.0*Sigma_lambda*delta*nu - 12.0*Sigma_lambda*delta)/M**2 + 0.0208333333333333*nHat*(11.0*S_n*nu**2 - 1331.0*S_n*nu + 183.0*S_n + 5.0*Sigma_n*delta*nu**2 - 734.0*Sigma_n*delta*nu + 183.0*Sigma_n*delta)/M**2
+            L_SO_3 = 0.166666666666667*ellHat*(-35.0*S_ell - 15.0*Sigma_ell*delta)/M**2 + lambdaHat*(-3.0*S_lambda - Sigma_lambda*delta)/M**2 + 0.5*nHat*(S_n + Sigma_n*delta)/M**2
+            L_6 = ellHat*(0.00540123456790123*nu**3 + 1.29166666666667*nu**2 - 30.9797035925835*nu + 8.4375)
             return L_coeff*(L_0 + v**2*(L_2 + v*(L_SO_3 + v*(L_4 + v*(L_SO_5 + v*(L_6 + v*(L_SO_7 + v*(L_8 + L_lnv_8*math.log(v) + v**2*(L_10 + L_lnv_10*math.log(v))))))))))
 
 
@@ -3833,9 +3833,9 @@ class TaylorTn_6p0PN_Q :
         def terminate(t,y):
             return 1.0*terminal1*terminal2
         terminate.terminal=True
-        TMerger=5.0/(256.0*nu*v**8)
+        TMerger=5.0/(256.0*nu*v_i**8)
         time=[0.0]
-        while time[-1]<TMerger:
+        while time[-1]<TMerger and 2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit>MinStep:
             time.append(time[-1]+2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit)
         time=np.delete(time, -1)
         
@@ -3846,7 +3846,7 @@ class TaylorTn_6p0PN_Q :
             t_eval=time, dense_output=True, events=terminate, rtol=tol, atol=tol)           
         if ForwardInTime:
             NotForward=False
-            time=[-2*M*(256*nu*TMerger/5)**(3/8)/StepsPerOrbit]
+            time=[0.0]
             TStart=-3*TMerger
             while time[-1]>TStart:
                 time.append(time[-1]-2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit)
@@ -3854,10 +3854,10 @@ class TaylorTn_6p0PN_Q :
                 rfrak_chi1_y_i,rfrak_chi2_x_i,rfrak_chi2_y_i,rfrak_frame_x_i,\
                 rfrak_frame_y_i,rfrak_frame_z_i,0.0], method='DOP853',\
                 t_eval=time, dense_output=True, rtol=tol, atol=tol)
-            yy.t=np.append(yyForward.t[::-1],yy.t)
+            yy.t=np.append(yyForward.t[1:][::-1],yy.t)
             data=np.empty((9,len(yy.t)))
             for i in range(9):
-                data[i]=np.append(yyForward.y[i][::-1],yy.y[i])
+                data[i]=np.append(yyForward.y[i][1:][::-1],yy.y[i])
             yy.y=data
             
         return yy

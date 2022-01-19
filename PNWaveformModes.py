@@ -866,8 +866,9 @@ class WaveformModes_1p0PN :
 class WaveformModes_1p5PN :
     def WaveformModes_1p5PN(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_chi1_x_i, rfrak_chi1_y_i, rfrak_chi2_x_i, rfrak_chi2_y_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i,y) :            
         ModeData=np.empty((len(y[0]),77), dtype=complex)
-        def WaveformModes(M1_i, M2_i, v_i, chiVec1_i, chiVec2_i):
+        def WaveformModes(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, rfrak_chi1_x_i, rfrak_chi1_y_i, chiVec1_i, chiVec2_i):
             I=1j
+            global R_S1
             global chi1_n
             global chi1_lambda
             global chi1_ell
@@ -889,12 +890,19 @@ class WaveformModes_1p5PN :
             global hHat_spin_Asymm_2_0_2
             global hHat_spin_Asymm_3_3_3
             global hHat_spin_Asymm_3_1_3
+            xHat=xHat_i
+            yHat=yHat_i
+            zHat=zHat_i
             M1=M1_i
             M2=M2_i
             v=v_i
+            S_chi1=S_chi1_i
+            rfrak_chi1_x=rfrak_chi1_x_i
+            rfrak_chi1_y=rfrak_chi1_y_i
             M=M1 + M2
             delta=(M1 - M2)/M
             nu=M1*M2/M**2
+            R_S1=exp(rfrak_chi1_x*xHat + rfrak_chi1_y*yHat)
             chiVec1=chiVec1_i
             chiVec2=chiVec2_i
             chi1_n=chiVec1[1]
@@ -942,6 +950,7 @@ class WaveformModes_1p5PN :
             chiVec2 = [0., chi2_n, chi2_lambda, chi2_ell]
 
 
+            R_S1 = exp(rfrak_chi1_x*xHat + rfrak_chi1_y*yHat)
             chi1_n = chiVec1[1]
             chi1_lambda = chiVec1[2]
             chi1_ell = chiVec1[3]
@@ -1205,16 +1214,14 @@ class WaveformModes_1p5PN :
             rfrak_frame_z_i=rfrak_frame_z
             chiVec1_i=quaternion.as_float_array(chiVec1)
             chiVec2_i=quaternion.as_float_array(chiVec2)
-            ModeData[i,:]=WaveformModes(M1_i, M2_i, v_i, chiVec1_i, chiVec2_i)
+            ModeData[i,:]=WaveformModes(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, rfrak_chi1_x_i, rfrak_chi1_y_i, chiVec1_i, chiVec2_i)
         return ModeData
 
 class WaveformModes_2p0PN :
     def WaveformModes_2p0PN(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_chi1_x_i, rfrak_chi1_y_i, rfrak_chi2_x_i, rfrak_chi2_y_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i,y) :            
         ModeData=np.empty((len(y[0]),77), dtype=complex)
-        def WaveformModes(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, rfrak_chi1_x_i, rfrak_chi1_y_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i, chiVec1_i, chiVec2_i):
+        def WaveformModes(M1_i, M2_i, v_i, chiVec1_i, chiVec2_i):
             I=1j
-            global R
-            global R_S1
             global chi1_n
             global chi1_lambda
             global chi1_ell
@@ -1257,23 +1264,12 @@ class WaveformModes_2p0PN :
             global hHat_spin_Asymm_4_4_4
             global hHat_spin_Asymm_4_2_4
             global hHat_spin_Asymm_4_0_4
-            xHat=xHat_i
-            yHat=yHat_i
-            zHat=zHat_i
             M1=M1_i
             M2=M2_i
             v=v_i
-            S_chi1=S_chi1_i
-            rfrak_chi1_x=rfrak_chi1_x_i
-            rfrak_chi1_y=rfrak_chi1_y_i
-            rfrak_frame_x=rfrak_frame_x_i
-            rfrak_frame_y=rfrak_frame_y_i
-            rfrak_frame_z=rfrak_frame_z_i
             M=M1 + M2
             delta=(M1 - M2)/M
             nu=M1*M2/M**2
-            R=exp(rfrak_frame_x*xHat + rfrak_frame_y*yHat + rfrak_frame_z*zHat)
-            R_S1=exp(rfrak_chi1_x*xHat + rfrak_chi1_y*yHat)
             chiVec1=chiVec1_i
             chiVec2=chiVec2_i
             chi1_n=chiVec1[1]
@@ -1354,8 +1350,6 @@ class WaveformModes_2p0PN :
             chiVec2 = [0., chi2_n, chi2_lambda, chi2_ell]
 
 
-            R = exp(rfrak_frame_x*xHat + rfrak_frame_y*yHat + rfrak_frame_z*zHat)
-            R_S1 = exp(rfrak_chi1_x*xHat + rfrak_chi1_y*yHat)
             chi1_n = chiVec1[1]
             chi1_lambda = chiVec1[2]
             chi1_ell = chiVec1[3]
@@ -1640,7 +1634,7 @@ class WaveformModes_2p0PN :
             rfrak_frame_z_i=rfrak_frame_z
             chiVec1_i=quaternion.as_float_array(chiVec1)
             chiVec2_i=quaternion.as_float_array(chiVec2)
-            ModeData[i,:]=WaveformModes(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, rfrak_chi1_x_i, rfrak_chi1_y_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i, chiVec1_i, chiVec2_i)
+            ModeData[i,:]=WaveformModes(M1_i, M2_i, v_i, chiVec1_i, chiVec2_i)
         return ModeData
 
 class WaveformModes_2p5PN :
