@@ -2486,9 +2486,13 @@ class TaylorTn_4p0PN_Q :
         terminate.terminal=True
         TMerger=5.0/(256.0*nu*v_i**8)
         time=[0.0]
-        while time[-1]<TMerger and 2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit>MinStep:
+        while time[-1]<TMerger-1300 and 2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit>MinStep:
             time.append(time[-1]+2*M*(256*nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit)
         time=np.delete(time, -1)
+        print(time)
+        for i in range(len(time)-1):
+            if time[i]>=time[i+1]:
+                print(time[i],time[i+1])
         
         # Integrate
         yy=solve_ivp(TaylorT1, [time[0],time[-1]], [v_i,rfrak_chi1_x_i,\

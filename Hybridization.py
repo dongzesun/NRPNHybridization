@@ -64,6 +64,9 @@ def Hybridize(t_start, data_dir, out_dir, debug=0):
     i_1=abs(tA-t_start).argmin()
     m1=mA[i_1]
     m2=mB[i_1]
+    delta=(m1-m2)/(m1+m2)
+    m1=(1+delta)/2.0
+    m2=(1-delta)/2.0
     v_i=omega_0**(1/3)
     chi1_i=chiA[i_1]
     chi2_i=chiB[i_1]
@@ -94,10 +97,13 @@ def Hybridize(t_start, data_dir, out_dir, debug=0):
         np.dot((Ra*yHat*Ra.inverse()).vec,lambdaHat[i_1].vec))
     R_frame_i=Ra*np.exp((beta)/2*xHat)
     rfrak_frame_i=np.log(R_frame_i).vec
+    print(("Generating PN with parameters m1={0}, m2={1}, v_i={2}, S_chi1_i={3}, S_chi2_i={4},"
+        +"rfrak_frame_i=[{5}, {6}, {7}].").format(m1, m2, v_i,S_chi1_i, S_chi2_i,\
+        rfrak_frame_i[0], rfrak_frame_i[1], rfrak_frame_i[2]))
     PN=PNEvolution.TaylorTn_4p0PN_Q.TaylorTn_4p0PN_Q(xHat, yHat, zHat, m1, m2, v_i,S_chi1_i, S_chi2_i,\
         0.0, 0.0, 0.0, 0.0,rfrak_frame_i[0], rfrak_frame_i[1], rfrak_frame_i[2])
     W_PN_corot=scri.WaveformModes()   
-    W_PN_corot.t=PN.t+t_start
+    W_PN_corot.t=PN.t-PN.t[-1]
     frame=np.empty(len(PN.t), dtype=quaternion.quaternion)
     for i in range (len(PN.t)):
         frame[i]=np.exp(quaternion.quaternion(0.0,PN.y[5,i],PN.y[6,i],PN.y[7,i]))
@@ -132,14 +138,6 @@ def Hybridize(t_start, data_dir, out_dir, debug=0):
     PNData_spline=SplineArray(W_PN.t, W_PN.data)
     matchingt=W_NR.t[(W_NR.t>=t_start)&(W_NR.t<=t_end0)]
     omega_NR_mag_matching=omega_NR_mag[(W_NR.t>=t_start)&(W_NR.t<=t_end0)]
-    if debug:
-        plt.plot(matchingt, omega_NR_mag_matching, label='Angular velocity')
-        plt.plot(matchingt, omega_PN_mag_spline(matchingt-2182), label='Angular velocity')
-        plt.legend(['NR', 'PN'], loc="upper right")
-        plt.ylabel("Omega Magnititude")
-        plt.xlabel("Time")
-        plt.savefig(out_dir+"/hybridCheckOmega")
-        plt.clf()
 
 # Get initial guess of time alignment by matching angular velocity
     def InitialT(x):
@@ -148,6 +146,14 @@ def Hybridize(t_start, data_dir, out_dir, debug=0):
     mint=least_squares(InitialT, 0.0, bounds=[-10*np.pi/omega_0,10*np.pi/omega_0])
     print(mint)
     print("Initial guess of t:", mint.x)
+    if debug:
+        plt.plot(matchingt, omega_NR_mag_matching, label='Angular velocity')
+        plt.plot(matchingt, omega_PN_mag_spline(matchingt+mint.x), label='Angular velocity')
+        plt.legend(['NR', 'PN'], loc="upper right")
+        plt.ylabel("Omega Magnititude")
+        plt.xlabel("Time")
+        plt.savefig(out_dir+"/hybridCheckOmega")
+        plt.clf()
 
 # Get initial guess of frame alignment
     R_delta = quaternion.optimal_alignment_in_Euclidean_metric(omega_NR[(W_NR.t>=t_start)&(W_NR.t<=t_end0)],\
