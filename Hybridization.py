@@ -72,7 +72,7 @@ def Align(x):
     if chi2Mag>1e-12:
         S_chi2_i=np.sqrt(chi2Mag)*np.sqrt(\
             -quaternion.quaternion(0,chi2_i[0],chi2_i[1],chi2_i[2]).normalized()*zHat).normalized()
-    print(("Iteration # {8}, generating PN with parameters m1={0}, m2={1}, v_i={2}, S_chi1_i={3}, S_chi2_i={4},"
+    print(("Call # {8}, generating PN with parameters m1={0}, m2={1}, v_i={2}, S_chi1_i={3}, S_chi2_i={4},"
         +"rfrak_frame_i=[{5}, {6}, {7}].").format(m1, m2, v_i,S_chi1_i, S_chi2_i,\
         rfrak_frame_i[0], rfrak_frame_i[1], rfrak_frame_i[2], iter_num))
     PN=PNEvolution.TaylorTn_4p0PN_Q.TaylorTn_4p0PN_Q(xHat, yHat, zHat, m1, m2, v_i,S_chi1_i, S_chi2_i,\
