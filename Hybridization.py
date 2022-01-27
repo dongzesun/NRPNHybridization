@@ -234,7 +234,7 @@ def Hybridize(t_start, data_dir, out_dir, debug=0, OptimizePNParas=1):
     if OptimizePNParas:
         PNPara=least_squares(Align, np.append(np.append(delta, chiA[i_1]), chiB[i_1]),\
             bounds=(np.append(np.append(delta-0.1, chiA[i_1]-0.2), chiB[i_1]-0.2),\
-            np.append(np.append(delta+0.1, chiA[i_1]+0.2), chiB[i_1]+0.2)))
+            np.append(np.append(delta+0.1, chiA[i_1]+0.2), chiB[i_1]+0.2)), x_scale='jac')
         print(PNPara)
         PNParas=PNPara.x
     Align(PNParas)
