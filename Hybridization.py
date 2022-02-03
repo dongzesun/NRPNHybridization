@@ -53,7 +53,8 @@ def Align(x):
     clock1=time.time()
     global mint, minima, R_delta, W_PN, W_PN_corot, t_end0, t_pre, t_end, omega_0, omega_PN,\
         omega_PN_spline, omega_PN_mag, omega_PN_mag_spline, PNData_spline, matchingt,\
-        omega_NR_mag_matching, omega_mean, iter_num, W_NR_matching_in, omega_NR_hat, Normalization
+        omega_NR_mag_matching, omega_mean, iter_num, W_NR_matching_in, omega_NR_hat,\
+        Normalization, lowbound, upbound, scale
     t_start=t_starts
     iter_num+=1
     [delta, chi1_x, chi1_y, chi1_z, chi2_x, chi2_y, chi2_z]=x
@@ -76,9 +77,9 @@ def Align(x):
         +"rfrak_frame_i=[{5}, {6}, {7}].").format(m1, m2, v_i,S_chi1_i, S_chi2_i,\
         rfrak_frame_i[0], rfrak_frame_i[1], rfrak_frame_i[2], iter_num))
     PN=PNEvolution.TaylorTn_4p0PN_Q.TaylorTn_4p0PN_Q(xHat, yHat, zHat, m1, m2, v_i,S_chi1_i, S_chi2_i,\
-        0.0, 0.0, 0.0, 0.0,rfrak_frame_i[0], rfrak_frame_i[1], rfrak_frame_i[2])
+        0.0, 0.0, 0.0, 0.0,rfrak_frame_i[0], rfrak_frame_i[1], rfrak_frame_i[2], t_PN1, t_PN2)
     W_PN_corot=scri.WaveformModes()
-    W_PN_corot.t=PN.t-PN.t[-1]
+    W_PN_corot.t=PN.t+t_start
     frame=np.empty(len(PN.t), dtype=quaternion.quaternion)
     for i in range (len(PN.t)):
         frame[i]=np.exp(quaternion.quaternion(0.0,PN.y[5,i],PN.y[6,i],PN.y[7,i]))
@@ -86,14 +87,15 @@ def Align(x):
     W_PN_corot.data=PNWaveformModes.WaveformModes_3p5PN.WaveformModes_3p5PN(xHat, yHat, zHat,\
         m1, m2, v_i,S_chi1_i, S_chi2_i,0.0, 0.0, 0.0, 0.0,\
         rfrak_frame_i[0], rfrak_frame_i[1], rfrak_frame_i[2],PN.y)
+    W_PN_corot.data[:,2]=0.0*W_PN_corot.data[:,2] # Not cosider memory effect since NR dosen't have corrrect memory.
     ell_min, ell_max = 2, 8
     W_PN_corot.ells = ell_min, ell_max
     W_PN=scri.to_inertial_frame(W_PN_corot.copy())
     
-# Set up the matching region data for PN, and get the corresponding angular velocity and frame
+    # Set up the matching region data for PN, and get the corresponding angular velocity and frame
     if W_PN.t[0]>=t_start-10*np.pi/omega_0 or W_PN.t[-1]<=t_start+10*np.pi/omega_0:
-        message=("t_start {0} should be at least {1} larger than the start time of PN waveform {2}"
-            +" and smaller than the ending time of PN waveform {3}.")
+        message=("t_start {0} should be at least {1} larger than the start time of PN waveform:{2},"
+            +" and smaller than the ending time of PN waveform:{3}.")
         raise ValueError(message.format(t_start, 10*np.pi/omega_0, W_PN.t[0], W_PN.t[-1]))
     omega_PN=W_PN.angular_velocity()
     omega_PN_spline=SplineArray(W_PN.t, omega_PN)
@@ -101,10 +103,10 @@ def Align(x):
     omega_PN_mag_spline=Spline(W_PN.t, omega_PN_mag)
     PNData_spline=SplineArray(W_PN.t, W_PN.data)
 
-# Get initial guess of time alignment by matching angular velocity
+    # Get initial guess of time alignment by matching angular velocity
     mint=least_squares(InitialT, 0.0, bounds=[-10*np.pi/omega_0,10*np.pi/omega_0])
 
-# Get initial guess of frame alignment
+    # Get initial guess of frame alignment
     R_delta = quaternion.optimal_alignment_in_Euclidean_metric(omega_NR[(W_NR.t>=t_start)&(W_NR.t<=t_end0)],\
         omega_PN_spline(matchingt+mint.x), matchingt)
     minf=least_squares(InitialR, 0.0, bounds=[-np.pi,np.pi])
@@ -125,22 +127,17 @@ def Align(x):
         R_delta=R_delta2
     logR_delta=quaternion.as_float_array(np.log(R_delta))-np.append(0.0, omega_mean*mint.x/2)
 
-# Alignment of time and frame
-    lowbound=np.append(np.append(mint.x-np.pi/omega_0/2.0, logR_delta[0][1:]-np.pi/4),0.0)
+    # Alignment of time and frame
+    lowbound=np.append(np.append(mint.x-np.pi/omega_0/2.0, logR_delta[0][1:]-np.pi/4),-0.015)
     upbound=np.append(np.append(mint.x+np.pi/omega_0/2.0, logR_delta[0][1:]+np.pi/4),0.015)
     scale=[np.pi/omega_0,np.pi/4.0,np.pi/4.0,np.pi/4.0,0.01]
-    minima=least_squares(Optimize5D, np.append(np.append(mint.x, logR_delta[0][1:]),0.009),\
+    minima=least_squares(Optimize5D, np.append(np.append(mint.x, logR_delta[0][1:]),0.0),\
         bounds=(lowbound,upbound),x_scale='jac')
-    if min((minima.x-lowbound)/scale)<1e-2 or min((upbound-minima.x)/scale)<1e-2:
-        message=("Minima {0} near bounds {1}, {2}.")
-        raise ValueError(message.format(minima.x, lowbound, upbound))
-    if minima.success==0:
-        raise ValueError("Optimized unsuccessful.")
     print(minima)
     print("{0}th call of cost function used time:".format(iter_num),time.time()-clock1)
-    return minima.cost
+    return minima.fun
 
-def Hybridize(t_start, data_dir, out_dir, debug=0, OptimizePNParas=1):
+def Hybridize(t_start, data_dir, out_dir, debug=0, OptimizePNParas=0):
     """
     Align and hybridize given NR waveform with PN waveform.
     """
@@ -148,7 +145,7 @@ def Hybridize(t_start, data_dir, out_dir, debug=0, OptimizePNParas=1):
     global mint, minima, W_NR, W_PN, W_PN_corot, t_starts, t_end0, t_pre, t_end, omega_0, omega_PN,\
         omega_NR, omega_PN_spline, omega_PN_mag, omega_PN_mag_spline, PNData_spline, matchingt,\
         omega_NR_mag_matching, omega_mean, iter_num, W_NR_matching_in, R_delta, omega_NR_hat,\
-        Normalization, xHat, yHat, zHat, rfrak_frame_i
+        Normalization, xHat, yHat, zHat, rfrak_frame_i, t_PN1, t_PN2, lowbound, upbound, scale
 # Get NR waveform
     NRFileName=data_dir+'/rhOverM_Asymptotic_GeometricUnits_CoM.h5/Extrapolated_N2.dir'
     W_NR=scri.SpEC.read_from_h5(NRFileName)
@@ -183,13 +180,15 @@ def Hybridize(t_start, data_dir, out_dir, debug=0, OptimizePNParas=1):
         &(W_NR.t[-1]-W_NR.t>10*np.pi/omega_0)][-1]
     t_end=W_NR.t[(omega_NR_mag>1.11*omega_0)&(W_NR.t-W_NR.t[0]>10*np.pi/omega_0)\
         &(W_NR.t[-1]-W_NR.t>10*np.pi/omega_0)][0]
+    t_PN1=W_NR.t[(omega_NR_mag<0.9*omega_0)&(W_NR.t[-1]-W_NR.t>10*np.pi/omega_0)][-1]-t_start
+    t_PN2=W_NR.t[(omega_NR_mag>1.4*omega_0)&(W_NR.t-W_NR.t[0]>10*np.pi/omega_0)][0]-t_start
     matchingt=W_NR.t[(W_NR.t>=t_start)&(W_NR.t<=t_end0)]
     omega_NR_mag_matching=omega_NR_mag[(W_NR.t>=t_start)&(W_NR.t<=t_end0)]
     W_NR_matching_in=W_NR.interpolate(matchingt)
     omega_NR_matching = omega_NR[(W_NR.t>=t_start) & (W_NR.t<=t_end0)]
     omega_mean = np.mean(omega_NR_matching, axis=0)
     omega_NR_hat = omega_NR_matching / np.linalg.norm(omega_NR_matching, axis=1)[:, np.newaxis]
-    Normalization=1e-4*simpson(np.linalg.norm(W_NR_matching_in.data,axis=1)**2.0, matchingt)
+    Normalization=0.1*simpson(np.linalg.norm(W_NR_matching_in.data,axis=1)**2.0, matchingt)
 
 # Get PN Parameters
     xHat=quaternion.quaternion(0.0,1.0,0.0,0.0)
@@ -237,7 +236,13 @@ def Hybridize(t_start, data_dir, out_dir, debug=0, OptimizePNParas=1):
             np.append(np.append(delta+0.1, chiA[i_1]+0.2), chiB[i_1]+0.2)), x_scale='jac')
         print(PNPara)
         PNParas=PNPara.x
+    t_PN1, t_PN2=False, t_end-t_start
     Align(PNParas)
+    if min((minima.x-lowbound)/scale)<1e-2 or min((upbound-minima.x)/scale)<1e-2:
+        message=("Minima {0} near bounds {1}, {2}.")
+        raise ValueError(message.format(minima.x, lowbound, upbound))
+    if minima.success==0:
+        raise ValueError("Optimized unsuccessful.")
     t_delta=minima.x[0]
     print("Time shift=", t_delta)
     phase=quaternion.quaternion(0.0, omega_mean[0]*minima.x[0]/2,\
@@ -293,7 +298,7 @@ def Hybridize(t_start, data_dir, out_dir, debug=0, OptimizePNParas=1):
     ell_min, ell_max = min(W_NR.LM[:, 0]), max(W_NR.LM[:, 0])
     W_H.ells = ell_min, ell_max
 
-# Plot results
+# Plot results############################################################################    
     plt.subplot(311)
     plt.plot(W_NR.t, W_NR.data[:,4].real-W_NR.data[:,4].imag, label='NR', linewidth=1)
     plt.plot(W_PN.t, W_PN.data[:,4].real-W_PN.data[:,4].imag, label='PN', linewidth=1)
@@ -318,29 +323,52 @@ def Hybridize(t_start, data_dir, out_dir, debug=0, OptimizePNParas=1):
     plt.plot(W_PN.t, W_PN.data[:,2].real-W_PN.data[:,2].imag, label='PN', linewidth=1)
     plt.plot(W_H.t, W_H.data[:,2].real-W_H.data[:,2].imag, ls='--', label='Hybrid', linewidth=1)
     plt.xlim((t_start-25*np.pi/omega_0, t_end0+25*np.pi/omega_0))
-    plt.ylim((-0.015,0.01))
-    plt.ylabel("(2,2) mode")
+    plt.ylim((-0.01,0.01))
+    plt.ylabel("(2,0) mode")
     plt.xlabel("Time")
     plt.axvline(t_start, linestyle='dotted')
     plt.axvline(t_end0, linestyle='dotted')
     plt.savefig(out_dir+"/hybridCheckResults",dpi=1000)
     plt.clf()
+    
+    W_NR=W_NR.interpolate(W_PN.t)
+    plt.subplot(311)
+    plt.plot(W_PN.t, np.abs((W_NR.data[:,4].real-W_NR.data[:,4].imag)\
+        -(W_PN.data[:,4].real-W_PN.data[:,4].imag)), linewidth=1)
+    plt.yscale('log')
+    plt.xlim((t_start-25*np.pi/omega_0, t_end0+25*np.pi/omega_0))
+    plt.ylabel("(2,2) mode Error")
+    plt.axvline(t_start, linestyle='dotted')
+    plt.axvline(t_end0, linestyle='dotted')
+    plt.subplot(312)
+    plt.plot(W_PN.t, np.abs((W_NR.data[:,3].real-W_NR.data[:,3].imag)\
+        -(W_PN.data[:,3].real-W_PN.data[:,3].imag)), linewidth=1)
+    plt.yscale('log')
+    plt.xlim((t_start-25*np.pi/omega_0, t_end0+25*np.pi/omega_0))
+    plt.ylabel("(2,1) mode Error")
+    plt.axvline(t_start, linestyle='dotted')
+    plt.axvline(t_end0, linestyle='dotted')
+    plt.subplot(313)
+    plt.plot(W_NR.t, np.abs((W_NR.data[:,2].real-W_NR.data[:,2].imag)\
+        -(W_PN.data[:,2].real-W_PN.data[:,2].imag)), linewidth=1)
+    plt.yscale('log')
+    plt.xlim((t_start-25*np.pi/omega_0, t_end0+25*np.pi/omega_0))
+    plt.ylabel("(2,0) mode Error")
+    plt.xlabel("Time")
+    plt.axvline(t_start, linestyle='dotted')
+    plt.axvline(t_end0, linestyle='dotted')
+    plt.savefig(out_dir+"/hybridCheckResultsError",dpi=1000)
+    plt.clf()
 
 # Output results
     outname=out_dir+'/hybridHybrid'+str(t_start)+'.h5'
     scri.SpEC.write_to_h5(W_H, outname, file_write_mode='w')
-    outname=out_dir+'/hybridNR'+str(t_start)+'.h5'
-    scri.SpEC.write_to_h5(W_NR, outname, file_write_mode='w')
-    outname=out_dir+'/hybridPN'+str(t_start)+'.h5'
-    scri.SpEC.write_to_h5(W_PN, outname, file_write_mode='w')
     print("All done, total time:",time.time()-clock0)
 
 # Run the code
 import os
 for i in [-30000]:
-    Hybridize(i,'/home/dzsun/SimAnnex/Public/HybTest/006/Lev3','/home/dzsun', debug=0, OptimizePNParas=1)
+    Hybridize(i,'/home/dzsun/SimAnnex/Public/HybTest/006/Lev3','/home/dzsun', debug=0, OptimizePNParas=0)
     #Hybridize(i,'/home/dzsun/SimAnnex/Public/NonSpinningSurrogate/BBH_SKS_d17.5_q2_sA_0_0_0_sB_0_0_0/Lev4',\
     #    '/home/dzsun',debug=0)
-    os.rename('/home/dzsun/rhOverM_hybridNR'+str(i)+'.h5','/home/dzsun/hybridNR'+str(i)+'.h5')
-    os.rename('/home/dzsun/rhOverM_hybridPN'+str(i)+'.h5','/home/dzsun/hybridPN'+str(i)+'.h5')
     os.rename('/home/dzsun/UnknownDataType_hybridHybrid'+str(i)+'.h5','/home/dzsun/hybridHybrid'+str(i)+'.h5')
