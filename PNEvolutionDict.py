@@ -110,11 +110,34 @@ def Initialization(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, 
     Sigma_n=Cons['M']*(-Cons['M1']*chi1_n + Cons['M2']*chi2_n)
     chi_s_ell=chi1_ell/2 + chi2_ell/2
     chi_a_ell=chi1_ell/2 - chi2_ell/2
+    logv=log(v)
     Fcal_coeff=32*Cons['nu']**2*v**10/5
     Cons['Fcal_0']=np.array([1.0])
     Cons['Fcal_2']=-35*Cons['nu']/12 - 1247/336
+    Cons['Fcal_3']=np.array([4*pi])
+    Cons['Fcal_4']=65*Cons['nu']**2/18 + 9271*Cons['nu']/504 - 44711/9072
+    Cons['Fcal_5']=pi*(-583*Cons['nu']/24 - 8191/672)
+    Cons['Fcal_6']=-775*Cons['nu']**3/324 - 94403*Cons['nu']**2/3024 + Cons['nu']*(-134543/7776 + 41*pi**2/48) - 1712*log(4)/105 - 1712*EulerGamma/105 + 16*pi**2/3 + 6643739519/69854400
+    Cons['Fcal_lnv_6']=np.array([-1712/105])
+    Cons['Fcal_7']=pi*(193385*Cons['nu']**2/3024 + 214745*Cons['nu']/1728 - 16285/504)
+    Cons['Fcal_8']=np.array([-1369*pi**2/126 - 323105549467/3178375200 - 47385*log(3)/1568 + 232597*EulerGamma/4410 + 39931*log(2)/294])
+    Cons['Fcal_lnv_8']=np.array([232597/4410])
+    Fcal_SQ_4=Cons['chi1chi1']*(-89*Cons['delta']/192 + 89*Cons['nu']/96 - 89/192) - 103*Cons['chi1chi2']*Cons['nu']/48 + Cons['chi2chi2']*(89*Cons['delta']/192 + 89*Cons['nu']/96 - 89/192) + chi_a_ell*(chi_a_ell*(287/96 - 12*Cons['nu']) + 287*chi_s_ell*Cons['delta']/48) + chi_s_ell**2*(Cons['nu']/24 + 287/96)
+    Fcal_SO_3=(-4*S_ell - 5*Sigma_ell*Cons['delta']/4)/Cons['M']**2
+    Fcal_SO_5=(S_ell*(272*Cons['nu']/9 - 9/2) + Sigma_ell*Cons['delta']*(43*Cons['nu']/4 - 13/16))/Cons['M']**2
+    Fcal_SO_6=(-16*S_ell*pi - 31*Sigma_ell*Cons['delta']*pi/6)/Cons['M']**2
+    Fcal_SO_7=(S_ell*(-2810*Cons['nu']**2/27 + 6172*Cons['nu']/189 + 476645/6804) + Sigma_ell*Cons['delta']*(-1501*Cons['nu']**2/36 + 1849*Cons['nu']/126 + 9535/336))/Cons['M']**2
+    Fcal_SO_8=(S_ell*pi*(13879*Cons['nu']/72 - 3485/96) + Sigma_ell*Cons['delta']*pi*(130583*Cons['nu']/2016 - 7163/672))/Cons['M']**2
     Cons['E_0']=np.array([1.0])
     Cons['E_2']=-Cons['nu']/12 - 3/4
+    Cons['E_4']=-Cons['nu']**2/24 + 19*Cons['nu']/8 - 27/8
+    Cons['E_6']=-35*Cons['nu']**3/5184 - 155*Cons['nu']**2/96 + Cons['nu']*(34445/576 - 205*pi**2/96) - 675/64
+    Cons['E_8']=77*Cons['nu']**4/31104 + 301*Cons['nu']**3/1728 + Cons['nu']**2*(-498449/3456 + 3157*pi**2/576) + Cons['nu']*(-123671/5760 + 896*EulerGamma/15 + 9037*pi**2/1536 + 1792*log(2)/15) - 3969/128
+    Cons['E_lnv_8']=896*Cons['nu']/15
+    E_SQ_4=-3*chi_a_ell**2/2 - 3*chi_s_ell**2/2 - Cons['delta']*(Cons['chi2chi2']/2 + 3*chi_a_ell*chi_s_ell) + Cons['nu']*(Cons['chi1chi2'] + 6*chi_a_ell**2) + (Cons['chi1chi1'] + Cons['chi2chi2'])*(Cons['delta'] - 2*Cons['nu'] + 1)/4
+    E_SO_3=(14*S_ell/3 + 2*Sigma_ell*Cons['delta'])/Cons['M']**2
+    E_SO_5=(S_ell*(11 - 61*Cons['nu']/9) + Sigma_ell*Cons['delta']*(3 - 10*Cons['nu']/3))/Cons['M']**2
+    E_SO_7=(S_ell*(29*Cons['nu']**2/12 - 367*Cons['nu']/4 + 135/4) + Sigma_ell*Cons['delta']*(5*Cons['nu']**2/4 - 39*Cons['nu'] + 27/4))/Cons['M']**2
     return Cons
 
 @njit
@@ -161,8 +184,8 @@ def OmegaVec_chiVec_2_0(Cons,Vars):
 
 @njit
 def OmegaVec_0(Cons,Vars):
-    a_ell_0 = 7.0*Vars['S_n'] + 3.0*Vars['Sigma_n']*Cons['delta']
     gamma_PN_0 = 1.00000000000000
+    a_ell_0 = 7.0*Vars['S_n'] + 3.0*Vars['Sigma_n']*Cons['delta']
     return Vars['ellHat']*Vars['v']**3/Cons['M'] + a_ell_0*gamma_PN_0*Vars['nHat']*Vars['v']**6/Cons['M']**3
 
 
@@ -233,8 +256,8 @@ def OmegaVec_chiVec_2_0p50(Cons,Vars):
 
 @njit
 def OmegaVec_0p50(Cons,Vars):
-    a_ell_0 = 7.0*Vars['S_n'] + 3.0*Vars['Sigma_n']*Cons['delta']
     gamma_PN_0 = 1.00000000000000
+    a_ell_0 = 7.0*Vars['S_n'] + 3.0*Vars['Sigma_n']*Cons['delta']
     return Vars['ellHat']*Vars['v']**3/Cons['M'] + a_ell_0*gamma_PN_0*Vars['nHat']*Vars['v']**6/Cons['M']**3
 
 
@@ -305,10 +328,10 @@ def OmegaVec_chiVec_2_1p0(Cons,Vars):
 
 @njit
 def OmegaVec_1p0(Cons,Vars):
-    a_ell_0 = 7.0*Vars['S_n'] + 3.0*Vars['Sigma_n']*Cons['delta']
-    gamma_PN_2 = 1.0 - 0.333333333333333*Cons['nu']
     gamma_PN_0 = 1.00000000000000
     a_ell_2 = Vars['S_n']*(-9.66666666666667*Cons['nu'] - 10.0) + Vars['Sigma_n']*Cons['delta']*(-4.5*Cons['nu'] - 6.0)
+    gamma_PN_2 = 1.0 - 0.333333333333333*Cons['nu']
+    a_ell_0 = 7.0*Vars['S_n'] + 3.0*Vars['Sigma_n']*Cons['delta']
     return Vars['ellHat']*Vars['v']**3/Cons['M'] + Vars['nHat']*Vars['v']**6*(a_ell_0 + a_ell_2*Vars['v']**2)*(gamma_PN_0 + gamma_PN_2*Vars['v']**2)/Cons['M']**3
 
 
@@ -387,10 +410,10 @@ def OmegaVec_chiVec_2_1p5(Cons,Vars):
 @njit
 def OmegaVec_1p5(Cons,Vars):
     gamma_PN_3 = (1.66666666666667*Vars['S_ell'] + Vars['Sigma_ell']*Cons['delta'])/Cons['M']**2
-    a_ell_0 = 7.0*Vars['S_n'] + 3.0*Vars['Sigma_n']*Cons['delta']
-    gamma_PN_2 = 1.0 - 0.333333333333333*Cons['nu']
-    gamma_PN_0 = 1.00000000000000
     a_ell_2 = Vars['S_n']*(-9.66666666666667*Cons['nu'] - 10.0) + Vars['Sigma_n']*Cons['delta']*(-4.5*Cons['nu'] - 6.0)
+    gamma_PN_2 = 1.0 - 0.333333333333333*Cons['nu']
+    a_ell_0 = 7.0*Vars['S_n'] + 3.0*Vars['Sigma_n']*Cons['delta']
+    gamma_PN_0 = 1.00000000000000
     return Vars['ellHat']*Vars['v']**3/Cons['M'] + Vars['nHat']*Vars['v']**6*(a_ell_0 + a_ell_2*Vars['v']**2)*(gamma_PN_0 + Vars['v']**2*(gamma_PN_2 + gamma_PN_3*Vars['v']))/Cons['M']**3
 
 
@@ -470,13 +493,13 @@ def OmegaVec_chiVec_2_2p0(Cons,Vars):
 
 @njit
 def OmegaVec_2p0(Cons,Vars):
-    a_ell_0 = 7.0*Vars['S_n'] + 3.0*Vars['Sigma_n']*Cons['delta']
-    gamma_PN_3 = (1.66666666666667*Vars['S_ell'] + Vars['Sigma_ell']*Cons['delta'])/Cons['M']**2
-    gamma_PN_4 = 1.0 - 5.41666666666667*Cons['nu']
-    gamma_PN_2 = 1.0 - 0.333333333333333*Cons['nu']
     gamma_PN_0 = 1.00000000000000
+    gamma_PN_3 = (1.66666666666667*Vars['S_ell'] + Vars['Sigma_ell']*Cons['delta'])/Cons['M']**2
     a_ell_2 = Vars['S_n']*(-9.66666666666667*Cons['nu'] - 10.0) + Vars['Sigma_n']*Cons['delta']*(-4.5*Cons['nu'] - 6.0)
     a_ell_4 = Vars['S_n']*(5.77777777777778*Cons['nu']**2 + 14.75*Cons['nu'] + 1.5) + Vars['Sigma_n']*Cons['delta']*(2.83333333333333*Cons['nu']**2 + 9.125*Cons['nu'] + 1.5)
+    gamma_PN_4 = 1.0 - 5.41666666666667*Cons['nu']
+    gamma_PN_2 = 1.0 - 0.333333333333333*Cons['nu']
+    a_ell_0 = 7.0*Vars['S_n'] + 3.0*Vars['Sigma_n']*Cons['delta']
     return Vars['ellHat']*Vars['v']**3/Cons['M'] + Vars['nHat']*Vars['v']**6*(a_ell_0 + Vars['v']**2*(a_ell_2 + a_ell_4*Vars['v']**2))*(gamma_PN_0 + Vars['v']**2*(gamma_PN_2 + Vars['v']*(gamma_PN_3 + gamma_PN_4*Vars['v'])))/Cons['M']**3
 
 
@@ -559,13 +582,13 @@ def OmegaVec_chiVec_2_2p5(Cons,Vars):
 @njit
 def OmegaVec_2p5(Cons,Vars):
     gamma_PN_5 = (Vars['S_ell']*(0.888888888888889*Cons['nu'] + 3.33333333333333) + 2.0*Vars['Sigma_ell']*Cons['delta'])/Cons['M']**2
-    a_ell_0 = 7.0*Vars['S_n'] + 3.0*Vars['Sigma_n']*Cons['delta']
-    gamma_PN_3 = (1.66666666666667*Vars['S_ell'] + Vars['Sigma_ell']*Cons['delta'])/Cons['M']**2
-    gamma_PN_4 = 1.0 - 5.41666666666667*Cons['nu']
-    gamma_PN_2 = 1.0 - 0.333333333333333*Cons['nu']
     gamma_PN_0 = 1.00000000000000
+    gamma_PN_3 = (1.66666666666667*Vars['S_ell'] + Vars['Sigma_ell']*Cons['delta'])/Cons['M']**2
     a_ell_2 = Vars['S_n']*(-9.66666666666667*Cons['nu'] - 10.0) + Vars['Sigma_n']*Cons['delta']*(-4.5*Cons['nu'] - 6.0)
     a_ell_4 = Vars['S_n']*(5.77777777777778*Cons['nu']**2 + 14.75*Cons['nu'] + 1.5) + Vars['Sigma_n']*Cons['delta']*(2.83333333333333*Cons['nu']**2 + 9.125*Cons['nu'] + 1.5)
+    gamma_PN_4 = 1.0 - 5.41666666666667*Cons['nu']
+    gamma_PN_2 = 1.0 - 0.333333333333333*Cons['nu']
+    a_ell_0 = 7.0*Vars['S_n'] + 3.0*Vars['Sigma_n']*Cons['delta']
     return Vars['ellHat']*Vars['v']**3/Cons['M'] + Vars['nHat']*Vars['v']**6*(a_ell_0 + Vars['v']**2*(a_ell_2 + a_ell_4*Vars['v']**2))*(gamma_PN_0 + Vars['v']**2*(gamma_PN_2 + Vars['v']*(gamma_PN_3 + Vars['v']*(gamma_PN_4 + gamma_PN_5*Vars['v']))))/Cons['M']**3
 
 
@@ -649,15 +672,15 @@ def OmegaVec_chiVec_2_3p0(Cons,Vars):
 
 @njit
 def OmegaVec_3p0(Cons,Vars):
+    gamma_PN_6 = 0.0123456790123457*Cons['nu']**3 + 6.36111111111111*Cons['nu']**2 - 2.98177812235564*Cons['nu'] + 1.0
     gamma_PN_5 = (Vars['S_ell']*(0.888888888888889*Cons['nu'] + 3.33333333333333) + 2.0*Vars['Sigma_ell']*Cons['delta'])/Cons['M']**2
-    a_ell_0 = 7.0*Vars['S_n'] + 3.0*Vars['Sigma_n']*Cons['delta']
+    gamma_PN_0 = 1.00000000000000
     gamma_PN_3 = (1.66666666666667*Vars['S_ell'] + Vars['Sigma_ell']*Cons['delta'])/Cons['M']**2
+    a_ell_2 = Vars['S_n']*(-9.66666666666667*Cons['nu'] - 10.0) + Vars['Sigma_n']*Cons['delta']*(-4.5*Cons['nu'] - 6.0)
+    a_ell_4 = Vars['S_n']*(5.77777777777778*Cons['nu']**2 + 14.75*Cons['nu'] + 1.5) + Vars['Sigma_n']*Cons['delta']*(2.83333333333333*Cons['nu']**2 + 9.125*Cons['nu'] + 1.5)
     gamma_PN_4 = 1.0 - 5.41666666666667*Cons['nu']
     gamma_PN_2 = 1.0 - 0.333333333333333*Cons['nu']
-    gamma_PN_0 = 1.00000000000000
-    a_ell_2 = Vars['S_n']*(-9.66666666666667*Cons['nu'] - 10.0) + Vars['Sigma_n']*Cons['delta']*(-4.5*Cons['nu'] - 6.0)
-    gamma_PN_6 = 0.0123456790123457*Cons['nu']**3 + 6.36111111111111*Cons['nu']**2 - 2.98177812235564*Cons['nu'] + 1.0
-    a_ell_4 = Vars['S_n']*(5.77777777777778*Cons['nu']**2 + 14.75*Cons['nu'] + 1.5) + Vars['Sigma_n']*Cons['delta']*(2.83333333333333*Cons['nu']**2 + 9.125*Cons['nu'] + 1.5)
+    a_ell_0 = 7.0*Vars['S_n'] + 3.0*Vars['Sigma_n']*Cons['delta']
     return Vars['ellHat']*Vars['v']**3/Cons['M'] + Vars['nHat']*Vars['v']**6*(a_ell_0 + Vars['v']**2*(a_ell_2 + a_ell_4*Vars['v']**2))*(gamma_PN_0 + Vars['v']**2*(gamma_PN_2 + Vars['v']*(gamma_PN_3 + Vars['v']*(gamma_PN_4 + Vars['v']*(gamma_PN_5 + gamma_PN_6*Vars['v'])))))/Cons['M']**3
 
 
@@ -743,16 +766,16 @@ def OmegaVec_chiVec_2_3p5(Cons,Vars):
 
 @njit
 def OmegaVec_3p5(Cons,Vars):
+    gamma_PN_6 = 0.0123456790123457*Cons['nu']**3 + 6.36111111111111*Cons['nu']**2 - 2.98177812235564*Cons['nu'] + 1.0
     gamma_PN_5 = (Vars['S_ell']*(0.888888888888889*Cons['nu'] + 3.33333333333333) + 2.0*Vars['Sigma_ell']*Cons['delta'])/Cons['M']**2
-    a_ell_0 = 7.0*Vars['S_n'] + 3.0*Vars['Sigma_n']*Cons['delta']
+    gamma_PN_0 = 1.00000000000000
     gamma_PN_3 = (1.66666666666667*Vars['S_ell'] + Vars['Sigma_ell']*Cons['delta'])/Cons['M']**2
+    a_ell_2 = Vars['S_n']*(-9.66666666666667*Cons['nu'] - 10.0) + Vars['Sigma_n']*Cons['delta']*(-4.5*Cons['nu'] - 6.0)
+    a_ell_4 = Vars['S_n']*(5.77777777777778*Cons['nu']**2 + 14.75*Cons['nu'] + 1.5) + Vars['Sigma_n']*Cons['delta']*(2.83333333333333*Cons['nu']**2 + 9.125*Cons['nu'] + 1.5)
     gamma_PN_4 = 1.0 - 5.41666666666667*Cons['nu']
     gamma_PN_2 = 1.0 - 0.333333333333333*Cons['nu']
-    gamma_PN_0 = 1.00000000000000
-    a_ell_2 = Vars['S_n']*(-9.66666666666667*Cons['nu'] - 10.0) + Vars['Sigma_n']*Cons['delta']*(-4.5*Cons['nu'] - 6.0)
+    a_ell_0 = 7.0*Vars['S_n'] + 3.0*Vars['Sigma_n']*Cons['delta']
     gamma_PN_7 = (Vars['S_ell']*(-6.0*Cons['nu']**2 - 10.5833333333333*Cons['nu'] + 5.0) - 2.66666666666667*Vars['Sigma_ell']*Cons['delta']*Cons['nu']**2 + Vars['Sigma_ell']*Cons['delta']*(3.0 - 10.1666666666667*Cons['nu']))/Cons['M']**2
-    gamma_PN_6 = 0.0123456790123457*Cons['nu']**3 + 6.36111111111111*Cons['nu']**2 - 2.98177812235564*Cons['nu'] + 1.0
-    a_ell_4 = Vars['S_n']*(5.77777777777778*Cons['nu']**2 + 14.75*Cons['nu'] + 1.5) + Vars['Sigma_n']*Cons['delta']*(2.83333333333333*Cons['nu']**2 + 9.125*Cons['nu'] + 1.5)
     return Vars['ellHat']*Vars['v']**3/Cons['M'] + Vars['nHat']*Vars['v']**6*(a_ell_0 + Vars['v']**2*(a_ell_2 + a_ell_4*Vars['v']**2))*(gamma_PN_0 + Vars['v']**2*(gamma_PN_2 + Vars['v']*(gamma_PN_3 + Vars['v']*(gamma_PN_4 + Vars['v']*(gamma_PN_5 + Vars['v']*(gamma_PN_6 + gamma_PN_7*Vars['v']))))))/Cons['M']**3
 
 
@@ -839,16 +862,16 @@ def OmegaVec_chiVec_2_4p0(Cons,Vars):
 
 @njit
 def OmegaVec_4p0(Cons,Vars):
+    gamma_PN_6 = 0.0123456790123457*Cons['nu']**3 + 6.36111111111111*Cons['nu']**2 - 2.98177812235564*Cons['nu'] + 1.0
     gamma_PN_5 = (Vars['S_ell']*(0.888888888888889*Cons['nu'] + 3.33333333333333) + 2.0*Vars['Sigma_ell']*Cons['delta'])/Cons['M']**2
-    a_ell_0 = 7.0*Vars['S_n'] + 3.0*Vars['Sigma_n']*Cons['delta']
+    gamma_PN_0 = 1.00000000000000
     gamma_PN_3 = (1.66666666666667*Vars['S_ell'] + Vars['Sigma_ell']*Cons['delta'])/Cons['M']**2
+    a_ell_2 = Vars['S_n']*(-9.66666666666667*Cons['nu'] - 10.0) + Vars['Sigma_n']*Cons['delta']*(-4.5*Cons['nu'] - 6.0)
+    a_ell_4 = Vars['S_n']*(5.77777777777778*Cons['nu']**2 + 14.75*Cons['nu'] + 1.5) + Vars['Sigma_n']*Cons['delta']*(2.83333333333333*Cons['nu']**2 + 9.125*Cons['nu'] + 1.5)
     gamma_PN_4 = 1.0 - 5.41666666666667*Cons['nu']
     gamma_PN_2 = 1.0 - 0.333333333333333*Cons['nu']
-    gamma_PN_0 = 1.00000000000000
-    a_ell_2 = Vars['S_n']*(-9.66666666666667*Cons['nu'] - 10.0) + Vars['Sigma_n']*Cons['delta']*(-4.5*Cons['nu'] - 6.0)
+    a_ell_0 = 7.0*Vars['S_n'] + 3.0*Vars['Sigma_n']*Cons['delta']
     gamma_PN_7 = (Vars['S_ell']*(-6.0*Cons['nu']**2 - 10.5833333333333*Cons['nu'] + 5.0) - 2.66666666666667*Vars['Sigma_ell']*Cons['delta']*Cons['nu']**2 + Vars['Sigma_ell']*Cons['delta']*(3.0 - 10.1666666666667*Cons['nu']))/Cons['M']**2
-    gamma_PN_6 = 0.0123456790123457*Cons['nu']**3 + 6.36111111111111*Cons['nu']**2 - 2.98177812235564*Cons['nu'] + 1.0
-    a_ell_4 = Vars['S_n']*(5.77777777777778*Cons['nu']**2 + 14.75*Cons['nu'] + 1.5) + Vars['Sigma_n']*Cons['delta']*(2.83333333333333*Cons['nu']**2 + 9.125*Cons['nu'] + 1.5)
     return Vars['ellHat']*Vars['v']**3/Cons['M'] + Vars['nHat']*Vars['v']**6*(a_ell_0 + Vars['v']**2*(a_ell_2 + a_ell_4*Vars['v']**2))*(gamma_PN_0 + Vars['v']**2*(gamma_PN_2 + Vars['v']*(gamma_PN_3 + Vars['v']*(gamma_PN_4 + Vars['v']*(gamma_PN_5 + Vars['v']*(gamma_PN_6 + gamma_PN_7*Vars['v']))))))/Cons['M']**3
 
 
@@ -892,7 +915,7 @@ class PNEv:
             PNEv.terminal2=False
         return dydt
         
-    def Evolution(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_chi1_x_i, rfrak_chi1_y_i, rfrak_chi2_x_i, rfrak_chi2_y_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i, t_PNStart=False, t_PNEnd=False, PNEvolutionOrder=1, TaylorTn=1, StepsPerOrbit=32, ForwardInTime=False, tol=1e-12, MinStep=1e-7): 
+    def Evolution(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_chi1_x_i, rfrak_chi1_y_i, rfrak_chi2_x_i, rfrak_chi2_y_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i, t_PNStart=False, t_PNEnd=False, PNEvolutionOrder=3.5, TaylorTn=1, StepsPerOrbit=32, ForwardInTime=True, tol=1e-12, MinStep=1e-7): 
         # Initialization of constants
         PNEv.terminal1=True
         PNEv.terminal2=True
