@@ -69,10 +69,10 @@ def FrameFromAngularVelocityIntegrand(rfrak, Omega):
     return ((OmegaOver2 - rfrakHat * np.dot(rfrakHat, OmegaOver2)) * (rfrakMag / np.tan(rfrakMag))\
         + rfrakHat * np.dot(rfrakHat, OmegaOver2) + np.cross(OmegaOver2, rfrak))  
 
-ConsSpec=[('xHat', float64[:]),('yHat', float64[:]),('zHat', float64[:]),('M1', float64[:]),('M2', float64[:]),('S_chi1', float64[:]),('S_chi2', float64[:]),('M', float64[:]),('delta', float64[:]),('nu', float64[:]),('chi1chi1', float64[:]),('chi1chi2', float64[:]),('chi2chi2', float64[:]),('Fcal_0', float64[:]),('Fcal_2', float64[:]),('Fcal_3', float64[:]),('Fcal_4', float64[:]),('Fcal_5', float64[:]),('Fcal_6', float64[:]),('Fcal_lnv_6', float64[:]),('Fcal_7', float64[:]),('E_0', float64[:]),('E_2', float64[:]),('E_4', float64[:]),('E_6', float64[:]),('EvolveSpin1',boolean),('EvolveSpin2',boolean)]
+ConsSpec=[('xHat', float64[:]),('yHat', float64[:]),('zHat', float64[:]),('M1', float64[:]),('M2', float64[:]),('S_chi1', float64[:]),('S_chi2', float64[:]),('M', float64[:]),('delta', float64[:]),('nu', float64[:]),('chi1chi1', float64[:]),('chi1chi2', float64[:]),('chi2chi2', float64[:]),('Fcal_0', float64[:]),('Fcal_2', float64[:]),('Fcal_3', float64[:]),('Fcal_4', float64[:]),('Fcal_5', float64[:]),('Fcal_6', float64[:]),('Fcal_lnv_6', float64[:]),('Fcal_7', float64[:]),('Fcal_8', float64[:]),('Fcal_lnv_8', float64[:]),('E_0', float64[:]),('E_2', float64[:]),('E_4', float64[:]),('E_6', float64[:]),('E_8', float64[:]),('E_lnv_8', float64[:]),('EvolveSpin1',boolean),('EvolveSpin2',boolean)]
 @jitclass(ConsSpec)
 class Cons:
-    def __init__(self,xHat,yHat,zHat,M1,M2,S_chi1,S_chi2,M,delta,nu,chi1chi1,chi1chi2,chi2chi2,Fcal_0,Fcal_2,Fcal_3,Fcal_4,Fcal_5,Fcal_6,Fcal_lnv_6,Fcal_7,E_0,E_2,E_4,E_6,EvolveSpin1,EvolveSpin2):
+    def __init__(self,xHat,yHat,zHat,M1,M2,S_chi1,S_chi2,M,delta,nu,chi1chi1,chi1chi2,chi2chi2,Fcal_0,Fcal_2,Fcal_3,Fcal_4,Fcal_5,Fcal_6,Fcal_lnv_6,Fcal_7,Fcal_8,Fcal_lnv_8,E_0,E_2,E_4,E_6,E_8,E_lnv_8,EvolveSpin1,EvolveSpin2):
         self.xHat=xHat
         self.yHat=yHat
         self.zHat=zHat
@@ -94,17 +94,21 @@ class Cons:
         self.Fcal_6=Fcal_6
         self.Fcal_lnv_6=Fcal_lnv_6
         self.Fcal_7=Fcal_7
+        self.Fcal_8=Fcal_8
+        self.Fcal_lnv_8=Fcal_lnv_8
         self.E_0=E_0
         self.E_2=E_2
         self.E_4=E_4
         self.E_6=E_6
+        self.E_8=E_8
+        self.E_lnv_8=E_lnv_8
         self.EvolveSpin1=EvolveSpin1
         self.EvolveSpin2=EvolveSpin2
 
-VarsSpec=[('v', float64[:]),('rfrak_chi1_x', float64[:]),('rfrak_chi1_y', float64[:]),('rfrak_chi2_x', float64[:]),('rfrak_chi2_y', float64[:]),('rfrak_frame_x', float64[:]),('rfrak_frame_y', float64[:]),('rfrak_frame_z', float64[:]),('R', float64[:]),('nHat', float64[:]),('lambdaHat', float64[:]),('ellHat', float64[:]),('R_S1', float64[:]),('R_S2', float64[:]),('chiVec1', float64[:]),('chiVec2', float64[:]),('chi1_n', float64[:]),('chi1_lambda', float64[:]),('chi1_ell', float64[:]),('chi2_n', float64[:]),('chi2_lambda', float64[:]),('chi2_ell', float64[:]),('S_ell', float64[:]),('S_n', float64[:]),('S_lambda', float64[:]),('Sigma_ell', float64[:]),('Sigma_n', float64[:]),('Sigma_lambda', float64[:]),('chi_s_ell', float64[:]),('chi_a_ell', float64[:]),('logv', float64[:]),('Fcal_coeff', float64[:]),('Fcal_SQ_4', float64[:]),('Fcal_SO_3', float64[:]),('Fcal_SO_5', float64[:]),('Fcal_SO_6', float64[:]),('Fcal_SO_7', float64[:]),('E_SQ_4', float64[:]),('E_SO_3', float64[:]),('E_SO_5', float64[:]),('E_SO_7', float64[:])]
+VarsSpec=[('v', float64[:]),('rfrak_chi1_x', float64[:]),('rfrak_chi1_y', float64[:]),('rfrak_chi2_x', float64[:]),('rfrak_chi2_y', float64[:]),('rfrak_frame_x', float64[:]),('rfrak_frame_y', float64[:]),('rfrak_frame_z', float64[:]),('R', float64[:]),('nHat', float64[:]),('lambdaHat', float64[:]),('ellHat', float64[:]),('R_S1', float64[:]),('R_S2', float64[:]),('chiVec1', float64[:]),('chiVec2', float64[:]),('chi1_n', float64[:]),('chi1_lambda', float64[:]),('chi1_ell', float64[:]),('chi2_n', float64[:]),('chi2_lambda', float64[:]),('chi2_ell', float64[:]),('S_ell', float64[:]),('S_n', float64[:]),('S_lambda', float64[:]),('Sigma_ell', float64[:]),('Sigma_n', float64[:]),('Sigma_lambda', float64[:]),('chi_s_ell', float64[:]),('chi_a_ell', float64[:]),('logv', float64[:]),('Fcal_coeff', float64[:]),('Fcal_SQ_4', float64[:]),('Fcal_SO_3', float64[:]),('Fcal_SO_5', float64[:]),('Fcal_SO_6', float64[:]),('Fcal_SO_7', float64[:]),('Fcal_SO_8', float64[:]),('E_SQ_4', float64[:]),('E_SO_3', float64[:]),('E_SO_5', float64[:]),('E_SO_7', float64[:])]
 @jitclass(VarsSpec)
 class Vars:
-    def __init__(self,v,rfrak_chi1_x,rfrak_chi1_y,rfrak_chi2_x,rfrak_chi2_y,rfrak_frame_x,rfrak_frame_y,rfrak_frame_z,R,nHat,lambdaHat,ellHat,R_S1,R_S2,chiVec1,chiVec2,chi1_n,chi1_lambda,chi1_ell,chi2_n,chi2_lambda,chi2_ell,S_ell,S_n,S_lambda,Sigma_ell,Sigma_n,Sigma_lambda,chi_s_ell,chi_a_ell,logv,Fcal_coeff,Fcal_SQ_4,Fcal_SO_3,Fcal_SO_5,Fcal_SO_6,Fcal_SO_7,E_SQ_4,E_SO_3,E_SO_5,E_SO_7):
+    def __init__(self,v,rfrak_chi1_x,rfrak_chi1_y,rfrak_chi2_x,rfrak_chi2_y,rfrak_frame_x,rfrak_frame_y,rfrak_frame_z,R,nHat,lambdaHat,ellHat,R_S1,R_S2,chiVec1,chiVec2,chi1_n,chi1_lambda,chi1_ell,chi2_n,chi2_lambda,chi2_ell,S_ell,S_n,S_lambda,Sigma_ell,Sigma_n,Sigma_lambda,chi_s_ell,chi_a_ell,logv,Fcal_coeff,Fcal_SQ_4,Fcal_SO_3,Fcal_SO_5,Fcal_SO_6,Fcal_SO_7,Fcal_SO_8,E_SQ_4,E_SO_3,E_SO_5,E_SO_7):
         self.v=v
         self.rfrak_chi1_x=rfrak_chi1_x
         self.rfrak_chi1_y=rfrak_chi1_y
@@ -142,6 +146,7 @@ class Vars:
         self.Fcal_SO_5=Fcal_SO_5
         self.Fcal_SO_6=Fcal_SO_6
         self.Fcal_SO_7=Fcal_SO_7
+        self.Fcal_SO_8=Fcal_SO_8
         self.E_SQ_4=E_SQ_4
         self.E_SO_3=E_SO_3
         self.E_SO_5=E_SO_5
@@ -202,15 +207,20 @@ def Initialization(Cons, xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_ch
     Cons.Fcal_6=-775*Cons.nu**3/324 - 94403*Cons.nu**2/3024 + Cons.nu*(-134543/7776 + 41*pi**2/48) - 1712*log(4)/105 - 1712*EulerGamma/105 + 16*pi**2/3 + 6643739519/69854400
     Cons.Fcal_lnv_6=np.array([-1712/105])
     Cons.Fcal_7=pi*(193385*Cons.nu**2/3024 + 214745*Cons.nu/1728 - 16285/504)
+    Cons.Fcal_8=np.array([-1369*pi**2/126 - 323105549467/3178375200 - 47385*log(3)/1568 + 232597*EulerGamma/4410 + 39931*log(2)/294])
+    Cons.Fcal_lnv_8=np.array([232597/4410])
     Fcal_SQ_4=Cons.chi1chi1*(-89*Cons.delta/192 + 89*Cons.nu/96 - 89/192) - 103*Cons.chi1chi2*Cons.nu/48 + Cons.chi2chi2*(89*Cons.delta/192 + 89*Cons.nu/96 - 89/192) + chi_a_ell*(chi_a_ell*(287/96 - 12*Cons.nu) + 287*chi_s_ell*Cons.delta/48) + chi_s_ell**2*(Cons.nu/24 + 287/96)
     Fcal_SO_3=(-4*S_ell - 5*Sigma_ell*Cons.delta/4)/Cons.M**2
     Fcal_SO_5=(S_ell*(272*Cons.nu/9 - 9/2) + Sigma_ell*Cons.delta*(43*Cons.nu/4 - 13/16))/Cons.M**2
     Fcal_SO_6=(-16*S_ell*pi - 31*Sigma_ell*Cons.delta*pi/6)/Cons.M**2
     Fcal_SO_7=(S_ell*(-2810*Cons.nu**2/27 + 6172*Cons.nu/189 + 476645/6804) + Sigma_ell*Cons.delta*(-1501*Cons.nu**2/36 + 1849*Cons.nu/126 + 9535/336))/Cons.M**2
+    Fcal_SO_8=(S_ell*pi*(13879*Cons.nu/72 - 3485/96) + Sigma_ell*Cons.delta*pi*(130583*Cons.nu/2016 - 7163/672))/Cons.M**2
     Cons.E_0=np.array([1.0])
     Cons.E_2=-Cons.nu/12 - 3/4
     Cons.E_4=-Cons.nu**2/24 + 19*Cons.nu/8 - 27/8
     Cons.E_6=-35*Cons.nu**3/5184 - 155*Cons.nu**2/96 + Cons.nu*(34445/576 - 205*pi**2/96) - 675/64
+    Cons.E_8=77*Cons.nu**4/31104 + 301*Cons.nu**3/1728 + Cons.nu**2*(-498449/3456 + 3157*pi**2/576) + Cons.nu*(-123671/5760 + 896*EulerGamma/15 + 9037*pi**2/1536 + 1792*log(2)/15) - 3969/128
+    Cons.E_lnv_8=896*Cons.nu/15
     E_SQ_4=-3*chi_a_ell**2/2 - 3*chi_s_ell**2/2 - Cons.delta*(Cons.chi2chi2/2 + 3*chi_a_ell*chi_s_ell) + Cons.nu*(Cons.chi1chi2 + 6*chi_a_ell**2) + (Cons.chi1chi1 + Cons.chi2chi2)*(Cons.delta - 2*Cons.nu + 1)/4
     E_SO_3=(14*S_ell/3 + 2*Sigma_ell*Cons.delta)/Cons.M**2
     E_SO_5=(S_ell*(11 - 61*Cons.nu/9) + Sigma_ell*Cons.delta*(3 - 10*Cons.nu/3))/Cons.M**2
@@ -942,8 +952,8 @@ def TaylorT1_4p0(Cons,Vars):
 
 class PNEv:
     def Integrand(t,y):
-        PNEv.SwitcherOrder.get(2*PNEv.PNEvolutionOrder)(PNEv.Cons,PNEv.Vars,y)
-        dydt=PNEv.SwitcherTn.get(PNEv.TaylorTn+20*PNEv.PNEvolutionOrder)(PNEv.Cons,PNEv.Vars)
+        PNEv.Recalculate.get(2*PNEv.PNEvolutionOrder)(PNEv.Cons,PNEv.Vars,y)
+        dydt=PNEv.TaylorTn.get(PNEv.TaylorTn+20*PNEv.PNEvolutionOrder)(PNEv.Cons,PNEv.Vars)
         if PNEv.Vars.v>=1.0 and PNEv.NotForward:
             print("Beyond domain of PN validity, this is a good way to terminate.")
             PNEv.terminal1=False
@@ -959,7 +969,7 @@ class PNEv:
         PNEv.NotForward=True
         PNEv.PNEvolutionOrder=PNEvolutionOrder
         PNEv.TaylorTn=TaylorTn
-        PNEv.SwitcherOrder= {0:Recalculate_0,
+        PNEv.Recalculate={0:Recalculate_0,
             1:Recalculate_0p50,
             2:Recalculate_1p0,
             3:Recalculate_1p5,
@@ -968,7 +978,7 @@ class PNEv:
             6:Recalculate_3p0,
             7:Recalculate_3p5,
             8:Recalculate_4p0}
-        PNEv.SwitcherTn= {1:TaylorT1_0,
+        PNEv.TaylorTn={1:TaylorT1_0,
             11:TaylorT1_0p50,
             21:TaylorT1_1p0,
             31:TaylorT1_1p5,
@@ -978,8 +988,8 @@ class PNEv:
             71:TaylorT1_3p5,
             81:TaylorT1_4p0}
         z=np.array([0.0])
-        PNEv.Cons=Cons(z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,True,True)
-        PNEv.Vars=Vars(z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z)
+        PNEv.Cons=Cons(z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,True,True)
+        PNEv.Vars=Vars(z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z)
         Initialization(PNEv.Cons,xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_chi1_x_i, rfrak_chi1_y_i, rfrak_chi2_x_i, rfrak_chi2_y_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i)
     
         def terminate(t,y):
