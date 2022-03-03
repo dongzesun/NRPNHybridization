@@ -59,7 +59,7 @@ class CodeConstructor:
         if e.datatype:
             return e.datatype
         else:
-            return 'float64'
+            return 'double'
 
     def AddDependencies(self, Expressions):
         AtomSet = set([])
@@ -174,22 +174,7 @@ class CodeConstructor:
             else:
                 return '        {0}={1}'.format(self.Variables[atom], atom.substitution)
         Initializations  = [Initialization(atom) for atom in self.Atoms]
-        InputArguments = ['        self.{0}_i={0}_i'.format(self.Variables[atom])
-                          for atom in self.Atoms if atom.fundamental]
-        return '\n'.join(InputArguments)+'\n'+'\n'.join(Initializations)
-    
-    def CppUpdates(self):
-        return '\n'.join(['        self.{0}={0}'.format(self.Variables[atom]) for atom in self.Atoms])
-    
-    def CppRead(self):
-        return '\n'.join(['        {0}=self.{0}'.format(self.Variables[atom]) for atom in self.Atoms])
-    
-    def CppSpecs(self):
-        return ','.join(['("{0}", float64)'.format(self.Variables[atom]) for atom in self.Atoms])
-    
-    def CppInputSpecs(self):
-        return ','.join(['("{0}_i", float64)'.format(self.Variables[atom]) for atom in self.Atoms if atom.fundamental])
-        
+        return '\n'.join(['        global {0}'.format(self.Variables[atom]) for atom in self.Atoms if not atom.fundamental and not atom.constant])+'\n'+'\n'.join(Initializations)
 
     def CppEvaluations(self, Indent=4, GlobalDeclaration=False):
         """Evaluate all derived variables in C++
@@ -215,10 +200,10 @@ class CodeConstructor:
                 return '\n'.join(['    {0}[{1}] = {2};'.format(self.Variables[atom], i, Ccode(atom.substitution[i]))
                                   for i in range(len(atom.substitution))])
             else:
-                return '        {0} = {1}'.format(self.Variables[atom], atom.substitution)
+                return '            {0} = {1}'.format(self.Variables[atom], atom.substitution)
         ReturnExpression='\n'.join([Evaluation(atom) for atom in self.Atoms if not atom.fundamental and not atom.constant])
         if GlobalDeclaration:
-            ReturnExpression='\n'.join([Evaluation(atom) for atom in self.Atoms if not atom.fundamental and not atom.constant])+'\n'+'\n'.join(['        self.{0}={0}'.format(self.Variables[atom]) for atom in self.Atoms if not atom.fundamental and not atom.constant])
+            ReturnExpression='\n'.join(['            global {0}'.format(self.Variables[atom]) for atom in self.Atoms if not atom.fundamental and not atom.constant])+'\n'+'\n'.join([Evaluation(atom) for atom in self.Atoms if not atom.fundamental and not atom.constant])
         return ReturnExpression
 
     def CppEvaluateExpressions(self, Indent=4, Expressions=None):
@@ -240,7 +225,7 @@ class CodeConstructor:
             Expressions=self.Expressions
         for Expression in Expressions:
             try:
-                Evaluations.append('        {0} = {1}'.format(Expressions[Expression], Expression.pycode()))
+                Evaluations.append('            {0} = {1}'.format(Expressions[Expression], Expression.pycode()))
             except TypeError:
                 pass
         return '\n'.join(Evaluations)
@@ -282,8 +267,8 @@ class CodeConstructor:
                         pass
             MiniConstructor = CodeConstructor(self.Variables, ExprColl)
             Evaluations.append(
-                '    def ' + Expressions[Expression] + '(self):\n'+'\n'.join(['        {0}=self.{0}'.format(self.Variables[atom]) for atom in self.Atoms])+'\n'
-                + MiniConstructor.CppEvaluateExpressions(Indent+2) + '\n        return '
+                '        def ' + Expressions[Expression] + '():\n'
+                + MiniConstructor.CppEvaluateExpressions(Indent+2) + '\n            return '
                 + Expression.pycode() + '\n'
             )
         return '\n'.join(Evaluations)

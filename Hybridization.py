@@ -1,6 +1,5 @@
 import scri
-import PNEvolution
-import PNWaveformModes
+from PYPostNewtonian.Code import PostNewtonian
 import numpy as np
 import math
 import quaternion
@@ -60,36 +59,23 @@ def Align(x):
     [delta, chi1_x, chi1_y, chi1_z, chi2_x, chi2_y, chi2_z]=x
     m1=(1+delta)/2.0
     m2=(1-delta)/2.0
-    v_i=omega_0**(1/3)
-    chi1_i=[chi1_x, chi1_y, chi1_z]
-    chi2_i=[chi2_x, chi2_y, chi2_z]
-    chi1Mag=quaternion.quaternion(0,chi1_i[0],chi1_i[1],chi1_i[2]).abs()
-    chi2Mag=quaternion.quaternion(0,chi2_i[0],chi2_i[1],chi2_i[2]).abs()
-    S_chi1_i=quaternion.quaternion(0.0,0.0,0.0,0.0)
-    S_chi2_i=S_chi1_i
+    chi1_0=[chi1_x, chi1_y, chi1_z]
+    chi2_0=[chi2_x, chi2_y, chi2_z]
+    chi1Mag=quaternion.quaternion(0,chi1_0[0],chi1_0[1],chi1_0[2]).abs()
+    chi2Mag=quaternion.quaternion(0,chi2_0[0],chi2_0[1],chi2_0[2]).abs()
+    S_chi1_0=quaternion.quaternion(0.0,0.0,0.0,0.0)
+    S_chi2_0=S_chi1_0
     if chi1Mag>1e-12:
-        S_chi1_i=np.sqrt(chi1Mag)*np.sqrt(\
-            -quaternion.quaternion(0,chi1_i[0],chi1_i[1],chi1_i[2]).normalized()*zHat).normalized()
+        S_chi1_0=np.sqrt(chi1Mag)*np.sqrt(\
+            -quaternion.quaternion(0,chi1_0[0],chi1_0[1],chi1_0[2]).normalized()*zHat).normalized()
     if chi2Mag>1e-12:
-        S_chi2_i=np.sqrt(chi2Mag)*np.sqrt(\
-            -quaternion.quaternion(0,chi2_i[0],chi2_i[1],chi2_i[2]).normalized()*zHat).normalized()
-    print(("Call # {8}, generating PN with parameters m1={0}, m2={1}, v_i={2}, S_chi1_i={3}, S_chi2_i={4},"
-        +"rfrak_frame_i=[{5}, {6}, {7}].").format(m1, m2, v_i,S_chi1_i, S_chi2_i,\
-        rfrak_frame_i[0], rfrak_frame_i[1], rfrak_frame_i[2], iter_num))
-    PN=PNEvolution.TaylorTn_4p0PN_Q.TaylorTn_4p0PN_Q(xHat, yHat, zHat, m1, m2, v_i,S_chi1_i, S_chi2_i,\
-        0.0, 0.0, 0.0, 0.0,rfrak_frame_i[0], rfrak_frame_i[1], rfrak_frame_i[2], t_PN1, t_PN2)
-    W_PN_corot=scri.WaveformModes()
-    W_PN_corot.t=PN.t+t_start
-    frame=np.empty(len(PN.t), dtype=quaternion.quaternion)
-    for i in range (len(PN.t)):
-        frame[i]=np.exp(quaternion.quaternion(0.0,PN.y[5,i],PN.y[6,i],PN.y[7,i]))
-    W_PN_corot.frame=frame
-    W_PN_corot.data=PNWaveformModes.WaveformModes_3p5PN.WaveformModes_3p5PN(xHat, yHat, zHat,\
-        m1, m2, v_i,S_chi1_i, S_chi2_i,0.0, 0.0, 0.0, 0.0,\
-        rfrak_frame_i[0], rfrak_frame_i[1], rfrak_frame_i[2],PN.y)
+        S_chi2_0=np.sqrt(chi2Mag)*np.sqrt(\
+            -quaternion.quaternion(0,chi2_0[0],chi2_0[1],chi2_0[2]).normalized()*zHat).normalized()
+    print(("Call # {5}, generating PN with parameters m1={0}, m2={1}, omega_0={2}, chi1_0={3}, chi2_0={4},"
+        +"t_PNstart={6}, t_PNend={7}.").format(m1, m2, omega_0,chi1_0, chi2_0,iter_num, t_PNStart, t_PNEnd))
+    W_PN_corot=PostNewtonian.PNWaveform(m1, m2, omega_0,chi1_0, chi2_0,quaternion.quaternion(1.0,0.0,0.0,0.0),\
+        t_start, t_PNStart, t_PNEnd)
     W_PN_corot.data[:,2]=0.0*W_PN_corot.data[:,2] # Not cosider memory effect since NR dosen't have corrrect memory.
-    ell_min, ell_max = 2, 8
-    W_PN_corot.ells = ell_min, ell_max
     W_PN=scri.to_inertial_frame(W_PN_corot.copy())
     
     # Set up the matching region data for PN, and get the corresponding angular velocity and frame
@@ -116,7 +102,6 @@ def Align(x):
     W_temp1=scri.rotate_physical_system(W_NR_matching_in.copy(), R_delta1)
     W_temp2=scri.rotate_physical_system(W_NR_matching_in.copy(), R_delta2)
     temp=PNData_spline(matchingt+mint.x)
-    temp[:,2]=temp[:,2]+0.009
     cost1=np.linalg.norm(temp-W_temp1.data,axis=1)**2.0
     cost1=np.real(simpson(cost1, matchingt))/Normalization
     cost2=np.linalg.norm(temp-W_temp2.data,axis=1)**2.0
@@ -145,7 +130,7 @@ def Hybridize(t_start, data_dir, out_dir, debug=0, OptimizePNParas=0):
     global mint, minima, W_NR, W_PN, W_PN_corot, t_starts, t_end0, t_pre, t_end, omega_0, omega_PN,\
         omega_NR, omega_PN_spline, omega_PN_mag, omega_PN_mag_spline, PNData_spline, matchingt,\
         omega_NR_mag_matching, omega_mean, iter_num, W_NR_matching_in, R_delta, omega_NR_hat,\
-        Normalization, xHat, yHat, zHat, rfrak_frame_i, t_PN1, t_PN2, lowbound, upbound, scale
+        Normalization, xHat, yHat, zHat, t_PNStart, t_PNEnd, lowbound, upbound, scale
 # Get NR waveform
     NRFileName=data_dir+'/rhOverM_Asymptotic_GeometricUnits_CoM.h5/Extrapolated_N2.dir'
     W_NR=scri.SpEC.read_from_h5(NRFileName)
@@ -180,8 +165,8 @@ def Hybridize(t_start, data_dir, out_dir, debug=0, OptimizePNParas=0):
         &(W_NR.t[-1]-W_NR.t>10*np.pi/omega_0)][-1]
     t_end=W_NR.t[(omega_NR_mag>1.11*omega_0)&(W_NR.t-W_NR.t[0]>10*np.pi/omega_0)\
         &(W_NR.t[-1]-W_NR.t>10*np.pi/omega_0)][0]
-    t_PN1=W_NR.t[(omega_NR_mag<0.9*omega_0)&(W_NR.t[-1]-W_NR.t>10*np.pi/omega_0)][-1]-t_start
-    t_PN2=W_NR.t[(omega_NR_mag>1.4*omega_0)&(W_NR.t-W_NR.t[0]>10*np.pi/omega_0)][0]-t_start
+    t_PNStart=W_NR.t[(omega_NR_mag<0.9*omega_0)&(W_NR.t[-1]-W_NR.t>10*np.pi/omega_0)][-1]-t_start
+    t_PNEnd=W_NR.t[(omega_NR_mag>1.4*omega_0)&(W_NR.t-W_NR.t[0]>10*np.pi/omega_0)][0]-t_start
     matchingt=W_NR.t[(W_NR.t>=t_start)&(W_NR.t<=t_end0)]
     omega_NR_mag_matching=omega_NR_mag[(W_NR.t>=t_start)&(W_NR.t<=t_end0)]
     W_NR_matching_in=W_NR.interpolate(matchingt)
@@ -196,35 +181,14 @@ def Hybridize(t_start, data_dir, out_dir, debug=0, OptimizePNParas=0):
     zHat=quaternion.quaternion(0.0,0.0,0.0,1.0)
     with h5py.File(data_dir+'/Horizons.h5', 'r') as f:
         tA=f['AhA.dir/CoordCenterInertial.dat'][:,0]+t0
-        xA=f['AhA.dir/CoordCenterInertial.dat'][:,1:]
         mA=f['AhA.dir/ArealMass.dat'][:,1]
         chiA=f['AhA.dir/chiInertial.dat'][:,1:]
-        tB=f['AhB.dir/CoordCenterInertial.dat'][:,0]+t0
-        xB=f['AhB.dir/CoordCenterInertial.dat'][:,1:]
         mB=f['AhB.dir/ArealMass.dat'][:,1]
         chiB=f['AhB.dir/chiInertial.dat'][:,1:]
     i_1=abs(tA-t_start).argmin()
     m1=mA[i_1]
     m2=mB[i_1]
     delta=(m1-m2)/(m1+m2)
-    v_i=omega_0**(1/3)
-    d=xA-xB
-    nHat=np.empty((len(d),4))
-    for i in range(len(d)):
-        nHat[i]=np.append(0,d[i])
-    nHatArray=nHat
-    nHat=quaternion.from_float_array(nHat)
-    for i in range(len(d)):
-        nHat[i]=nHat[i].normalized()
-    dnHatdt=CubicSpline(tA, nHatArray).derivative()(tA)
-    lambdaHat=quaternion.from_float_array(dnHatdt)
-    for i in range(len(d)):
-        lambdaHat[i]=lambdaHat[i].normalized()
-    Ra=np.sqrt(-nHat[i_1]*xHat)
-    beta=math.atan2(np.dot((Ra*zHat*Ra.inverse()).vec,lambdaHat[i_1].vec),\
-        np.dot((Ra*yHat*Ra.inverse()).vec,lambdaHat[i_1].vec))
-    R_frame_i=Ra*np.exp((beta)/2*xHat)
-    rfrak_frame_i=np.log(R_frame_i).vec
     
 # Align Waveforms
     t_starts=t_start
@@ -236,7 +200,7 @@ def Hybridize(t_start, data_dir, out_dir, debug=0, OptimizePNParas=0):
             np.append(np.append(delta+0.1, chiA[i_1]+0.2), chiB[i_1]+0.2)), x_scale='jac')
         print(PNPara)
         PNParas=PNPara.x
-    t_PN1, t_PN2=False, t_end-t_start
+    t_PNStart, t_PNEnd=False, t_end-t_start
     Align(PNParas)
     if min((minima.x-lowbound)/scale)<1e-2 or min((upbound-minima.x)/scale)<1e-2:
         message=("Minima {0} near bounds {1}, {2}.")
