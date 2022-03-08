@@ -5,7 +5,7 @@ import numpy as np
 import quaternionic
 import quaternion
 
-def PNWaveform(delta,omega_0,chi1_0,chi2_0,frame_0,t_0=0.0, t_PNStart=False, t_PNEnd=False, PNEvolutionOrder=3.5, PNWaveformModeOrder=3.5, TaylorTn=1, StepsPerOrbit=32, ForwardInTime=True, tol=1e-12, MinStep=1e-7):
+def PNWaveform(delta,omega_0,chi1_0,chi2_0,frame_0,t_0=0.0, t_PNStart=False, t_PNEnd=False, PNEvolutionOrder=3.5, PNWaveformModeOrder=3.5, TaylorTn=1, StepsPerOrbit=32, ForwardInTime=True, tol=1e-8, MinStep=1e-7):
     """
     delta = (m1-m2)/(m1+m2), float number,
     omega_0: magnititude of angular velocity at t_0, float number,
