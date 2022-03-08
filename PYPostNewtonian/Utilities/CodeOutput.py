@@ -145,7 +145,7 @@ class CodeConstructor:
         #wrapper.initial_indent = ' '*Indent
         #wrapper.subsequent_indent = wrapper.initial_indent
         InputArguments = ['{0}_i'.format(self.Variables[atom])
-                          for atom in self.Atoms if atom.fundamental]
+                          for atom in self.Atoms if atom.fundamental and str(atom).find('rfrak_chi')==-1]
         return ', '.join(InputArguments)
 
          
@@ -202,8 +202,10 @@ class CodeConstructor:
             else:
                 if atom.datatype and (atom.datatype=='double'):
                     return '   {0}={1}'.format(self.Variables[atom], len(atom.substitution))
-                if atom.fundamental:
+                if atom.fundamental and str(atom).find('rfrak_chi')==-1:
                     return '    {0}=np.array([{0}_i])'.format(self.Variables[atom])
+                elif atom.fundamental and str(atom).find('rfrak_chi')!=-1:
+                    return '    {0}=np.array([0.0])'.format(self.Variables[atom])
                 else:
                     return '    {0}={1}'.format(self.Variables[atom], Initialize(atom))
         Initializations  = [Initialization(atom) for atom in self.Atoms]
