@@ -546,6 +546,7 @@ def Recalculate_2p0(Cons,Vars,y):
     Vars.rfrak_frame_x = np.array([y[5]])
     Vars.rfrak_frame_y = np.array([y[6]])
     Vars.rfrak_frame_z = np.array([y[7]])
+    Vars.R = exp(Vars.rfrak_frame_x*Cons.xHat + Vars.rfrak_frame_y*Cons.yHat + Vars.rfrak_frame_z*Cons.zHat)
     Vars.R_S1 = exp(Vars.rfrak_chi1_x*Cons.xHat + Vars.rfrak_chi1_y*Cons.yHat)
     Vars.R_S2 = exp(Vars.rfrak_chi2_x*Cons.xHat + Vars.rfrak_chi2_y*Cons.yHat)
     Vars.chiVec1 = mul(mul(mul(Cons.S_chi1,Vars.R_S1),Cons.zHat),mul(conjugate(Vars.R_S1),conjugate(Cons.S_chi1)))

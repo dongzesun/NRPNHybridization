@@ -279,11 +279,11 @@ def TaylorT1_0(Cons,Vars):
     Flux = Cons.Fcal_0*Vars.Fcal_coeff
     dEdV = -Cons.E_0*Cons.M*Cons.nu*Vars.v
     Absorption = 0
-    dvdt = (-Absorption - Flux)/dEdV
+    dvdt_T1 = (-Absorption - Flux)/dEdV
     dydt=np.zeros(8)
     rfrak_frame=[Vars.rfrak_frame_x[0],Vars.rfrak_frame_y[0],Vars.rfrak_frame_z[0]]
     [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(rfrak_frame, OmegaVec_0(Cons,Vars)[1:])
-    dydt[0] = dvdt[0]
+    dydt[0] = dvdt_T1[0]
     if(Cons.EvolveSpin1):
         dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1_x[0], Vars.rfrak_chi1_y[0],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_0(Cons,Vars)),Cons.S_chi1))[1:])
     else:
@@ -347,11 +347,11 @@ def TaylorT1_0p50(Cons,Vars):
     Flux = Cons.Fcal_0*Vars.Fcal_coeff
     dEdV = -Cons.E_0*Cons.M*Cons.nu*Vars.v
     Absorption = 0
-    dvdt = (-Absorption - Flux)/dEdV
+    dvdt_T1 = (-Absorption - Flux)/dEdV
     dydt=np.zeros(8)
     rfrak_frame=[Vars.rfrak_frame_x[0],Vars.rfrak_frame_y[0],Vars.rfrak_frame_z[0]]
     [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(rfrak_frame, OmegaVec_0p50(Cons,Vars)[1:])
-    dydt[0] = dvdt[0]
+    dydt[0] = dvdt_T1[0]
     if(Cons.EvolveSpin1):
         dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1_x[0], Vars.rfrak_chi1_y[0],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_0p50(Cons,Vars)),Cons.S_chi1))[1:])
     else:
@@ -406,9 +406,9 @@ def OmegaVec_chiVec_2_1p0(Cons,Vars):
 @njit
 def OmegaVec_1p0(Cons,Vars):
     gamma_PN_0 = 1.00000000000000
+    gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
     a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
     a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
-    gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
     return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + a_ell_2*Vars.v**2)*(gamma_PN_0 + gamma_PN_2*Vars.v**2)/Cons.M**3
 
 
@@ -417,11 +417,11 @@ def TaylorT1_1p0(Cons,Vars):
     Flux = Vars.Fcal_coeff*(Cons.Fcal_0 + Cons.Fcal_2*Vars.v**2)
     dEdV = -Cons.M*Cons.nu*Vars.v*(Cons.E_0 + 2.0*Cons.E_2*Vars.v**2)
     Absorption = 0
-    dvdt = (-Absorption - Flux)/dEdV
+    dvdt_T1 = (-Absorption - Flux)/dEdV
     dydt=np.zeros(8)
     rfrak_frame=[Vars.rfrak_frame_x[0],Vars.rfrak_frame_y[0],Vars.rfrak_frame_z[0]]
     [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(rfrak_frame, OmegaVec_1p0(Cons,Vars)[1:])
-    dydt[0] = dvdt[0]
+    dydt[0] = dvdt_T1[0]
     if(Cons.EvolveSpin1):
         dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1_x[0], Vars.rfrak_chi1_y[0],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_1p0(Cons,Vars)),Cons.S_chi1))[1:])
     else:
@@ -483,10 +483,10 @@ def OmegaVec_chiVec_2_1p5(Cons,Vars):
 @njit
 def OmegaVec_1p5(Cons,Vars):
     gamma_PN_0 = 1.00000000000000
+    gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
     gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
     a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
     a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
-    gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
     return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + a_ell_2*Vars.v**2)*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + gamma_PN_3*Vars.v))/Cons.M**3
 
 
@@ -495,11 +495,11 @@ def TaylorT1_1p5(Cons,Vars):
     Flux = Vars.Fcal_coeff*(Cons.Fcal_0 + Vars.v**2*(Cons.Fcal_2 + Vars.v*(Cons.Fcal_3 + Vars.Fcal_SO_3)))
     dEdV = -0.5*Cons.M*Cons.nu*Vars.v*(2.0*Cons.E_0 + Vars.v**2*(4.0*Cons.E_2 + 5.0*Vars.E_SO_3*Vars.v))
     Absorption = 0
-    dvdt = (-Absorption - Flux)/dEdV
+    dvdt_T1 = (-Absorption - Flux)/dEdV
     dydt=np.zeros(8)
     rfrak_frame=[Vars.rfrak_frame_x[0],Vars.rfrak_frame_y[0],Vars.rfrak_frame_z[0]]
     [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(rfrak_frame, OmegaVec_1p5(Cons,Vars)[1:])
-    dydt[0] = dvdt[0]
+    dydt[0] = dvdt_T1[0]
     if(Cons.EvolveSpin1):
         dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1_x[0], Vars.rfrak_chi1_y[0],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_1p5(Cons,Vars)),Cons.S_chi1))[1:])
     else:
@@ -566,9 +566,9 @@ def OmegaVec_2p0(Cons,Vars):
     gamma_PN_0 = 1.00000000000000
     a_ell_4 = Vars.S_n*(5.77777777777778*Cons.nu**2 + 14.75*Cons.nu + 1.5) + Vars.Sigma_n*Cons.delta*(2.83333333333333*Cons.nu**2 + 9.125*Cons.nu + 1.5)
     gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
+    gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
     a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
     a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
-    gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
     return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v**2*(a_ell_2 + a_ell_4*Vars.v**2))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + Vars.v*(gamma_PN_3 + gamma_PN_4*Vars.v)))/Cons.M**3
 
 
@@ -577,11 +577,11 @@ def TaylorT1_2p0(Cons,Vars):
     Flux = Vars.Fcal_coeff*(Cons.Fcal_0 + Vars.v**2*(Cons.Fcal_2 + Vars.v*(Cons.Fcal_3 + Vars.Fcal_SO_3 + Vars.v*(Cons.Fcal_4 + Vars.Fcal_SQ_4))))
     dEdV = -0.5*Cons.M*Cons.nu*Vars.v*(2.0*Cons.E_0 + Vars.v**2*(4.0*Cons.E_2 + Vars.v*(5.0*Vars.E_SO_3 + 6.0*Vars.v*(Cons.E_4 + Vars.E_SQ_4))))
     Absorption = 0
-    dvdt = (-Absorption - Flux)/dEdV
+    dvdt_T1 = (-Absorption - Flux)/dEdV
     dydt=np.zeros(8)
     rfrak_frame=[Vars.rfrak_frame_x[0],Vars.rfrak_frame_y[0],Vars.rfrak_frame_z[0]]
     [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(rfrak_frame, OmegaVec_2p0(Cons,Vars)[1:])
-    dydt[0] = dvdt[0]
+    dydt[0] = dvdt_T1[0]
     if(Cons.EvolveSpin1):
         dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1_x[0], Vars.rfrak_chi1_y[0],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_2p0(Cons,Vars)),Cons.S_chi1))[1:])
     else:
@@ -648,12 +648,12 @@ def OmegaVec_chiVec_2_2p5(Cons,Vars):
 def OmegaVec_2p5(Cons,Vars):
     gamma_PN_4 = 1.0 - 5.41666666666667*Cons.nu
     gamma_PN_0 = 1.00000000000000
-    gamma_PN_5 = (Vars.S_ell*(0.888888888888889*Cons.nu + 3.33333333333333) + 2.0*Vars.Sigma_ell*Cons.delta)/Cons.M**2
     a_ell_4 = Vars.S_n*(5.77777777777778*Cons.nu**2 + 14.75*Cons.nu + 1.5) + Vars.Sigma_n*Cons.delta*(2.83333333333333*Cons.nu**2 + 9.125*Cons.nu + 1.5)
     gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
-    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
-    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
     gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
+    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_5 = (Vars.S_ell*(0.888888888888889*Cons.nu + 3.33333333333333) + 2.0*Vars.Sigma_ell*Cons.delta)/Cons.M**2
+    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
     return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v**2*(a_ell_2 + a_ell_4*Vars.v**2))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + Vars.v*(gamma_PN_3 + Vars.v*(gamma_PN_4 + gamma_PN_5*Vars.v))))/Cons.M**3
 
 
@@ -662,11 +662,11 @@ def TaylorT1_2p5(Cons,Vars):
     Flux = Vars.Fcal_coeff*(Cons.Fcal_0 + Vars.v**2*(Cons.Fcal_2 + Vars.v*(Cons.Fcal_3 + Vars.Fcal_SO_3 + Vars.v*(Cons.Fcal_4 + Vars.Fcal_SQ_4 + Vars.v*(Cons.Fcal_5 + Vars.Fcal_SO_5)))))
     dEdV = -0.5*Cons.M*Cons.nu*Vars.v*(2.0*Cons.E_0 + Vars.v**2*(4.0*Cons.E_2 + Vars.v*(5.0*Vars.E_SO_3 + Vars.v*(6.0*Cons.E_4 + 7.0*Vars.E_SO_5*Vars.v + 6.0*Vars.E_SQ_4))))
     Absorption = 0
-    dvdt = (-Absorption - Flux)/dEdV
+    dvdt_T1 = (-Absorption - Flux)/dEdV
     dydt=np.zeros(8)
     rfrak_frame=[Vars.rfrak_frame_x[0],Vars.rfrak_frame_y[0],Vars.rfrak_frame_z[0]]
     [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(rfrak_frame, OmegaVec_2p5(Cons,Vars)[1:])
-    dydt[0] = dvdt[0]
+    dydt[0] = dvdt_T1[0]
     if(Cons.EvolveSpin1):
         dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1_x[0], Vars.rfrak_chi1_y[0],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_2p5(Cons,Vars)),Cons.S_chi1))[1:])
     else:
@@ -735,13 +735,13 @@ def OmegaVec_chiVec_2_3p0(Cons,Vars):
 def OmegaVec_3p0(Cons,Vars):
     gamma_PN_4 = 1.0 - 5.41666666666667*Cons.nu
     gamma_PN_0 = 1.00000000000000
-    gamma_PN_5 = (Vars.S_ell*(0.888888888888889*Cons.nu + 3.33333333333333) + 2.0*Vars.Sigma_ell*Cons.delta)/Cons.M**2
     a_ell_4 = Vars.S_n*(5.77777777777778*Cons.nu**2 + 14.75*Cons.nu + 1.5) + Vars.Sigma_n*Cons.delta*(2.83333333333333*Cons.nu**2 + 9.125*Cons.nu + 1.5)
-    gamma_PN_6 = 0.0123456790123457*Cons.nu**3 + 6.36111111111111*Cons.nu**2 - 2.98177812235564*Cons.nu + 1.0
     gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
-    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
-    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
+    gamma_PN_6 = 0.0123456790123457*Cons.nu**3 + 6.36111111111111*Cons.nu**2 - 2.98177812235564*Cons.nu + 1.0
     gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
+    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_5 = (Vars.S_ell*(0.888888888888889*Cons.nu + 3.33333333333333) + 2.0*Vars.Sigma_ell*Cons.delta)/Cons.M**2
+    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
     return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v**2*(a_ell_2 + a_ell_4*Vars.v**2))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + Vars.v*(gamma_PN_3 + Vars.v*(gamma_PN_4 + Vars.v*(gamma_PN_5 + gamma_PN_6*Vars.v)))))/Cons.M**3
 
 
@@ -750,11 +750,11 @@ def TaylorT1_3p0(Cons,Vars):
     Flux = Vars.Fcal_coeff*(Cons.Fcal_0 + Vars.v**2*(Cons.Fcal_2 + Vars.v*(Cons.Fcal_3 + Vars.Fcal_SO_3 + Vars.v*(Cons.Fcal_4 + Vars.Fcal_SQ_4 + Vars.v*(Cons.Fcal_5 + Vars.Fcal_SO_5 + Vars.v*(Cons.Fcal_6 + Vars.Fcal_SO_6 + Cons.Fcal_lnv_6*Vars.logv))))))
     dEdV = -0.5*Cons.M*Cons.nu*Vars.v*(2.0*Cons.E_0 + Vars.v**2*(4.0*Cons.E_2 + Vars.v*(5.0*Vars.E_SO_3 + Vars.v*(6.0*Cons.E_4 + 6.0*Vars.E_SQ_4 + Vars.v*(8.0*Cons.E_6*Vars.v + 7.0*Vars.E_SO_5)))))
     Absorption = 0
-    dvdt = (-Absorption - Flux)/dEdV
+    dvdt_T1 = (-Absorption - Flux)/dEdV
     dydt=np.zeros(8)
     rfrak_frame=[Vars.rfrak_frame_x[0],Vars.rfrak_frame_y[0],Vars.rfrak_frame_z[0]]
     [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(rfrak_frame, OmegaVec_3p0(Cons,Vars)[1:])
-    dydt[0] = dvdt[0]
+    dydt[0] = dvdt_T1[0]
     if(Cons.EvolveSpin1):
         dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1_x[0], Vars.rfrak_chi1_y[0],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_3p0(Cons,Vars)),Cons.S_chi1))[1:])
     else:
@@ -825,14 +825,14 @@ def OmegaVec_chiVec_2_3p5(Cons,Vars):
 def OmegaVec_3p5(Cons,Vars):
     gamma_PN_4 = 1.0 - 5.41666666666667*Cons.nu
     gamma_PN_0 = 1.00000000000000
-    gamma_PN_5 = (Vars.S_ell*(0.888888888888889*Cons.nu + 3.33333333333333) + 2.0*Vars.Sigma_ell*Cons.delta)/Cons.M**2
-    gamma_PN_7 = (Vars.S_ell*(-6.0*Cons.nu**2 - 10.5833333333333*Cons.nu + 5.0) - 2.66666666666667*Vars.Sigma_ell*Cons.delta*Cons.nu**2 + Vars.Sigma_ell*Cons.delta*(3.0 - 10.1666666666667*Cons.nu))/Cons.M**2
     a_ell_4 = Vars.S_n*(5.77777777777778*Cons.nu**2 + 14.75*Cons.nu + 1.5) + Vars.Sigma_n*Cons.delta*(2.83333333333333*Cons.nu**2 + 9.125*Cons.nu + 1.5)
-    gamma_PN_6 = 0.0123456790123457*Cons.nu**3 + 6.36111111111111*Cons.nu**2 - 2.98177812235564*Cons.nu + 1.0
     gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
-    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
-    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
+    gamma_PN_6 = 0.0123456790123457*Cons.nu**3 + 6.36111111111111*Cons.nu**2 - 2.98177812235564*Cons.nu + 1.0
     gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
+    gamma_PN_7 = (Vars.S_ell*(-6.0*Cons.nu**2 - 10.5833333333333*Cons.nu + 5.0) - 2.66666666666667*Vars.Sigma_ell*Cons.delta*Cons.nu**2 + Vars.Sigma_ell*Cons.delta*(3.0 - 10.1666666666667*Cons.nu))/Cons.M**2
+    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_5 = (Vars.S_ell*(0.888888888888889*Cons.nu + 3.33333333333333) + 2.0*Vars.Sigma_ell*Cons.delta)/Cons.M**2
+    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
     return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v**2*(a_ell_2 + a_ell_4*Vars.v**2))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + Vars.v*(gamma_PN_3 + Vars.v*(gamma_PN_4 + Vars.v*(gamma_PN_5 + Vars.v*(gamma_PN_6 + gamma_PN_7*Vars.v))))))/Cons.M**3
 
 
@@ -841,11 +841,11 @@ def TaylorT1_3p5(Cons,Vars):
     Flux = Vars.Fcal_coeff*(Cons.Fcal_0 + Vars.v**2*(Cons.Fcal_2 + Vars.v*(Cons.Fcal_3 + Vars.Fcal_SO_3 + Vars.v*(Cons.Fcal_4 + Vars.Fcal_SQ_4 + Vars.v*(Cons.Fcal_5 + Vars.Fcal_SO_5 + Vars.v*(Cons.Fcal_6 + Vars.Fcal_SO_6 + Cons.Fcal_lnv_6*Vars.logv + Vars.v*(Cons.Fcal_7 + Vars.Fcal_SO_7)))))))
     dEdV = -0.5*Cons.M*Cons.nu*Vars.v*(2.0*Cons.E_0 + Vars.v**2*(4.0*Cons.E_2 + Vars.v*(5.0*Vars.E_SO_3 + Vars.v*(6.0*Cons.E_4 + 6.0*Vars.E_SQ_4 + Vars.v*(7.0*Vars.E_SO_5 + Vars.v*(8.0*Cons.E_6 + 9.0*Vars.E_SO_7*Vars.v))))))
     Absorption = 0
-    dvdt = (-Absorption - Flux)/dEdV
+    dvdt_T1 = (-Absorption - Flux)/dEdV
     dydt=np.zeros(8)
     rfrak_frame=[Vars.rfrak_frame_x[0],Vars.rfrak_frame_y[0],Vars.rfrak_frame_z[0]]
     [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(rfrak_frame, OmegaVec_3p5(Cons,Vars)[1:])
-    dydt[0] = dvdt[0]
+    dydt[0] = dvdt_T1[0]
     if(Cons.EvolveSpin1):
         dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1_x[0], Vars.rfrak_chi1_y[0],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_3p5(Cons,Vars)),Cons.S_chi1))[1:])
     else:
@@ -917,14 +917,14 @@ def OmegaVec_chiVec_2_4p0(Cons,Vars):
 def OmegaVec_4p0(Cons,Vars):
     gamma_PN_4 = 1.0 - 5.41666666666667*Cons.nu
     gamma_PN_0 = 1.00000000000000
-    gamma_PN_5 = (Vars.S_ell*(0.888888888888889*Cons.nu + 3.33333333333333) + 2.0*Vars.Sigma_ell*Cons.delta)/Cons.M**2
-    gamma_PN_7 = (Vars.S_ell*(-6.0*Cons.nu**2 - 10.5833333333333*Cons.nu + 5.0) - 2.66666666666667*Vars.Sigma_ell*Cons.delta*Cons.nu**2 + Vars.Sigma_ell*Cons.delta*(3.0 - 10.1666666666667*Cons.nu))/Cons.M**2
     a_ell_4 = Vars.S_n*(5.77777777777778*Cons.nu**2 + 14.75*Cons.nu + 1.5) + Vars.Sigma_n*Cons.delta*(2.83333333333333*Cons.nu**2 + 9.125*Cons.nu + 1.5)
-    gamma_PN_6 = 0.0123456790123457*Cons.nu**3 + 6.36111111111111*Cons.nu**2 - 2.98177812235564*Cons.nu + 1.0
     gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
-    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
-    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
+    gamma_PN_6 = 0.0123456790123457*Cons.nu**3 + 6.36111111111111*Cons.nu**2 - 2.98177812235564*Cons.nu + 1.0
     gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
+    gamma_PN_7 = (Vars.S_ell*(-6.0*Cons.nu**2 - 10.5833333333333*Cons.nu + 5.0) - 2.66666666666667*Vars.Sigma_ell*Cons.delta*Cons.nu**2 + Vars.Sigma_ell*Cons.delta*(3.0 - 10.1666666666667*Cons.nu))/Cons.M**2
+    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_5 = (Vars.S_ell*(0.888888888888889*Cons.nu + 3.33333333333333) + 2.0*Vars.Sigma_ell*Cons.delta)/Cons.M**2
+    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
     return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v**2*(a_ell_2 + a_ell_4*Vars.v**2))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + Vars.v*(gamma_PN_3 + Vars.v*(gamma_PN_4 + Vars.v*(gamma_PN_5 + Vars.v*(gamma_PN_6 + gamma_PN_7*Vars.v))))))/Cons.M**3
 
 
@@ -933,11 +933,11 @@ def TaylorT1_4p0(Cons,Vars):
     Flux = Vars.Fcal_coeff*(Cons.Fcal_0 + Vars.v**2*(Cons.Fcal_2 + Vars.v*(Cons.Fcal_3 + Vars.Fcal_SO_3 + Vars.v*(Cons.Fcal_4 + Vars.Fcal_SQ_4 + Vars.v*(Cons.Fcal_5 + Vars.Fcal_SO_5 + Vars.v*(Cons.Fcal_6 + Vars.Fcal_SO_6 + Cons.Fcal_lnv_6*Vars.logv + Vars.v*(Cons.Fcal_7 + Vars.Fcal_SO_7 + Vars.v*(Cons.Fcal_8 + Vars.Fcal_SO_8 + Cons.Fcal_lnv_8*Vars.logv))))))))
     dEdV = -0.5*Cons.M*Cons.nu*Vars.v*(2.0*Cons.E_0 + Vars.v**2*(4.0*Cons.E_2 + Vars.v*(5.0*Vars.E_SO_3 + Vars.v*(6.0*Cons.E_4 + 6.0*Vars.E_SQ_4 + Vars.v*(7.0*Vars.E_SO_5 + Vars.v*(8.0*Cons.E_6 + Vars.v*(9.0*Vars.E_SO_7 + Vars.v*(10.0*Cons.E_8 + Cons.E_lnv_8*(10.0*Vars.logv + 1.0)))))))))
     Absorption = 0
-    dvdt = (-Absorption - Flux)/dEdV
+    dvdt_T1 = (-Absorption - Flux)/dEdV
     dydt=np.zeros(8)
     rfrak_frame=[Vars.rfrak_frame_x[0],Vars.rfrak_frame_y[0],Vars.rfrak_frame_z[0]]
     [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(rfrak_frame, OmegaVec_4p0(Cons,Vars)[1:])
-    dydt[0] = dvdt[0]
+    dydt[0] = dvdt_T1[0]
     if(Cons.EvolveSpin1):
         dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1_x[0], Vars.rfrak_chi1_y[0],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_4p0(Cons,Vars)),Cons.S_chi1))[1:])
     else:

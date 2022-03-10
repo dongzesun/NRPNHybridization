@@ -43,7 +43,7 @@ def PNWaveform(delta,omega_0,chi1_0,chi2_0,frame_0,t_0=0.0, t_PNStart=False, t_P
     chi2Mag=np.sqrt(quaternionic.array([0,chi2_0[0],chi2_0[1],chi2_0[2]]).norm)
     
     # Quaternions that rotate z-axis to spin vectors
-    S_chi1_0=quaternionic.array([0.0,0.0,0.0,0.0])
+    S_chi1_0=quaternionic.array([0.0,0.0,0.0,0.0]) 
     S_chi2_0=quaternionic.array([0.0,0.0,0.0,0.0])
     if chi1Mag>1e-12:
         S_chi1_0=np.sqrt(chi1Mag)*np.sqrt(\
@@ -59,9 +59,7 @@ def PNWaveform(delta,omega_0,chi1_0,chi2_0,frame_0,t_0=0.0, t_PNStart=False, t_P
 
     W_PN_corot=scri.WaveformModes()
     W_PN_corot.t=PN.t+t_0
-    W_PN_corot.frame=np.empty(len(PN.t), dtype=quaternion.quaternion)
-    for i in range (len(PN.t)):
-        W_PN_corot.frame[i]=np.exp(quaternion.quaternion(0.0,PN.y[5,i],PN.y[6,i],PN.y[7,i]))
+    W_PN_corot.frame=np.exp(quaternion.from_float_array(np.column_stack((0.0*PN.t,PN.y[5],PN.y[6],PN.y[7]))))
     W_PN_corot.data, W_PN_corot.ells = PNWaveformModes.Modes(xHat, yHat, zHat, m1, m2, v_0,S_chi1_0, S_chi2_0, rfrak_frame_0, PN.y, PNWaveformModeOrder)
 
     return W_PN_corot

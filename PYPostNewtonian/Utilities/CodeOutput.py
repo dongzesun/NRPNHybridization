@@ -27,7 +27,7 @@ class CodeConstructor:
     here, they must obey that ordering.
 
     """
-    def __init__(self, Variables, Expressions):
+    def __init__(self, Variables, Expressions,NumTerms=None,DenTerms=None):
         AtomSet = set([])
         self.Variables = Variables
         self.Expressions = Expressions
@@ -39,9 +39,20 @@ class CodeConstructor:
         LastAtomsLength = 0
         while(len(AtomSet) != LastAtomsLength):
             LastAtomsLength = len(AtomSet)
-            for Atom in list(AtomSet):
-                if (Atom.substitution_atoms):
-                    AtomSet.update(Atom.substitution_atoms)
+            for Atom in list(AtomSet): 
+                try:
+                    if (Atom.substitution_atoms):
+                        AtomSet.update(Atom.substitution_atoms)
+                except:
+                    try:
+                        Atom=NumTerms.get(str(Atom))
+                        AtomSet.update(Atom.substitution_atoms)
+                    except:
+                        try:
+                            Atom=DenTerms.get(str(Atom))
+                            AtomSet.update(Atom.substitution_atoms)
+                        except:
+                            pass
         self.Atoms = []
         for sym in self.Variables:
             if sym in AtomSet or str(sym) in set(['xHat','yHat','zHat','S_chi1','S_chi2','R_S1','R_S2','rfrak_chi1_x','rfrak_chi1_y','rfrak_chi2_x','rfrak_chi2_y','rfrak_frame_x','rfrak_frame_y','rfrak_frame_z']):
@@ -434,6 +445,82 @@ class CodeConstructor:
         #wrapper.subsequent_indent = wrapper.initial_indent+'  '
         def Express(atom):
             A=str(atom)
+            for i in self.Atoms:
+                try:
+                    if i.constant:
+                        j=0
+                        while j!=-1 and j+len(str(i))<=len(A):
+                            j=A.find(str(i),j)
+                            if j!=-1:
+                                if j+len(str(i)) ==len(A) or not (A[j+len(str(i))].isalnum() or A[j+len(str(i))]=='_'):
+                                    B=A[0:j]+'Cons.{0}'.format(i)+A[j+len(str(i)):]
+                                    A=B
+                                    j=j+5+len(str(i))
+                                else:
+                                    j=j+1
+                    elif not i.constant:
+                        j=0
+                        while j!=-1 and j+len(str(i))<=len(A):
+                            j=A.find(str(i),j)
+                            if j!=-1:
+                                if j+len(str(i)) ==len(A) or not (A[j+len(str(i))].isalnum() or A[j+len(str(i))]=='_'):
+                                    if j==0:
+                                        B=A[0:j]+'Vars.{0}'.format(i)+A[j+len(str(i)):]
+                                        A=B
+                                        j=j+5+len(str(i))
+                                    elif not (A[j-1].isalnum() or A[j-1]=='_'):
+                                        B=A[0:j]+'Vars.{0}'.format(i)+A[j+len(str(i)):]
+                                        A=B
+                                        j=j+5+len(str(i))
+                                    else:
+                                        j=j+1
+                                else:
+                                    j=j+1
+                except:
+                    pass
+            return A
+        
+        Evaluations = []
+        if not Expressions:
+            Expressions=self.Expressions
+        for Expression in Expressions:
+            try:
+                Evaluations.append('    {0} = {1}'.format(Expressions[Expression], Express(Expression.pycode())))
+            except TypeError:
+                pass
+        return '\n'.join(Evaluations)
+    
+    def CppEvaluateT45(self, NumTerms,DenTerms, Expressions=None):
+        """Declare and define the `Expressions` for C++
+
+        The output of this function declares are defines the
+        `Expressions` as individual variables.  An optional dictionary
+        of expressions allows just a subset of this object's
+        expressions to be output; if this argument is not present, all
+        will be output.
+
+        """
+        from textwrap import TextWrapper
+        #wrapper = TextWrapper(width=120)
+        #wrapper.initial_indent = ' '*Indent
+        #wrapper.subsequent_indent = wrapper.initial_indent+'  '
+        def Express(atom):
+            A=str(atom)
+            while (A.find('Num')!=-1):
+                j=A.find('Num')
+                B=A[0:j]+'{0}'.format(NumTerms.get(str(A[j:j+4])))+A[j+4:]
+                C=B[0:j+2]+'Vars.'+B[j+2:]
+                A=C
+            while (A.find('Den')!=-1):
+                j=A.find('Den')
+                B=A[0:j]+'{0}'.format(DenTerms.get(str(A[j:j+4])))+A[j+4:]
+                C=B[0:j+1]+'Vars.'+B[j+1:]
+                A=C
+            while (A.find('PolynomialVariable')!=-1):
+                j=A.find('PolynomialVariable')
+                B=A[0:j]+'v'+A[j+18:]
+                A=B
+            
             for i in self.Atoms:
                 try:
                     if i.constant:
