@@ -66,7 +66,7 @@ def FrameFromAngularVelocityIntegrand(rfrak, Omega):
         return np.array([Omega[0] / 2.0, Omega[1] / 2.0, Omega[2] / 2.0])
     OmegaOver2 = np.array([Omega[0] / 2.0, Omega[1] / 2.0, Omega[2] / 2.0])
     rfrakHat = np.array([rfrak[0] / rfrakMag, rfrak[1] / rfrakMag, rfrak[2] / rfrakMag])
-    return ((OmegaOver2 - rfrakHat * np.dot(rfrakHat, OmegaOver2)) * (rfrakMag / np.tan(rfrakMag))\
+    return ((OmegaOver2 - rfrakHat * np.dot(rfrakHat, OmegaOver2)) * (rfrakMag / np.tan(rfrakMag))
         + rfrakHat * np.dot(rfrakHat, OmegaOver2) + np.cross(OmegaOver2, rfrak))  
 
 ConsSpec=[('xHat', float64[:]),('yHat', float64[:]),('zHat', float64[:]),('M1', float64[:]),('M2', float64[:]),('S_chi1', float64[:]),('S_chi2', float64[:]),('M', float64[:]),('delta', float64[:]),('nu', float64[:]),('chi1chi1', float64[:]),('chi1chi2', float64[:]),('chi2chi2', float64[:]),('Fcal_0', float64[:]),('Fcal_2', float64[:]),('Fcal_3', float64[:]),('Fcal_4', float64[:]),('Fcal_5', float64[:]),('Fcal_6', float64[:]),('Fcal_lnv_6', float64[:]),('Fcal_7', float64[:]),('Fcal_8', float64[:]),('Fcal_lnv_8', float64[:]),('E_0', float64[:]),('E_2', float64[:]),('E_4', float64[:]),('E_6', float64[:]),('E_8', float64[:]),('E_lnv_8', float64[:]),('EvolveSpin1',boolean),('EvolveSpin2',boolean)]
@@ -105,18 +105,14 @@ class Cons:
         self.EvolveSpin1=EvolveSpin1
         self.EvolveSpin2=EvolveSpin2
 
-VarsSpec=[('v', float64[:]),('rfrak_chi1_x', float64[:]),('rfrak_chi1_y', float64[:]),('rfrak_chi2_x', float64[:]),('rfrak_chi2_y', float64[:]),('rfrak_frame_x', float64[:]),('rfrak_frame_y', float64[:]),('rfrak_frame_z', float64[:]),('R', float64[:]),('nHat', float64[:]),('lambdaHat', float64[:]),('ellHat', float64[:]),('R_S1', float64[:]),('R_S2', float64[:]),('chiVec1', float64[:]),('chiVec2', float64[:]),('chi1_n', float64[:]),('chi1_lambda', float64[:]),('chi1_ell', float64[:]),('chi2_n', float64[:]),('chi2_lambda', float64[:]),('chi2_ell', float64[:]),('S_ell', float64[:]),('S_n', float64[:]),('S_lambda', float64[:]),('Sigma_ell', float64[:]),('Sigma_n', float64[:]),('Sigma_lambda', float64[:]),('chi_s_ell', float64[:]),('chi_a_ell', float64[:]),('logv', float64[:]),('Fcal_coeff', float64[:]),('Fcal_SQ_4', float64[:]),('Fcal_SO_3', float64[:]),('Fcal_SO_5', float64[:]),('Fcal_SO_6', float64[:]),('Fcal_SO_7', float64[:]),('Fcal_SO_8', float64[:]),('E_SQ_4', float64[:]),('E_SO_3', float64[:]),('E_SO_5', float64[:]),('E_SO_7', float64[:])]
+VarsSpec=[('v', float64[:]),('rfrak_chi1', float64[:]),('rfrak_chi2', float64[:]),('rfrak_frame', float64[:]),('R', float64[:]),('nHat', float64[:]),('lambdaHat', float64[:]),('ellHat', float64[:]),('R_S1', float64[:]),('R_S2', float64[:]),('chiVec1', float64[:]),('chiVec2', float64[:]),('chi1_n', float64[:]),('chi1_lambda', float64[:]),('chi1_ell', float64[:]),('chi2_n', float64[:]),('chi2_lambda', float64[:]),('chi2_ell', float64[:]),('S_ell', float64[:]),('S_n', float64[:]),('S_lambda', float64[:]),('Sigma_ell', float64[:]),('Sigma_n', float64[:]),('Sigma_lambda', float64[:]),('chi_s_ell', float64[:]),('chi_a_ell', float64[:]),('logv', float64[:]),('Fcal_coeff', float64[:]),('Fcal_SQ_4', float64[:]),('Fcal_SO_3', float64[:]),('Fcal_SO_5', float64[:]),('Fcal_SO_6', float64[:]),('Fcal_SO_7', float64[:]),('Fcal_SO_8', float64[:]),('E_SQ_4', float64[:]),('E_SO_3', float64[:]),('E_SO_5', float64[:]),('E_SO_7', float64[:])]
 @jitclass(VarsSpec)
 class Vars:
-    def __init__(self,v,rfrak_chi1_x,rfrak_chi1_y,rfrak_chi2_x,rfrak_chi2_y,rfrak_frame_x,rfrak_frame_y,rfrak_frame_z,R,nHat,lambdaHat,ellHat,R_S1,R_S2,chiVec1,chiVec2,chi1_n,chi1_lambda,chi1_ell,chi2_n,chi2_lambda,chi2_ell,S_ell,S_n,S_lambda,Sigma_ell,Sigma_n,Sigma_lambda,chi_s_ell,chi_a_ell,logv,Fcal_coeff,Fcal_SQ_4,Fcal_SO_3,Fcal_SO_5,Fcal_SO_6,Fcal_SO_7,Fcal_SO_8,E_SQ_4,E_SO_3,E_SO_5,E_SO_7):
+    def __init__(self,v,rfrak_chi1,rfrak_chi2,rfrak_frame,R,nHat,lambdaHat,ellHat,R_S1,R_S2,chiVec1,chiVec2,chi1_n,chi1_lambda,chi1_ell,chi2_n,chi2_lambda,chi2_ell,S_ell,S_n,S_lambda,Sigma_ell,Sigma_n,Sigma_lambda,chi_s_ell,chi_a_ell,logv,Fcal_coeff,Fcal_SQ_4,Fcal_SO_3,Fcal_SO_5,Fcal_SO_6,Fcal_SO_7,Fcal_SO_8,E_SQ_4,E_SO_3,E_SO_5,E_SO_7):
         self.v=v
-        self.rfrak_chi1_x=rfrak_chi1_x
-        self.rfrak_chi1_y=rfrak_chi1_y
-        self.rfrak_chi2_x=rfrak_chi2_x
-        self.rfrak_chi2_y=rfrak_chi2_y
-        self.rfrak_frame_x=rfrak_frame_x
-        self.rfrak_frame_y=rfrak_frame_y
-        self.rfrak_frame_z=rfrak_frame_z
+        self.rfrak_chi1=rfrak_chi1
+        self.rfrak_chi2=rfrak_chi2
+        self.rfrak_frame=rfrak_frame
         self.R=R
         self.nHat=nHat
         self.lambdaHat=lambdaHat
@@ -153,52 +149,26 @@ class Vars:
         self.E_SO_7=E_SO_7
 
 @njit(cache=True)
-def Initialization(Cons, xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i): 
+def Initialization(Cons, xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_frame_i): 
     Cons.xHat=xHat_i
     Cons.yHat=yHat_i
     Cons.zHat=zHat_i
     Cons.M1=np.array([M1_i])
     Cons.M2=np.array([M2_i])
-    v=np.array([v_i])
     Cons.S_chi1=S_chi1_i
     Cons.S_chi2=S_chi2_i
-    rfrak_chi1_x=np.array([0.0])
-    rfrak_chi1_y=np.array([0.0])
-    rfrak_chi2_x=np.array([0.0])
-    rfrak_chi2_y=np.array([0.0])
-    rfrak_frame_x=np.array([rfrak_frame_x_i])
-    rfrak_frame_y=np.array([rfrak_frame_y_i])
-    rfrak_frame_z=np.array([rfrak_frame_z_i])
+    rfrak_chi1=np.array([0.0,0.0])
+    rfrak_chi2=np.array([0.0,0.0])
     Cons.M=Cons.M1 + Cons.M2
     Cons.delta=(Cons.M1 - Cons.M2)/Cons.M
     Cons.nu=Cons.M1*Cons.M2/Cons.M**2
-    R=exp(rfrak_frame_x*Cons.xHat + rfrak_frame_y*Cons.yHat + rfrak_frame_z*Cons.zHat)
-    nHat=mul(mul(R,Cons.xHat),conjugate(R))
-    lambdaHat=mul(mul(R,Cons.yHat),conjugate(R))
-    ellHat=mul(mul(R,Cons.zHat),conjugate(R))
-    R_S1=exp(rfrak_chi1_x*Cons.xHat + rfrak_chi1_y*Cons.yHat)
-    R_S2=exp(rfrak_chi2_x*Cons.xHat + rfrak_chi2_y*Cons.yHat)
+    R_S1=exp(rfrak_chi1[0]*Cons.xHat + rfrak_chi1[1]*Cons.yHat)
+    R_S2=exp(rfrak_chi2[0]*Cons.xHat + rfrak_chi2[1]*Cons.yHat)
     chiVec1=mul(mul(mul(Cons.S_chi1,R_S1),Cons.zHat),mul(conjugate(R_S1),conjugate(Cons.S_chi1)))
     chiVec2=mul(mul(mul(Cons.S_chi2,R_S2),Cons.zHat),mul(conjugate(R_S2),conjugate(Cons.S_chi2)))
     Cons.chi1chi1=np.array([dot(chiVec1[1:],chiVec1[1:])])
     Cons.chi1chi2=np.array([dot(chiVec1[1:],chiVec2[1:])])
     Cons.chi2chi2=np.array([dot(chiVec2[1:],chiVec2[1:])])
-    chi1_n=np.array([dot(chiVec1[1:],nHat[1:])])
-    chi1_lambda=np.array([dot(chiVec1[1:],lambdaHat[1:])])
-    chi1_ell=np.array([dot(chiVec1[1:],ellHat[1:])])
-    chi2_n=np.array([dot(chiVec2[1:],nHat[1:])])
-    chi2_lambda=np.array([dot(chiVec2[1:],lambdaHat[1:])])
-    chi2_ell=np.array([dot(chiVec2[1:],ellHat[1:])])
-    S_ell=Cons.M1**2*chi1_ell + Cons.M2**2*chi2_ell
-    S_n=Cons.M1**2*chi1_n + Cons.M2**2*chi2_n
-    S_lambda=Cons.M1**2*chi1_lambda + Cons.M2**2*chi2_lambda
-    Sigma_ell=Cons.M*(-Cons.M1*chi1_ell + Cons.M2*chi2_ell)
-    Sigma_n=Cons.M*(-Cons.M1*chi1_n + Cons.M2*chi2_n)
-    Sigma_lambda=Cons.M*(-Cons.M1*chi1_lambda + Cons.M2*chi2_lambda)
-    chi_s_ell=chi1_ell/2 + chi2_ell/2
-    chi_a_ell=chi1_ell/2 - chi2_ell/2
-    logv=log(v)
-    Fcal_coeff=32*Cons.nu**2*v**10/5
     Cons.Fcal_0=np.array([1.0])
     Cons.Fcal_2=-35*Cons.nu/12 - 1247/336
     Cons.Fcal_3=np.array([4*pi])
@@ -209,40 +179,26 @@ def Initialization(Cons, xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_ch
     Cons.Fcal_7=pi*(193385*Cons.nu**2/3024 + 214745*Cons.nu/1728 - 16285/504)
     Cons.Fcal_8=np.array([-1369*pi**2/126 - 323105549467/3178375200 - 47385*log(3)/1568 + 232597*EulerGamma/4410 + 39931*log(2)/294])
     Cons.Fcal_lnv_8=np.array([232597/4410])
-    Fcal_SQ_4=Cons.chi1chi1*(-89*Cons.delta/192 + 89*Cons.nu/96 - 89/192) - 103*Cons.chi1chi2*Cons.nu/48 + Cons.chi2chi2*(89*Cons.delta/192 + 89*Cons.nu/96 - 89/192) + chi_a_ell*(chi_a_ell*(287/96 - 12*Cons.nu) + 287*chi_s_ell*Cons.delta/48) + chi_s_ell**2*(Cons.nu/24 + 287/96)
-    Fcal_SO_3=(-4*S_ell - 5*Sigma_ell*Cons.delta/4)/Cons.M**2
-    Fcal_SO_5=(S_ell*(272*Cons.nu/9 - 9/2) + Sigma_ell*Cons.delta*(43*Cons.nu/4 - 13/16))/Cons.M**2
-    Fcal_SO_6=(-16*S_ell*pi - 31*Sigma_ell*Cons.delta*pi/6)/Cons.M**2
-    Fcal_SO_7=(S_ell*(-2810*Cons.nu**2/27 + 6172*Cons.nu/189 + 476645/6804) + Sigma_ell*Cons.delta*(-1501*Cons.nu**2/36 + 1849*Cons.nu/126 + 9535/336))/Cons.M**2
-    Fcal_SO_8=(S_ell*pi*(13879*Cons.nu/72 - 3485/96) + Sigma_ell*Cons.delta*pi*(130583*Cons.nu/2016 - 7163/672))/Cons.M**2
     Cons.E_0=np.array([1.0])
     Cons.E_2=-Cons.nu/12 - 3/4
     Cons.E_4=-Cons.nu**2/24 + 19*Cons.nu/8 - 27/8
     Cons.E_6=-35*Cons.nu**3/5184 - 155*Cons.nu**2/96 + Cons.nu*(34445/576 - 205*pi**2/96) - 675/64
     Cons.E_8=77*Cons.nu**4/31104 + 301*Cons.nu**3/1728 + Cons.nu**2*(-498449/3456 + 3157*pi**2/576) + Cons.nu*(-123671/5760 + 896*EulerGamma/15 + 9037*pi**2/1536 + 1792*log(2)/15) - 3969/128
     Cons.E_lnv_8=896*Cons.nu/15
-    E_SQ_4=-3*chi_a_ell**2/2 - 3*chi_s_ell**2/2 - Cons.delta*(Cons.chi2chi2/2 + 3*chi_a_ell*chi_s_ell) + Cons.nu*(Cons.chi1chi2 + 6*chi_a_ell**2) + (Cons.chi1chi1 + Cons.chi2chi2)*(Cons.delta - 2*Cons.nu + 1)/4
-    E_SO_3=(14*S_ell/3 + 2*Sigma_ell*Cons.delta)/Cons.M**2
-    E_SO_5=(S_ell*(11 - 61*Cons.nu/9) + Sigma_ell*Cons.delta*(3 - 10*Cons.nu/3))/Cons.M**2
-    E_SO_7=(S_ell*(29*Cons.nu**2/12 - 367*Cons.nu/4 + 135/4) + Sigma_ell*Cons.delta*(5*Cons.nu**2/4 - 39*Cons.nu + 27/4))/Cons.M**2
     Cons.EvolveSpin1=np.linalg.norm(mul(Cons.S_chi1,conjugate(Cons.S_chi1)))>1e-8
     Cons.EvolveSpin2=np.linalg.norm(mul(Cons.S_chi2,conjugate(Cons.S_chi2)))>1e-8
 
 @njit(cache=True)
 def Recalculate_0(Cons,Vars,y):
     Vars.v = np.array([y[0]])
-    Vars.rfrak_chi1_x = np.array([y[1]])
-    Vars.rfrak_chi1_y = np.array([y[2]])
-    Vars.rfrak_chi2_x = np.array([y[3]])
-    Vars.rfrak_chi2_y = np.array([y[4]])
-    Vars.rfrak_frame_x = np.array([y[5]])
-    Vars.rfrak_frame_y = np.array([y[6]])
-    Vars.rfrak_frame_z = np.array([y[7]])
-    Vars.R = exp(Vars.rfrak_frame_x*Cons.xHat + Vars.rfrak_frame_y*Cons.yHat + Vars.rfrak_frame_z*Cons.zHat)
+    Vars.rfrak_chi1 = np.array([y[1],y[2]])
+    Vars.rfrak_chi2 = np.array([y[3],y[4]])
+    Vars.rfrak_frame = np.array([y[5],y[6],y[7]])
+    Vars.R = exp(Vars.rfrak_frame[0]*Cons.xHat + Vars.rfrak_frame[1]*Cons.yHat + Vars.rfrak_frame[2]*Cons.zHat)
     Vars.nHat = mul(mul(Vars.R,Cons.xHat),conjugate(Vars.R))
     Vars.ellHat = mul(mul(Vars.R,Cons.zHat),conjugate(Vars.R))
-    Vars.R_S1 = exp(Vars.rfrak_chi1_x*Cons.xHat + Vars.rfrak_chi1_y*Cons.yHat)
-    Vars.R_S2 = exp(Vars.rfrak_chi2_x*Cons.xHat + Vars.rfrak_chi2_y*Cons.yHat)
+    Vars.R_S1 = exp(Vars.rfrak_chi1[0]*Cons.xHat + Vars.rfrak_chi1[1]*Cons.yHat)
+    Vars.R_S2 = exp(Vars.rfrak_chi2[0]*Cons.xHat + Vars.rfrak_chi2[1]*Cons.yHat)
     Vars.chiVec1 = mul(mul(mul(Cons.S_chi1,Vars.R_S1),Cons.zHat),mul(conjugate(Vars.R_S1),conjugate(Cons.S_chi1)))
     Vars.chiVec2 = mul(mul(mul(Cons.S_chi2,Vars.R_S2),Cons.zHat),mul(conjugate(Vars.R_S2),conjugate(Cons.S_chi2)))
     Vars.chi1_n = np.array([dot(Vars.chiVec1[1:],Vars.nHat[1:])])
@@ -269,8 +225,8 @@ def OmegaVec_chiVec_2_0(Cons,Vars):
 
 @njit
 def OmegaVec_0(Cons,Vars):
-    gamma_PN_0 = 1.00000000000000
     a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_0 = 1.00000000000000
     return Vars.ellHat*Vars.v**3/Cons.M + a_ell_0*gamma_PN_0*Vars.nHat*Vars.v**6/Cons.M**3
 
 
@@ -281,36 +237,62 @@ def TaylorT1_0(Cons,Vars):
     Absorption = 0
     dvdt_T1 = (-Absorption - Flux)/dEdV
     dydt=np.zeros(8)
-    rfrak_frame=[Vars.rfrak_frame_x[0],Vars.rfrak_frame_y[0],Vars.rfrak_frame_z[0]]
-    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(rfrak_frame, OmegaVec_0(Cons,Vars)[1:])
-    dydt[0] = dvdt_T1[0]
+    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(Vars.rfrak_frame, OmegaVec_0(Cons,Vars)[1:])
+    dydt[0] = dvdt_T1[0] 
     if(Cons.EvolveSpin1):
-        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1_x[0], Vars.rfrak_chi1_y[0],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_0(Cons,Vars)),Cons.S_chi1))[1:])
+        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1[0], Vars.rfrak_chi1[1],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_0(Cons,Vars)),Cons.S_chi1))[1:])
     else:
-        dydt[1] = 0.0
-        dydt[2] = 0.0
+        dydt[1], dydt[2] = 0.0, 0.0
     if(Cons.EvolveSpin2):
-        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2_x[0], Vars.rfrak_chi2_y[0],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_0(Cons,Vars)),Cons.S_chi2))[1:])
+        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2[0], Vars.rfrak_chi2[1],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_0(Cons,Vars)),Cons.S_chi2))[1:])
     else:
-        dydt[3] = 0.0
-        dydt[4] = 0.0
+        dydt[3], dydt[4] = 0.0, 0.0
+    return dydt
+
+@njit(cache=True)
+def TaylorT4_0(Cons,Vars):
+    dvdt_T4 = -2.0*Vars.Fcal_coeff*-Cons.Fcal_0/(Cons.nu*Vars.v*2*Cons.E_0*Cons.M)
+    dydt=np.zeros(8)
+    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(Vars.rfrak_frame, OmegaVec_0(Cons,Vars)[1:])
+    dydt[0] = dvdt_T4[0]
+    if(Cons.EvolveSpin1):
+        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1[0], Vars.rfrak_chi1[1],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_0(Cons,Vars)),Cons.S_chi1))[1:])
+    else:
+        dydt[1], dydt[2] = 0.0, 0.0
+    if(Cons.EvolveSpin2):
+        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2[0], Vars.rfrak_chi2[1],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_0(Cons,Vars)),Cons.S_chi2))[1:])
+    else:
+        dydt[3], dydt[4] = 0.0, 0.0
+    return dydt      
+
+@njit(cache=True)
+def TaylorT5_0(Cons,Vars):
+    dtdv = -0.5*Cons.nu*Vars.v*2*Cons.E_0*Cons.M/(Vars.Fcal_coeff*-Cons.Fcal_0)
+    dvdt_T5 = 1.0/dtdv
+    dydt=np.zeros(8)
+    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(Vars.rfrak_frame, OmegaVec_0(Cons,Vars)[1:])
+    dydt[0] = dvdt_T5[0]
+    if(Cons.EvolveSpin1):
+        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1[0], Vars.rfrak_chi1[1],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_0(Cons,Vars)),Cons.S_chi1))[1:])
+    else:
+        dydt[1], dydt[2] = 0.0, 0.0
+    if(Cons.EvolveSpin2):
+        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2[0], Vars.rfrak_chi2[1],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_0(Cons,Vars)),Cons.S_chi2))[1:])
+    else:
+        dydt[3], dydt[4] = 0.0, 0.0
     return dydt      
 
 @njit(cache=True)
 def Recalculate_0p50(Cons,Vars,y):
     Vars.v = np.array([y[0]])
-    Vars.rfrak_chi1_x = np.array([y[1]])
-    Vars.rfrak_chi1_y = np.array([y[2]])
-    Vars.rfrak_chi2_x = np.array([y[3]])
-    Vars.rfrak_chi2_y = np.array([y[4]])
-    Vars.rfrak_frame_x = np.array([y[5]])
-    Vars.rfrak_frame_y = np.array([y[6]])
-    Vars.rfrak_frame_z = np.array([y[7]])
-    Vars.R = exp(Vars.rfrak_frame_x*Cons.xHat + Vars.rfrak_frame_y*Cons.yHat + Vars.rfrak_frame_z*Cons.zHat)
+    Vars.rfrak_chi1 = np.array([y[1],y[2]])
+    Vars.rfrak_chi2 = np.array([y[3],y[4]])
+    Vars.rfrak_frame = np.array([y[5],y[6],y[7]])
+    Vars.R = exp(Vars.rfrak_frame[0]*Cons.xHat + Vars.rfrak_frame[1]*Cons.yHat + Vars.rfrak_frame[2]*Cons.zHat)
     Vars.nHat = mul(mul(Vars.R,Cons.xHat),conjugate(Vars.R))
     Vars.ellHat = mul(mul(Vars.R,Cons.zHat),conjugate(Vars.R))
-    Vars.R_S1 = exp(Vars.rfrak_chi1_x*Cons.xHat + Vars.rfrak_chi1_y*Cons.yHat)
-    Vars.R_S2 = exp(Vars.rfrak_chi2_x*Cons.xHat + Vars.rfrak_chi2_y*Cons.yHat)
+    Vars.R_S1 = exp(Vars.rfrak_chi1[0]*Cons.xHat + Vars.rfrak_chi1[1]*Cons.yHat)
+    Vars.R_S2 = exp(Vars.rfrak_chi2[0]*Cons.xHat + Vars.rfrak_chi2[1]*Cons.yHat)
     Vars.chiVec1 = mul(mul(mul(Cons.S_chi1,Vars.R_S1),Cons.zHat),mul(conjugate(Vars.R_S1),conjugate(Cons.S_chi1)))
     Vars.chiVec2 = mul(mul(mul(Cons.S_chi2,Vars.R_S2),Cons.zHat),mul(conjugate(Vars.R_S2),conjugate(Cons.S_chi2)))
     Vars.chi1_n = np.array([dot(Vars.chiVec1[1:],Vars.nHat[1:])])
@@ -337,8 +319,8 @@ def OmegaVec_chiVec_2_0p50(Cons,Vars):
 
 @njit
 def OmegaVec_0p50(Cons,Vars):
-    gamma_PN_0 = 1.00000000000000
     a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_0 = 1.00000000000000
     return Vars.ellHat*Vars.v**3/Cons.M + a_ell_0*gamma_PN_0*Vars.nHat*Vars.v**6/Cons.M**3
 
 
@@ -349,36 +331,62 @@ def TaylorT1_0p50(Cons,Vars):
     Absorption = 0
     dvdt_T1 = (-Absorption - Flux)/dEdV
     dydt=np.zeros(8)
-    rfrak_frame=[Vars.rfrak_frame_x[0],Vars.rfrak_frame_y[0],Vars.rfrak_frame_z[0]]
-    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(rfrak_frame, OmegaVec_0p50(Cons,Vars)[1:])
-    dydt[0] = dvdt_T1[0]
+    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(Vars.rfrak_frame, OmegaVec_0p50(Cons,Vars)[1:])
+    dydt[0] = dvdt_T1[0] 
     if(Cons.EvolveSpin1):
-        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1_x[0], Vars.rfrak_chi1_y[0],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_0p50(Cons,Vars)),Cons.S_chi1))[1:])
+        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1[0], Vars.rfrak_chi1[1],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_0p50(Cons,Vars)),Cons.S_chi1))[1:])
     else:
-        dydt[1] = 0.0
-        dydt[2] = 0.0
+        dydt[1], dydt[2] = 0.0, 0.0
     if(Cons.EvolveSpin2):
-        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2_x[0], Vars.rfrak_chi2_y[0],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_0p50(Cons,Vars)),Cons.S_chi2))[1:])
+        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2[0], Vars.rfrak_chi2[1],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_0p50(Cons,Vars)),Cons.S_chi2))[1:])
     else:
-        dydt[3] = 0.0
-        dydt[4] = 0.0
+        dydt[3], dydt[4] = 0.0, 0.0
+    return dydt
+
+@njit(cache=True)
+def TaylorT4_0p50(Cons,Vars):
+    dvdt_T4 = -2.0*Vars.Fcal_coeff*(-Cons.Fcal_0 + 0*Vars.v - 0*-Cons.Fcal_0*Vars.v/2*Cons.E_0*Cons.M)/(Cons.nu*Vars.v*2*Cons.E_0*Cons.M)
+    dydt=np.zeros(8)
+    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(Vars.rfrak_frame, OmegaVec_0p50(Cons,Vars)[1:])
+    dydt[0] = dvdt_T4[0]
+    if(Cons.EvolveSpin1):
+        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1[0], Vars.rfrak_chi1[1],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_0p50(Cons,Vars)),Cons.S_chi1))[1:])
+    else:
+        dydt[1], dydt[2] = 0.0, 0.0
+    if(Cons.EvolveSpin2):
+        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2[0], Vars.rfrak_chi2[1],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_0p50(Cons,Vars)),Cons.S_chi2))[1:])
+    else:
+        dydt[3], dydt[4] = 0.0, 0.0
+    return dydt      
+
+@njit(cache=True)
+def TaylorT5_0p50(Cons,Vars):
+    dtdv = -0.5*Cons.nu*Vars.v*(2*Cons.E_0*Cons.M + 0*Vars.v - 0*2*Cons.E_0*Cons.M*Vars.v/-Cons.Fcal_0)/(Vars.Fcal_coeff*-Cons.Fcal_0)
+    dvdt_T5 = 1.0/dtdv
+    dydt=np.zeros(8)
+    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(Vars.rfrak_frame, OmegaVec_0p50(Cons,Vars)[1:])
+    dydt[0] = dvdt_T5[0]
+    if(Cons.EvolveSpin1):
+        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1[0], Vars.rfrak_chi1[1],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_0p50(Cons,Vars)),Cons.S_chi1))[1:])
+    else:
+        dydt[1], dydt[2] = 0.0, 0.0
+    if(Cons.EvolveSpin2):
+        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2[0], Vars.rfrak_chi2[1],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_0p50(Cons,Vars)),Cons.S_chi2))[1:])
+    else:
+        dydt[3], dydt[4] = 0.0, 0.0
     return dydt      
 
 @njit(cache=True)
 def Recalculate_1p0(Cons,Vars,y):
     Vars.v = np.array([y[0]])
-    Vars.rfrak_chi1_x = np.array([y[1]])
-    Vars.rfrak_chi1_y = np.array([y[2]])
-    Vars.rfrak_chi2_x = np.array([y[3]])
-    Vars.rfrak_chi2_y = np.array([y[4]])
-    Vars.rfrak_frame_x = np.array([y[5]])
-    Vars.rfrak_frame_y = np.array([y[6]])
-    Vars.rfrak_frame_z = np.array([y[7]])
-    Vars.R = exp(Vars.rfrak_frame_x*Cons.xHat + Vars.rfrak_frame_y*Cons.yHat + Vars.rfrak_frame_z*Cons.zHat)
+    Vars.rfrak_chi1 = np.array([y[1],y[2]])
+    Vars.rfrak_chi2 = np.array([y[3],y[4]])
+    Vars.rfrak_frame = np.array([y[5],y[6],y[7]])
+    Vars.R = exp(Vars.rfrak_frame[0]*Cons.xHat + Vars.rfrak_frame[1]*Cons.yHat + Vars.rfrak_frame[2]*Cons.zHat)
     Vars.nHat = mul(mul(Vars.R,Cons.xHat),conjugate(Vars.R))
     Vars.ellHat = mul(mul(Vars.R,Cons.zHat),conjugate(Vars.R))
-    Vars.R_S1 = exp(Vars.rfrak_chi1_x*Cons.xHat + Vars.rfrak_chi1_y*Cons.yHat)
-    Vars.R_S2 = exp(Vars.rfrak_chi2_x*Cons.xHat + Vars.rfrak_chi2_y*Cons.yHat)
+    Vars.R_S1 = exp(Vars.rfrak_chi1[0]*Cons.xHat + Vars.rfrak_chi1[1]*Cons.yHat)
+    Vars.R_S2 = exp(Vars.rfrak_chi2[0]*Cons.xHat + Vars.rfrak_chi2[1]*Cons.yHat)
     Vars.chiVec1 = mul(mul(mul(Cons.S_chi1,Vars.R_S1),Cons.zHat),mul(conjugate(Vars.R_S1),conjugate(Cons.S_chi1)))
     Vars.chiVec2 = mul(mul(mul(Cons.S_chi2,Vars.R_S2),Cons.zHat),mul(conjugate(Vars.R_S2),conjugate(Cons.S_chi2)))
     Vars.chi1_n = np.array([dot(Vars.chiVec1[1:],Vars.nHat[1:])])
@@ -405,9 +413,9 @@ def OmegaVec_chiVec_2_1p0(Cons,Vars):
 
 @njit
 def OmegaVec_1p0(Cons,Vars):
-    gamma_PN_0 = 1.00000000000000
-    gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
     a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
+    gamma_PN_0 = 1.00000000000000
     a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
     return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + a_ell_2*Vars.v**2)*(gamma_PN_0 + gamma_PN_2*Vars.v**2)/Cons.M**3
 
@@ -419,37 +427,63 @@ def TaylorT1_1p0(Cons,Vars):
     Absorption = 0
     dvdt_T1 = (-Absorption - Flux)/dEdV
     dydt=np.zeros(8)
-    rfrak_frame=[Vars.rfrak_frame_x[0],Vars.rfrak_frame_y[0],Vars.rfrak_frame_z[0]]
-    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(rfrak_frame, OmegaVec_1p0(Cons,Vars)[1:])
-    dydt[0] = dvdt_T1[0]
+    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(Vars.rfrak_frame, OmegaVec_1p0(Cons,Vars)[1:])
+    dydt[0] = dvdt_T1[0] 
     if(Cons.EvolveSpin1):
-        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1_x[0], Vars.rfrak_chi1_y[0],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_1p0(Cons,Vars)),Cons.S_chi1))[1:])
+        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1[0], Vars.rfrak_chi1[1],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_1p0(Cons,Vars)),Cons.S_chi1))[1:])
     else:
-        dydt[1] = 0.0
-        dydt[2] = 0.0
+        dydt[1], dydt[2] = 0.0, 0.0
     if(Cons.EvolveSpin2):
-        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2_x[0], Vars.rfrak_chi2_y[0],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_1p0(Cons,Vars)),Cons.S_chi2))[1:])
+        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2[0], Vars.rfrak_chi2[1],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_1p0(Cons,Vars)),Cons.S_chi2))[1:])
     else:
-        dydt[3] = 0.0
-        dydt[4] = 0.0
+        dydt[3], dydt[4] = 0.0, 0.0
+    return dydt
+
+@njit(cache=True)
+def TaylorT4_1p0(Cons,Vars):
+    dvdt_T4 = -2.0*Vars.Fcal_coeff*(-Cons.Fcal_0 + 0*Vars.v + -Cons.Fcal_2*Vars.v**2 + (0*(--Cons.Fcal_0*Vars.v - 0*Vars.v**2) - 4*Cons.E_2*Cons.M*-Cons.Fcal_0*Vars.v**2 + 0**2*-Cons.Fcal_0*Vars.v**2/2*Cons.E_0*Cons.M)/2*Cons.E_0*Cons.M)/(Cons.nu*Vars.v*2*Cons.E_0*Cons.M)
+    dydt=np.zeros(8)
+    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(Vars.rfrak_frame, OmegaVec_1p0(Cons,Vars)[1:])
+    dydt[0] = dvdt_T4[0]
+    if(Cons.EvolveSpin1):
+        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1[0], Vars.rfrak_chi1[1],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_1p0(Cons,Vars)),Cons.S_chi1))[1:])
+    else:
+        dydt[1], dydt[2] = 0.0, 0.0
+    if(Cons.EvolveSpin2):
+        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2[0], Vars.rfrak_chi2[1],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_1p0(Cons,Vars)),Cons.S_chi2))[1:])
+    else:
+        dydt[3], dydt[4] = 0.0, 0.0
+    return dydt      
+
+@njit(cache=True)
+def TaylorT5_1p0(Cons,Vars):
+    dtdv = -0.5*Cons.nu*Vars.v*(2*Cons.E_0*Cons.M + 0*Vars.v + 4*Cons.E_2*Cons.M*Vars.v**2 + (0*(-2*Cons.E_0*Cons.M*Vars.v - 0*Vars.v**2) - -Cons.Fcal_2*2*Cons.E_0*Cons.M*Vars.v**2 + 0**2*2*Cons.E_0*Cons.M*Vars.v**2/-Cons.Fcal_0)/-Cons.Fcal_0)/(Vars.Fcal_coeff*-Cons.Fcal_0)
+    dvdt_T5 = 1.0/dtdv
+    dydt=np.zeros(8)
+    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(Vars.rfrak_frame, OmegaVec_1p0(Cons,Vars)[1:])
+    dydt[0] = dvdt_T5[0]
+    if(Cons.EvolveSpin1):
+        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1[0], Vars.rfrak_chi1[1],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_1p0(Cons,Vars)),Cons.S_chi1))[1:])
+    else:
+        dydt[1], dydt[2] = 0.0, 0.0
+    if(Cons.EvolveSpin2):
+        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2[0], Vars.rfrak_chi2[1],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_1p0(Cons,Vars)),Cons.S_chi2))[1:])
+    else:
+        dydt[3], dydt[4] = 0.0, 0.0
     return dydt      
 
 @njit(cache=True)
 def Recalculate_1p5(Cons,Vars,y):
     Vars.v = np.array([y[0]])
-    Vars.rfrak_chi1_x = np.array([y[1]])
-    Vars.rfrak_chi1_y = np.array([y[2]])
-    Vars.rfrak_chi2_x = np.array([y[3]])
-    Vars.rfrak_chi2_y = np.array([y[4]])
-    Vars.rfrak_frame_x = np.array([y[5]])
-    Vars.rfrak_frame_y = np.array([y[6]])
-    Vars.rfrak_frame_z = np.array([y[7]])
-    Vars.R = exp(Vars.rfrak_frame_x*Cons.xHat + Vars.rfrak_frame_y*Cons.yHat + Vars.rfrak_frame_z*Cons.zHat)
+    Vars.rfrak_chi1 = np.array([y[1],y[2]])
+    Vars.rfrak_chi2 = np.array([y[3],y[4]])
+    Vars.rfrak_frame = np.array([y[5],y[6],y[7]])
+    Vars.R = exp(Vars.rfrak_frame[0]*Cons.xHat + Vars.rfrak_frame[1]*Cons.yHat + Vars.rfrak_frame[2]*Cons.zHat)
     Vars.nHat = mul(mul(Vars.R,Cons.xHat),conjugate(Vars.R))
     Vars.lambdaHat = mul(mul(Vars.R,Cons.yHat),conjugate(Vars.R))
     Vars.ellHat = mul(mul(Vars.R,Cons.zHat),conjugate(Vars.R))
-    Vars.R_S1 = exp(Vars.rfrak_chi1_x*Cons.xHat + Vars.rfrak_chi1_y*Cons.yHat)
-    Vars.R_S2 = exp(Vars.rfrak_chi2_x*Cons.xHat + Vars.rfrak_chi2_y*Cons.yHat)
+    Vars.R_S1 = exp(Vars.rfrak_chi1[0]*Cons.xHat + Vars.rfrak_chi1[1]*Cons.yHat)
+    Vars.R_S2 = exp(Vars.rfrak_chi2[0]*Cons.xHat + Vars.rfrak_chi2[1]*Cons.yHat)
     Vars.chiVec1 = mul(mul(mul(Cons.S_chi1,Vars.R_S1),Cons.zHat),mul(conjugate(Vars.R_S1),conjugate(Cons.S_chi1)))
     Vars.chiVec2 = mul(mul(mul(Cons.S_chi2,Vars.R_S2),Cons.zHat),mul(conjugate(Vars.R_S2),conjugate(Cons.S_chi2)))
     Vars.chi1_n = np.array([dot(Vars.chiVec1[1:],Vars.nHat[1:])])
@@ -482,10 +516,10 @@ def OmegaVec_chiVec_2_1p5(Cons,Vars):
 
 @njit
 def OmegaVec_1p5(Cons,Vars):
-    gamma_PN_0 = 1.00000000000000
+    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
     gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
     gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
-    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_0 = 1.00000000000000
     a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
     return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + a_ell_2*Vars.v**2)*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + gamma_PN_3*Vars.v))/Cons.M**3
 
@@ -497,37 +531,63 @@ def TaylorT1_1p5(Cons,Vars):
     Absorption = 0
     dvdt_T1 = (-Absorption - Flux)/dEdV
     dydt=np.zeros(8)
-    rfrak_frame=[Vars.rfrak_frame_x[0],Vars.rfrak_frame_y[0],Vars.rfrak_frame_z[0]]
-    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(rfrak_frame, OmegaVec_1p5(Cons,Vars)[1:])
-    dydt[0] = dvdt_T1[0]
+    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(Vars.rfrak_frame, OmegaVec_1p5(Cons,Vars)[1:])
+    dydt[0] = dvdt_T1[0] 
     if(Cons.EvolveSpin1):
-        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1_x[0], Vars.rfrak_chi1_y[0],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_1p5(Cons,Vars)),Cons.S_chi1))[1:])
+        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1[0], Vars.rfrak_chi1[1],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_1p5(Cons,Vars)),Cons.S_chi1))[1:])
     else:
-        dydt[1] = 0.0
-        dydt[2] = 0.0
+        dydt[1], dydt[2] = 0.0, 0.0
     if(Cons.EvolveSpin2):
-        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2_x[0], Vars.rfrak_chi2_y[0],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_1p5(Cons,Vars)),Cons.S_chi2))[1:])
+        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2[0], Vars.rfrak_chi2[1],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_1p5(Cons,Vars)),Cons.S_chi2))[1:])
     else:
-        dydt[3] = 0.0
-        dydt[4] = 0.0
+        dydt[3], dydt[4] = 0.0, 0.0
+    return dydt
+
+@njit(cache=True)
+def TaylorT4_1p5(Cons,Vars):
+    dvdt_T4 = -2.0*Vars.Fcal_coeff*(1.0*-Cons.Fcal_0 + 1.0*0*Vars.v + 1.0*-Cons.Fcal_2*Vars.v**2 + 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**3 + (0*(-1.0*-Cons.Fcal_0*Vars.v - 1.0*0*Vars.v**2 - 1.0*-Cons.Fcal_2*Vars.v**3) + 4*Cons.E_2*Cons.M*(-1.0*-Cons.Fcal_0*Vars.v**2 - 1.0*0*Vars.v**3) - 1.0*5*Vars.E_SO_3*Cons.M*-Cons.Fcal_0*Vars.v**3 + (0*(0*(1.0*-Cons.Fcal_0*Vars.v**2 + 1.0*0*Vars.v**3) + 2.0*4*Cons.E_2*Cons.M*-Cons.Fcal_0*Vars.v**3) - 1.0*0**3*-Cons.Fcal_0*Vars.v**3/2*Cons.E_0*Cons.M)/2*Cons.E_0*Cons.M)/2*Cons.E_0*Cons.M)/(Cons.nu*Vars.v*2*Cons.E_0*Cons.M)
+    dydt=np.zeros(8)
+    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(Vars.rfrak_frame, OmegaVec_1p5(Cons,Vars)[1:])
+    dydt[0] = dvdt_T4[0]
+    if(Cons.EvolveSpin1):
+        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1[0], Vars.rfrak_chi1[1],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_1p5(Cons,Vars)),Cons.S_chi1))[1:])
+    else:
+        dydt[1], dydt[2] = 0.0, 0.0
+    if(Cons.EvolveSpin2):
+        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2[0], Vars.rfrak_chi2[1],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_1p5(Cons,Vars)),Cons.S_chi2))[1:])
+    else:
+        dydt[3], dydt[4] = 0.0, 0.0
+    return dydt      
+
+@njit(cache=True)
+def TaylorT5_1p5(Cons,Vars):
+    dtdv = -0.5*Cons.nu*Vars.v*(1.0*2*Cons.E_0*Cons.M + 1.0*0*Vars.v + 1.0*4*Cons.E_2*Cons.M*Vars.v**2 + 1.0*5*Vars.E_SO_3*Cons.M*Vars.v**3 + (0*(-1.0*2*Cons.E_0*Cons.M*Vars.v - 1.0*0*Vars.v**2 - 1.0*4*Cons.E_2*Cons.M*Vars.v**3) + -Cons.Fcal_2*(-1.0*2*Cons.E_0*Cons.M*Vars.v**2 - 1.0*0*Vars.v**3) - 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*2*Cons.E_0*Cons.M*Vars.v**3 + (0*(0*(1.0*2*Cons.E_0*Cons.M*Vars.v**2 + 1.0*0*Vars.v**3) + 2.0*-Cons.Fcal_2*2*Cons.E_0*Cons.M*Vars.v**3) - 1.0*0**3*2*Cons.E_0*Cons.M*Vars.v**3/-Cons.Fcal_0)/-Cons.Fcal_0)/-Cons.Fcal_0)/(Vars.Fcal_coeff*-Cons.Fcal_0)
+    dvdt_T5 = 1.0/dtdv
+    dydt=np.zeros(8)
+    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(Vars.rfrak_frame, OmegaVec_1p5(Cons,Vars)[1:])
+    dydt[0] = dvdt_T5[0]
+    if(Cons.EvolveSpin1):
+        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1[0], Vars.rfrak_chi1[1],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_1p5(Cons,Vars)),Cons.S_chi1))[1:])
+    else:
+        dydt[1], dydt[2] = 0.0, 0.0
+    if(Cons.EvolveSpin2):
+        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2[0], Vars.rfrak_chi2[1],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_1p5(Cons,Vars)),Cons.S_chi2))[1:])
+    else:
+        dydt[3], dydt[4] = 0.0, 0.0
     return dydt      
 
 @njit(cache=True)
 def Recalculate_2p0(Cons,Vars,y):
     Vars.v = np.array([y[0]])
-    Vars.rfrak_chi1_x = np.array([y[1]])
-    Vars.rfrak_chi1_y = np.array([y[2]])
-    Vars.rfrak_chi2_x = np.array([y[3]])
-    Vars.rfrak_chi2_y = np.array([y[4]])
-    Vars.rfrak_frame_x = np.array([y[5]])
-    Vars.rfrak_frame_y = np.array([y[6]])
-    Vars.rfrak_frame_z = np.array([y[7]])
-    Vars.R = exp(Vars.rfrak_frame_x*Cons.xHat + Vars.rfrak_frame_y*Cons.yHat + Vars.rfrak_frame_z*Cons.zHat)
+    Vars.rfrak_chi1 = np.array([y[1],y[2]])
+    Vars.rfrak_chi2 = np.array([y[3],y[4]])
+    Vars.rfrak_frame = np.array([y[5],y[6],y[7]])
+    Vars.R = exp(Vars.rfrak_frame[0]*Cons.xHat + Vars.rfrak_frame[1]*Cons.yHat + Vars.rfrak_frame[2]*Cons.zHat)
     Vars.nHat = mul(mul(Vars.R,Cons.xHat),conjugate(Vars.R))
     Vars.lambdaHat = mul(mul(Vars.R,Cons.yHat),conjugate(Vars.R))
     Vars.ellHat = mul(mul(Vars.R,Cons.zHat),conjugate(Vars.R))
-    Vars.R_S1 = exp(Vars.rfrak_chi1_x*Cons.xHat + Vars.rfrak_chi1_y*Cons.yHat)
-    Vars.R_S2 = exp(Vars.rfrak_chi2_x*Cons.xHat + Vars.rfrak_chi2_y*Cons.yHat)
+    Vars.R_S1 = exp(Vars.rfrak_chi1[0]*Cons.xHat + Vars.rfrak_chi1[1]*Cons.yHat)
+    Vars.R_S2 = exp(Vars.rfrak_chi2[0]*Cons.xHat + Vars.rfrak_chi2[1]*Cons.yHat)
     Vars.chiVec1 = mul(mul(mul(Cons.S_chi1,Vars.R_S1),Cons.zHat),mul(conjugate(Vars.R_S1),conjugate(Cons.S_chi1)))
     Vars.chiVec2 = mul(mul(mul(Cons.S_chi2,Vars.R_S2),Cons.zHat),mul(conjugate(Vars.R_S2),conjugate(Cons.S_chi2)))
     Vars.chi1_n = np.array([dot(Vars.chiVec1[1:],Vars.nHat[1:])])
@@ -562,12 +622,12 @@ def OmegaVec_chiVec_2_2p0(Cons,Vars):
 
 @njit
 def OmegaVec_2p0(Cons,Vars):
-    gamma_PN_4 = 1.0 - 5.41666666666667*Cons.nu
-    gamma_PN_0 = 1.00000000000000
+    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
     a_ell_4 = Vars.S_n*(5.77777777777778*Cons.nu**2 + 14.75*Cons.nu + 1.5) + Vars.Sigma_n*Cons.delta*(2.83333333333333*Cons.nu**2 + 9.125*Cons.nu + 1.5)
     gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
-    gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
-    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_0 = 1.00000000000000
+    gamma_PN_4 = 1.0 - 5.41666666666667*Cons.nu
     a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
     return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v**2*(a_ell_2 + a_ell_4*Vars.v**2))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + Vars.v*(gamma_PN_3 + gamma_PN_4*Vars.v)))/Cons.M**3
 
@@ -579,37 +639,63 @@ def TaylorT1_2p0(Cons,Vars):
     Absorption = 0
     dvdt_T1 = (-Absorption - Flux)/dEdV
     dydt=np.zeros(8)
-    rfrak_frame=[Vars.rfrak_frame_x[0],Vars.rfrak_frame_y[0],Vars.rfrak_frame_z[0]]
-    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(rfrak_frame, OmegaVec_2p0(Cons,Vars)[1:])
-    dydt[0] = dvdt_T1[0]
+    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(Vars.rfrak_frame, OmegaVec_2p0(Cons,Vars)[1:])
+    dydt[0] = dvdt_T1[0] 
     if(Cons.EvolveSpin1):
-        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1_x[0], Vars.rfrak_chi1_y[0],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_2p0(Cons,Vars)),Cons.S_chi1))[1:])
+        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1[0], Vars.rfrak_chi1[1],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_2p0(Cons,Vars)),Cons.S_chi1))[1:])
     else:
-        dydt[1] = 0.0
-        dydt[2] = 0.0
+        dydt[1], dydt[2] = 0.0, 0.0
     if(Cons.EvolveSpin2):
-        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2_x[0], Vars.rfrak_chi2_y[0],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_2p0(Cons,Vars)),Cons.S_chi2))[1:])
+        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2[0], Vars.rfrak_chi2[1],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_2p0(Cons,Vars)),Cons.S_chi2))[1:])
     else:
-        dydt[3] = 0.0
-        dydt[4] = 0.0
+        dydt[3], dydt[4] = 0.0, 0.0
+    return dydt
+
+@njit(cache=True)
+def TaylorT4_2p0(Cons,Vars):
+    dvdt_T4 = -2.0*Vars.Fcal_coeff*(1.0*-Cons.Fcal_0 + 1.0*0*Vars.v + 1.0*-Cons.Fcal_2*Vars.v**2 + 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**3 + 1.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*Vars.v**4 + (0*(-1.0*-Cons.Fcal_0*Vars.v - 1.0*0*Vars.v**2 - 1.0*-Cons.Fcal_2*Vars.v**3 - 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**4) + 4*Cons.E_2*Cons.M*(-1.0*-Cons.Fcal_0*Vars.v**2 - 1.0*0*Vars.v**3 - 1.0*-Cons.Fcal_2*Vars.v**4) + 5*Vars.E_SO_3*Cons.M*(-1.0*-Cons.Fcal_0*Vars.v**3 - 1.0*0*Vars.v**4) - 1.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*-Cons.Fcal_0*Vars.v**4 + (0*(0*(1.0*-Cons.Fcal_0*Vars.v**2 + 1.0*0*Vars.v**3 + 1.0*-Cons.Fcal_2*Vars.v**4) + 4*Cons.E_2*Cons.M*(2.0*-Cons.Fcal_0*Vars.v**3 + 2.0*0*Vars.v**4) + 2.0*5*Vars.E_SO_3*Cons.M*-Cons.Fcal_0*Vars.v**4) + 1.0*4*Cons.E_2*Cons.M**2*-Cons.Fcal_0*Vars.v**4 + (0**2*(0*(-1.0*-Cons.Fcal_0*Vars.v**3 - 1.0*0*Vars.v**4) - 3.0*4*Cons.E_2*Cons.M*-Cons.Fcal_0*Vars.v**4) + 1.0*0**4*-Cons.Fcal_0*Vars.v**4/2*Cons.E_0*Cons.M)/2*Cons.E_0*Cons.M)/2*Cons.E_0*Cons.M)/2*Cons.E_0*Cons.M)/(Cons.nu*Vars.v*2*Cons.E_0*Cons.M)
+    dydt=np.zeros(8)
+    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(Vars.rfrak_frame, OmegaVec_2p0(Cons,Vars)[1:])
+    dydt[0] = dvdt_T4[0]
+    if(Cons.EvolveSpin1):
+        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1[0], Vars.rfrak_chi1[1],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_2p0(Cons,Vars)),Cons.S_chi1))[1:])
+    else:
+        dydt[1], dydt[2] = 0.0, 0.0
+    if(Cons.EvolveSpin2):
+        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2[0], Vars.rfrak_chi2[1],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_2p0(Cons,Vars)),Cons.S_chi2))[1:])
+    else:
+        dydt[3], dydt[4] = 0.0, 0.0
+    return dydt      
+
+@njit(cache=True)
+def TaylorT5_2p0(Cons,Vars):
+    dtdv = -0.5*Cons.nu*Vars.v*(1.0*2*Cons.E_0*Cons.M + 1.0*0*Vars.v + 1.0*4*Cons.E_2*Cons.M*Vars.v**2 + 1.0*5*Vars.E_SO_3*Cons.M*Vars.v**3 + 1.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*Vars.v**4 + (0*(-1.0*2*Cons.E_0*Cons.M*Vars.v - 1.0*0*Vars.v**2 - 1.0*4*Cons.E_2*Cons.M*Vars.v**3 - 1.0*5*Vars.E_SO_3*Cons.M*Vars.v**4) + -Cons.Fcal_2*(-1.0*2*Cons.E_0*Cons.M*Vars.v**2 - 1.0*0*Vars.v**3 - 1.0*4*Cons.E_2*Cons.M*Vars.v**4) + -Cons.Fcal_3 - Vars.Fcal_SO_3*(-1.0*2*Cons.E_0*Cons.M*Vars.v**3 - 1.0*0*Vars.v**4) - 1.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*2*Cons.E_0*Cons.M*Vars.v**4 + (0*(0*(1.0*2*Cons.E_0*Cons.M*Vars.v**2 + 1.0*0*Vars.v**3 + 1.0*4*Cons.E_2*Cons.M*Vars.v**4) + -Cons.Fcal_2*(2.0*2*Cons.E_0*Cons.M*Vars.v**3 + 2.0*0*Vars.v**4) + 2.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*2*Cons.E_0*Cons.M*Vars.v**4) + 1.0*-Cons.Fcal_2**2*2*Cons.E_0*Cons.M*Vars.v**4 + (0**2*(0*(-1.0*2*Cons.E_0*Cons.M*Vars.v**3 - 1.0*0*Vars.v**4) - 3.0*-Cons.Fcal_2*2*Cons.E_0*Cons.M*Vars.v**4) + 1.0*0**4*2*Cons.E_0*Cons.M*Vars.v**4/-Cons.Fcal_0)/-Cons.Fcal_0)/-Cons.Fcal_0)/-Cons.Fcal_0)/(Vars.Fcal_coeff*-Cons.Fcal_0)
+    dvdt_T5 = 1.0/dtdv
+    dydt=np.zeros(8)
+    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(Vars.rfrak_frame, OmegaVec_2p0(Cons,Vars)[1:])
+    dydt[0] = dvdt_T5[0]
+    if(Cons.EvolveSpin1):
+        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1[0], Vars.rfrak_chi1[1],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_2p0(Cons,Vars)),Cons.S_chi1))[1:])
+    else:
+        dydt[1], dydt[2] = 0.0, 0.0
+    if(Cons.EvolveSpin2):
+        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2[0], Vars.rfrak_chi2[1],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_2p0(Cons,Vars)),Cons.S_chi2))[1:])
+    else:
+        dydt[3], dydt[4] = 0.0, 0.0
     return dydt      
 
 @njit(cache=True)
 def Recalculate_2p5(Cons,Vars,y):
     Vars.v = np.array([y[0]])
-    Vars.rfrak_chi1_x = np.array([y[1]])
-    Vars.rfrak_chi1_y = np.array([y[2]])
-    Vars.rfrak_chi2_x = np.array([y[3]])
-    Vars.rfrak_chi2_y = np.array([y[4]])
-    Vars.rfrak_frame_x = np.array([y[5]])
-    Vars.rfrak_frame_y = np.array([y[6]])
-    Vars.rfrak_frame_z = np.array([y[7]])
-    Vars.R = exp(Vars.rfrak_frame_x*Cons.xHat + Vars.rfrak_frame_y*Cons.yHat + Vars.rfrak_frame_z*Cons.zHat)
+    Vars.rfrak_chi1 = np.array([y[1],y[2]])
+    Vars.rfrak_chi2 = np.array([y[3],y[4]])
+    Vars.rfrak_frame = np.array([y[5],y[6],y[7]])
+    Vars.R = exp(Vars.rfrak_frame[0]*Cons.xHat + Vars.rfrak_frame[1]*Cons.yHat + Vars.rfrak_frame[2]*Cons.zHat)
     Vars.nHat = mul(mul(Vars.R,Cons.xHat),conjugate(Vars.R))
     Vars.lambdaHat = mul(mul(Vars.R,Cons.yHat),conjugate(Vars.R))
     Vars.ellHat = mul(mul(Vars.R,Cons.zHat),conjugate(Vars.R))
-    Vars.R_S1 = exp(Vars.rfrak_chi1_x*Cons.xHat + Vars.rfrak_chi1_y*Cons.yHat)
-    Vars.R_S2 = exp(Vars.rfrak_chi2_x*Cons.xHat + Vars.rfrak_chi2_y*Cons.yHat)
+    Vars.R_S1 = exp(Vars.rfrak_chi1[0]*Cons.xHat + Vars.rfrak_chi1[1]*Cons.yHat)
+    Vars.R_S2 = exp(Vars.rfrak_chi2[0]*Cons.xHat + Vars.rfrak_chi2[1]*Cons.yHat)
     Vars.chiVec1 = mul(mul(mul(Cons.S_chi1,Vars.R_S1),Cons.zHat),mul(conjugate(Vars.R_S1),conjugate(Cons.S_chi1)))
     Vars.chiVec2 = mul(mul(mul(Cons.S_chi2,Vars.R_S2),Cons.zHat),mul(conjugate(Vars.R_S2),conjugate(Cons.S_chi2)))
     Vars.chi1_n = np.array([dot(Vars.chiVec1[1:],Vars.nHat[1:])])
@@ -646,13 +732,13 @@ def OmegaVec_chiVec_2_2p5(Cons,Vars):
 
 @njit
 def OmegaVec_2p5(Cons,Vars):
-    gamma_PN_4 = 1.0 - 5.41666666666667*Cons.nu
-    gamma_PN_0 = 1.00000000000000
+    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
     a_ell_4 = Vars.S_n*(5.77777777777778*Cons.nu**2 + 14.75*Cons.nu + 1.5) + Vars.Sigma_n*Cons.delta*(2.83333333333333*Cons.nu**2 + 9.125*Cons.nu + 1.5)
     gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
-    gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
-    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_0 = 1.00000000000000
     gamma_PN_5 = (Vars.S_ell*(0.888888888888889*Cons.nu + 3.33333333333333) + 2.0*Vars.Sigma_ell*Cons.delta)/Cons.M**2
+    gamma_PN_4 = 1.0 - 5.41666666666667*Cons.nu
     a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
     return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v**2*(a_ell_2 + a_ell_4*Vars.v**2))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + Vars.v*(gamma_PN_3 + Vars.v*(gamma_PN_4 + gamma_PN_5*Vars.v))))/Cons.M**3
 
@@ -664,37 +750,63 @@ def TaylorT1_2p5(Cons,Vars):
     Absorption = 0
     dvdt_T1 = (-Absorption - Flux)/dEdV
     dydt=np.zeros(8)
-    rfrak_frame=[Vars.rfrak_frame_x[0],Vars.rfrak_frame_y[0],Vars.rfrak_frame_z[0]]
-    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(rfrak_frame, OmegaVec_2p5(Cons,Vars)[1:])
-    dydt[0] = dvdt_T1[0]
+    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(Vars.rfrak_frame, OmegaVec_2p5(Cons,Vars)[1:])
+    dydt[0] = dvdt_T1[0] 
     if(Cons.EvolveSpin1):
-        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1_x[0], Vars.rfrak_chi1_y[0],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_2p5(Cons,Vars)),Cons.S_chi1))[1:])
+        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1[0], Vars.rfrak_chi1[1],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_2p5(Cons,Vars)),Cons.S_chi1))[1:])
     else:
-        dydt[1] = 0.0
-        dydt[2] = 0.0
+        dydt[1], dydt[2] = 0.0, 0.0
     if(Cons.EvolveSpin2):
-        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2_x[0], Vars.rfrak_chi2_y[0],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_2p5(Cons,Vars)),Cons.S_chi2))[1:])
+        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2[0], Vars.rfrak_chi2[1],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_2p5(Cons,Vars)),Cons.S_chi2))[1:])
     else:
-        dydt[3] = 0.0
-        dydt[4] = 0.0
+        dydt[3], dydt[4] = 0.0, 0.0
+    return dydt
+
+@njit(cache=True)
+def TaylorT4_2p5(Cons,Vars):
+    dvdt_T4 = -2.0*Vars.Fcal_coeff*(1.0*-Cons.Fcal_0 + 1.0*0*Vars.v + 1.0*-Cons.Fcal_2*Vars.v**2 + 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**3 + 1.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*Vars.v**4 + 1.0*-Cons.Fcal_5 - Vars.Fcal_SO_5*Vars.v**5 + (0*(-1.0*-Cons.Fcal_0*Vars.v - 1.0*0*Vars.v**2 - 1.0*-Cons.Fcal_2*Vars.v**3 - 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**4 - 1.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*Vars.v**5) + 4*Cons.E_2*Cons.M*(-1.0*-Cons.Fcal_0*Vars.v**2 - 1.0*0*Vars.v**3 - 1.0*-Cons.Fcal_2*Vars.v**4 - 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**5) + 5*Vars.E_SO_3*Cons.M*(-1.0*-Cons.Fcal_0*Vars.v**3 - 1.0*0*Vars.v**4 - 1.0*-Cons.Fcal_2*Vars.v**5) + 6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*(-1.0*-Cons.Fcal_0*Vars.v**4 - 1.0*0*Vars.v**5) - 1.0*7*Vars.E_SO_5*Cons.M*-Cons.Fcal_0*Vars.v**5 + (0*(0*(1.0*-Cons.Fcal_0*Vars.v**2 + 1.0*0*Vars.v**3 + 1.0*-Cons.Fcal_2*Vars.v**4 + 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**5) + 4*Cons.E_2*Cons.M*(2.0*-Cons.Fcal_0*Vars.v**3 + 2.0*0*Vars.v**4 + 2.0*-Cons.Fcal_2*Vars.v**5) + 5*Vars.E_SO_3*Cons.M*(2.0*-Cons.Fcal_0*Vars.v**4 + 2.0*0*Vars.v**5) + 2.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*-Cons.Fcal_0*Vars.v**5) + 4*Cons.E_2*Cons.M*(4*Cons.E_2*Cons.M*(1.0*-Cons.Fcal_0*Vars.v**4 + 1.0*0*Vars.v**5) + 2.0*5*Vars.E_SO_3*Cons.M*-Cons.Fcal_0*Vars.v**5) + (0*(0*(0*(-1.0*-Cons.Fcal_0*Vars.v**3 - 1.0*0*Vars.v**4 - 1.0*-Cons.Fcal_2*Vars.v**5) + 4*Cons.E_2*Cons.M*(-3.0*-Cons.Fcal_0*Vars.v**4 - 3.0*0*Vars.v**5) - 3.0*5*Vars.E_SO_3*Cons.M*-Cons.Fcal_0*Vars.v**5) - 3.0*4*Cons.E_2*Cons.M**2*-Cons.Fcal_0*Vars.v**5) + (0**3*(0*(1.0*-Cons.Fcal_0*Vars.v**4 + 1.0*0*Vars.v**5) + 4.0*4*Cons.E_2*Cons.M*-Cons.Fcal_0*Vars.v**5) - 1.0*0**5*-Cons.Fcal_0*Vars.v**5/2*Cons.E_0*Cons.M)/2*Cons.E_0*Cons.M)/2*Cons.E_0*Cons.M)/2*Cons.E_0*Cons.M)/2*Cons.E_0*Cons.M)/(Cons.nu*Vars.v*2*Cons.E_0*Cons.M)
+    dydt=np.zeros(8)
+    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(Vars.rfrak_frame, OmegaVec_2p5(Cons,Vars)[1:])
+    dydt[0] = dvdt_T4[0]
+    if(Cons.EvolveSpin1):
+        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1[0], Vars.rfrak_chi1[1],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_2p5(Cons,Vars)),Cons.S_chi1))[1:])
+    else:
+        dydt[1], dydt[2] = 0.0, 0.0
+    if(Cons.EvolveSpin2):
+        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2[0], Vars.rfrak_chi2[1],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_2p5(Cons,Vars)),Cons.S_chi2))[1:])
+    else:
+        dydt[3], dydt[4] = 0.0, 0.0
+    return dydt      
+
+@njit(cache=True)
+def TaylorT5_2p5(Cons,Vars):
+    dtdv = -0.5*Cons.nu*Vars.v*(1.0*2*Cons.E_0*Cons.M + 1.0*0*Vars.v + 1.0*4*Cons.E_2*Cons.M*Vars.v**2 + 1.0*5*Vars.E_SO_3*Cons.M*Vars.v**3 + 1.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*Vars.v**4 + 1.0*7*Vars.E_SO_5*Cons.M*Vars.v**5 + (0*(-1.0*2*Cons.E_0*Cons.M*Vars.v - 1.0*0*Vars.v**2 - 1.0*4*Cons.E_2*Cons.M*Vars.v**3 - 1.0*5*Vars.E_SO_3*Cons.M*Vars.v**4 - 1.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*Vars.v**5) + -Cons.Fcal_2*(-1.0*2*Cons.E_0*Cons.M*Vars.v**2 - 1.0*0*Vars.v**3 - 1.0*4*Cons.E_2*Cons.M*Vars.v**4 - 1.0*5*Vars.E_SO_3*Cons.M*Vars.v**5) + -Cons.Fcal_3 - Vars.Fcal_SO_3*(-1.0*2*Cons.E_0*Cons.M*Vars.v**3 - 1.0*0*Vars.v**4 - 1.0*4*Cons.E_2*Cons.M*Vars.v**5) + -Cons.Fcal_4 - Vars.Fcal_SQ_4*(-1.0*2*Cons.E_0*Cons.M*Vars.v**4 - 1.0*0*Vars.v**5) - 1.0*-Cons.Fcal_5 - Vars.Fcal_SO_5*2*Cons.E_0*Cons.M*Vars.v**5 + (0*(0*(1.0*2*Cons.E_0*Cons.M*Vars.v**2 + 1.0*0*Vars.v**3 + 1.0*4*Cons.E_2*Cons.M*Vars.v**4 + 1.0*5*Vars.E_SO_3*Cons.M*Vars.v**5) + -Cons.Fcal_2*(2.0*2*Cons.E_0*Cons.M*Vars.v**3 + 2.0*0*Vars.v**4 + 2.0*4*Cons.E_2*Cons.M*Vars.v**5) + -Cons.Fcal_3 - Vars.Fcal_SO_3*(2.0*2*Cons.E_0*Cons.M*Vars.v**4 + 2.0*0*Vars.v**5) + 2.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*2*Cons.E_0*Cons.M*Vars.v**5) + -Cons.Fcal_2*(-Cons.Fcal_2*(1.0*2*Cons.E_0*Cons.M*Vars.v**4 + 1.0*0*Vars.v**5) + 2.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*2*Cons.E_0*Cons.M*Vars.v**5) + (0*(0*(0*(-1.0*2*Cons.E_0*Cons.M*Vars.v**3 - 1.0*0*Vars.v**4 - 1.0*4*Cons.E_2*Cons.M*Vars.v**5) + -Cons.Fcal_2*(-3.0*2*Cons.E_0*Cons.M*Vars.v**4 - 3.0*0*Vars.v**5) - 3.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*2*Cons.E_0*Cons.M*Vars.v**5) - 3.0*-Cons.Fcal_2**2*2*Cons.E_0*Cons.M*Vars.v**5) + (0**3*(0*(1.0*2*Cons.E_0*Cons.M*Vars.v**4 + 1.0*0*Vars.v**5) + 4.0*-Cons.Fcal_2*2*Cons.E_0*Cons.M*Vars.v**5) - 1.0*0**5*2*Cons.E_0*Cons.M*Vars.v**5/-Cons.Fcal_0)/-Cons.Fcal_0)/-Cons.Fcal_0)/-Cons.Fcal_0)/-Cons.Fcal_0)/(Vars.Fcal_coeff*-Cons.Fcal_0)
+    dvdt_T5 = 1.0/dtdv
+    dydt=np.zeros(8)
+    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(Vars.rfrak_frame, OmegaVec_2p5(Cons,Vars)[1:])
+    dydt[0] = dvdt_T5[0]
+    if(Cons.EvolveSpin1):
+        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1[0], Vars.rfrak_chi1[1],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_2p5(Cons,Vars)),Cons.S_chi1))[1:])
+    else:
+        dydt[1], dydt[2] = 0.0, 0.0
+    if(Cons.EvolveSpin2):
+        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2[0], Vars.rfrak_chi2[1],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_2p5(Cons,Vars)),Cons.S_chi2))[1:])
+    else:
+        dydt[3], dydt[4] = 0.0, 0.0
     return dydt      
 
 @njit(cache=True)
 def Recalculate_3p0(Cons,Vars,y):
     Vars.v = np.array([y[0]])
-    Vars.rfrak_chi1_x = np.array([y[1]])
-    Vars.rfrak_chi1_y = np.array([y[2]])
-    Vars.rfrak_chi2_x = np.array([y[3]])
-    Vars.rfrak_chi2_y = np.array([y[4]])
-    Vars.rfrak_frame_x = np.array([y[5]])
-    Vars.rfrak_frame_y = np.array([y[6]])
-    Vars.rfrak_frame_z = np.array([y[7]])
-    Vars.R = exp(Vars.rfrak_frame_x*Cons.xHat + Vars.rfrak_frame_y*Cons.yHat + Vars.rfrak_frame_z*Cons.zHat)
+    Vars.rfrak_chi1 = np.array([y[1],y[2]])
+    Vars.rfrak_chi2 = np.array([y[3],y[4]])
+    Vars.rfrak_frame = np.array([y[5],y[6],y[7]])
+    Vars.R = exp(Vars.rfrak_frame[0]*Cons.xHat + Vars.rfrak_frame[1]*Cons.yHat + Vars.rfrak_frame[2]*Cons.zHat)
     Vars.nHat = mul(mul(Vars.R,Cons.xHat),conjugate(Vars.R))
     Vars.lambdaHat = mul(mul(Vars.R,Cons.yHat),conjugate(Vars.R))
     Vars.ellHat = mul(mul(Vars.R,Cons.zHat),conjugate(Vars.R))
-    Vars.R_S1 = exp(Vars.rfrak_chi1_x*Cons.xHat + Vars.rfrak_chi1_y*Cons.yHat)
-    Vars.R_S2 = exp(Vars.rfrak_chi2_x*Cons.xHat + Vars.rfrak_chi2_y*Cons.yHat)
+    Vars.R_S1 = exp(Vars.rfrak_chi1[0]*Cons.xHat + Vars.rfrak_chi1[1]*Cons.yHat)
+    Vars.R_S2 = exp(Vars.rfrak_chi2[0]*Cons.xHat + Vars.rfrak_chi2[1]*Cons.yHat)
     Vars.chiVec1 = mul(mul(mul(Cons.S_chi1,Vars.R_S1),Cons.zHat),mul(conjugate(Vars.R_S1),conjugate(Cons.S_chi1)))
     Vars.chiVec2 = mul(mul(mul(Cons.S_chi2,Vars.R_S2),Cons.zHat),mul(conjugate(Vars.R_S2),conjugate(Cons.S_chi2)))
     Vars.chi1_n = np.array([dot(Vars.chiVec1[1:],Vars.nHat[1:])])
@@ -733,14 +845,14 @@ def OmegaVec_chiVec_2_3p0(Cons,Vars):
 
 @njit
 def OmegaVec_3p0(Cons,Vars):
-    gamma_PN_4 = 1.0 - 5.41666666666667*Cons.nu
-    gamma_PN_0 = 1.00000000000000
+    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
     a_ell_4 = Vars.S_n*(5.77777777777778*Cons.nu**2 + 14.75*Cons.nu + 1.5) + Vars.Sigma_n*Cons.delta*(2.83333333333333*Cons.nu**2 + 9.125*Cons.nu + 1.5)
     gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
     gamma_PN_6 = 0.0123456790123457*Cons.nu**3 + 6.36111111111111*Cons.nu**2 - 2.98177812235564*Cons.nu + 1.0
-    gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
-    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_0 = 1.00000000000000
     gamma_PN_5 = (Vars.S_ell*(0.888888888888889*Cons.nu + 3.33333333333333) + 2.0*Vars.Sigma_ell*Cons.delta)/Cons.M**2
+    gamma_PN_4 = 1.0 - 5.41666666666667*Cons.nu
     a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
     return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v**2*(a_ell_2 + a_ell_4*Vars.v**2))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + Vars.v*(gamma_PN_3 + Vars.v*(gamma_PN_4 + Vars.v*(gamma_PN_5 + gamma_PN_6*Vars.v)))))/Cons.M**3
 
@@ -752,37 +864,63 @@ def TaylorT1_3p0(Cons,Vars):
     Absorption = 0
     dvdt_T1 = (-Absorption - Flux)/dEdV
     dydt=np.zeros(8)
-    rfrak_frame=[Vars.rfrak_frame_x[0],Vars.rfrak_frame_y[0],Vars.rfrak_frame_z[0]]
-    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(rfrak_frame, OmegaVec_3p0(Cons,Vars)[1:])
-    dydt[0] = dvdt_T1[0]
+    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(Vars.rfrak_frame, OmegaVec_3p0(Cons,Vars)[1:])
+    dydt[0] = dvdt_T1[0] 
     if(Cons.EvolveSpin1):
-        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1_x[0], Vars.rfrak_chi1_y[0],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_3p0(Cons,Vars)),Cons.S_chi1))[1:])
+        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1[0], Vars.rfrak_chi1[1],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_3p0(Cons,Vars)),Cons.S_chi1))[1:])
     else:
-        dydt[1] = 0.0
-        dydt[2] = 0.0
+        dydt[1], dydt[2] = 0.0, 0.0
     if(Cons.EvolveSpin2):
-        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2_x[0], Vars.rfrak_chi2_y[0],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_3p0(Cons,Vars)),Cons.S_chi2))[1:])
+        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2[0], Vars.rfrak_chi2[1],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_3p0(Cons,Vars)),Cons.S_chi2))[1:])
     else:
-        dydt[3] = 0.0
-        dydt[4] = 0.0
+        dydt[3], dydt[4] = 0.0, 0.0
+    return dydt
+
+@njit(cache=True)
+def TaylorT4_3p0(Cons,Vars):
+    dvdt_T4 = -2.0*Vars.Fcal_coeff*(1.0*-Cons.Fcal_0 + 1.0*0*Vars.v + 1.0*-Cons.Fcal_2*Vars.v**2 + 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**3 + 1.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*Vars.v**4 + 1.0*-Cons.Fcal_5 - Vars.Fcal_SO_5*Vars.v**5 + 1.0*-Cons.Fcal_6 - Vars.Fcal_SO_6 - Cons.Fcal_lnv_6*Vars.logv*Vars.v**6 + (0*(-1.0*-Cons.Fcal_0*Vars.v - 1.0*0*Vars.v**2 - 1.0*-Cons.Fcal_2*Vars.v**3 - 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**4 - 1.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*Vars.v**5 - 1.0*-Cons.Fcal_5 - Vars.Fcal_SO_5*Vars.v**6) + 4*Cons.E_2*Cons.M*(-1.0*-Cons.Fcal_0*Vars.v**2 - 1.0*0*Vars.v**3 - 1.0*-Cons.Fcal_2*Vars.v**4 - 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**5 - 1.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*Vars.v**6) + 5*Vars.E_SO_3*Cons.M*(-1.0*-Cons.Fcal_0*Vars.v**3 - 1.0*0*Vars.v**4 - 1.0*-Cons.Fcal_2*Vars.v**5 - 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**6) + 6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*(-1.0*-Cons.Fcal_0*Vars.v**4 - 1.0*0*Vars.v**5 - 1.0*-Cons.Fcal_2*Vars.v**6) + 7*Vars.E_SO_5*Cons.M*(-1.0*-Cons.Fcal_0*Vars.v**5 - 1.0*0*Vars.v**6) - 1.0*8*Cons.E_6*Cons.M*-Cons.Fcal_0*Vars.v**6 + (0*(0*(1.0*-Cons.Fcal_0*Vars.v**2 + 1.0*0*Vars.v**3 + 1.0*-Cons.Fcal_2*Vars.v**4 + 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**5 + 1.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*Vars.v**6) + 4*Cons.E_2*Cons.M*(2.0*-Cons.Fcal_0*Vars.v**3 + 2.0*0*Vars.v**4 + 2.0*-Cons.Fcal_2*Vars.v**5 + 2.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**6) + 5*Vars.E_SO_3*Cons.M*(2.0*-Cons.Fcal_0*Vars.v**4 + 2.0*0*Vars.v**5 + 2.0*-Cons.Fcal_2*Vars.v**6) + 6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*(2.0*-Cons.Fcal_0*Vars.v**5 + 2.0*0*Vars.v**6) + 2.0*7*Vars.E_SO_5*Cons.M*-Cons.Fcal_0*Vars.v**6) + 4*Cons.E_2*Cons.M*(4*Cons.E_2*Cons.M*(1.0*-Cons.Fcal_0*Vars.v**4 + 1.0*0*Vars.v**5 + 1.0*-Cons.Fcal_2*Vars.v**6) + 5*Vars.E_SO_3*Cons.M*(2.0*-Cons.Fcal_0*Vars.v**5 + 2.0*0*Vars.v**6) + 2.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*-Cons.Fcal_0*Vars.v**6) + 1.0*5*Vars.E_SO_3*Cons.M**2*-Cons.Fcal_0*Vars.v**6 + (0*(0*(0*(-1.0*-Cons.Fcal_0*Vars.v**3 - 1.0*0*Vars.v**4 - 1.0*-Cons.Fcal_2*Vars.v**5 - 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**6) + 4*Cons.E_2*Cons.M*(-3.0*-Cons.Fcal_0*Vars.v**4 - 3.0*0*Vars.v**5 - 3.0*-Cons.Fcal_2*Vars.v**6) + 5*Vars.E_SO_3*Cons.M*(-3.0*-Cons.Fcal_0*Vars.v**5 - 3.0*0*Vars.v**6) - 3.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*-Cons.Fcal_0*Vars.v**6) + 4*Cons.E_2*Cons.M*(4*Cons.E_2*Cons.M*(-3.0*-Cons.Fcal_0*Vars.v**5 - 3.0*0*Vars.v**6) - 6.0*5*Vars.E_SO_3*Cons.M*-Cons.Fcal_0*Vars.v**6)) - 1.0*4*Cons.E_2*Cons.M**3*-Cons.Fcal_0*Vars.v**6 + (0**2*(0*(0*(1.0*-Cons.Fcal_0*Vars.v**4 + 1.0*0*Vars.v**5 + 1.0*-Cons.Fcal_2*Vars.v**6) + 4*Cons.E_2*Cons.M*(4.0*-Cons.Fcal_0*Vars.v**5 + 4.0*0*Vars.v**6) + 4.0*5*Vars.E_SO_3*Cons.M*-Cons.Fcal_0*Vars.v**6) + 6.0*4*Cons.E_2*Cons.M**2*-Cons.Fcal_0*Vars.v**6) + (0**4*(0*(-1.0*-Cons.Fcal_0*Vars.v**5 - 1.0*0*Vars.v**6) - 5.0*4*Cons.E_2*Cons.M*-Cons.Fcal_0*Vars.v**6) + 1.0*0**6*-Cons.Fcal_0*Vars.v**6/2*Cons.E_0*Cons.M)/2*Cons.E_0*Cons.M)/2*Cons.E_0*Cons.M)/2*Cons.E_0*Cons.M)/2*Cons.E_0*Cons.M)/2*Cons.E_0*Cons.M)/(Cons.nu*Vars.v*2*Cons.E_0*Cons.M)
+    dydt=np.zeros(8)
+    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(Vars.rfrak_frame, OmegaVec_3p0(Cons,Vars)[1:])
+    dydt[0] = dvdt_T4[0]
+    if(Cons.EvolveSpin1):
+        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1[0], Vars.rfrak_chi1[1],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_3p0(Cons,Vars)),Cons.S_chi1))[1:])
+    else:
+        dydt[1], dydt[2] = 0.0, 0.0
+    if(Cons.EvolveSpin2):
+        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2[0], Vars.rfrak_chi2[1],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_3p0(Cons,Vars)),Cons.S_chi2))[1:])
+    else:
+        dydt[3], dydt[4] = 0.0, 0.0
+    return dydt      
+
+@njit(cache=True)
+def TaylorT5_3p0(Cons,Vars):
+    dtdv = -0.5*Cons.nu*Vars.v*(1.0*2*Cons.E_0*Cons.M + 1.0*0*Vars.v + 1.0*4*Cons.E_2*Cons.M*Vars.v**2 + 1.0*5*Vars.E_SO_3*Cons.M*Vars.v**3 + 1.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*Vars.v**4 + 1.0*7*Vars.E_SO_5*Cons.M*Vars.v**5 + 1.0*8*Cons.E_6*Cons.M*Vars.v**6 + (0*(-1.0*2*Cons.E_0*Cons.M*Vars.v - 1.0*0*Vars.v**2 - 1.0*4*Cons.E_2*Cons.M*Vars.v**3 - 1.0*5*Vars.E_SO_3*Cons.M*Vars.v**4 - 1.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*Vars.v**5 - 1.0*7*Vars.E_SO_5*Cons.M*Vars.v**6) + -Cons.Fcal_2*(-1.0*2*Cons.E_0*Cons.M*Vars.v**2 - 1.0*0*Vars.v**3 - 1.0*4*Cons.E_2*Cons.M*Vars.v**4 - 1.0*5*Vars.E_SO_3*Cons.M*Vars.v**5 - 1.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*Vars.v**6) + -Cons.Fcal_3 - Vars.Fcal_SO_3*(-1.0*2*Cons.E_0*Cons.M*Vars.v**3 - 1.0*0*Vars.v**4 - 1.0*4*Cons.E_2*Cons.M*Vars.v**5 - 1.0*5*Vars.E_SO_3*Cons.M*Vars.v**6) + -Cons.Fcal_4 - Vars.Fcal_SQ_4*(-1.0*2*Cons.E_0*Cons.M*Vars.v**4 - 1.0*0*Vars.v**5 - 1.0*4*Cons.E_2*Cons.M*Vars.v**6) + -Cons.Fcal_5 - Vars.Fcal_SO_5*(-1.0*2*Cons.E_0*Cons.M*Vars.v**5 - 1.0*0*Vars.v**6) - 1.0*-Cons.Fcal_6 - Vars.Fcal_SO_6 - Cons.Fcal_lnv_6*Vars.logv*2*Cons.E_0*Cons.M*Vars.v**6 + (0*(0*(1.0*2*Cons.E_0*Cons.M*Vars.v**2 + 1.0*0*Vars.v**3 + 1.0*4*Cons.E_2*Cons.M*Vars.v**4 + 1.0*5*Vars.E_SO_3*Cons.M*Vars.v**5 + 1.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*Vars.v**6) + -Cons.Fcal_2*(2.0*2*Cons.E_0*Cons.M*Vars.v**3 + 2.0*0*Vars.v**4 + 2.0*4*Cons.E_2*Cons.M*Vars.v**5 + 2.0*5*Vars.E_SO_3*Cons.M*Vars.v**6) + -Cons.Fcal_3 - Vars.Fcal_SO_3*(2.0*2*Cons.E_0*Cons.M*Vars.v**4 + 2.0*0*Vars.v**5 + 2.0*4*Cons.E_2*Cons.M*Vars.v**6) + -Cons.Fcal_4 - Vars.Fcal_SQ_4*(2.0*2*Cons.E_0*Cons.M*Vars.v**5 + 2.0*0*Vars.v**6) + 2.0*-Cons.Fcal_5 - Vars.Fcal_SO_5*2*Cons.E_0*Cons.M*Vars.v**6) + -Cons.Fcal_2*(-Cons.Fcal_2*(1.0*2*Cons.E_0*Cons.M*Vars.v**4 + 1.0*0*Vars.v**5 + 1.0*4*Cons.E_2*Cons.M*Vars.v**6) + -Cons.Fcal_3 - Vars.Fcal_SO_3*(2.0*2*Cons.E_0*Cons.M*Vars.v**5 + 2.0*0*Vars.v**6) + 2.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*2*Cons.E_0*Cons.M*Vars.v**6) + 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3**2*2*Cons.E_0*Cons.M*Vars.v**6 + (0*(0*(0*(-1.0*2*Cons.E_0*Cons.M*Vars.v**3 - 1.0*0*Vars.v**4 - 1.0*4*Cons.E_2*Cons.M*Vars.v**5 - 1.0*5*Vars.E_SO_3*Cons.M*Vars.v**6) + -Cons.Fcal_2*(-3.0*2*Cons.E_0*Cons.M*Vars.v**4 - 3.0*0*Vars.v**5 - 3.0*4*Cons.E_2*Cons.M*Vars.v**6) + -Cons.Fcal_3 - Vars.Fcal_SO_3*(-3.0*2*Cons.E_0*Cons.M*Vars.v**5 - 3.0*0*Vars.v**6) - 3.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*2*Cons.E_0*Cons.M*Vars.v**6) + -Cons.Fcal_2*(-Cons.Fcal_2*(-3.0*2*Cons.E_0*Cons.M*Vars.v**5 - 3.0*0*Vars.v**6) - 6.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*2*Cons.E_0*Cons.M*Vars.v**6)) - 1.0*-Cons.Fcal_2**3*2*Cons.E_0*Cons.M*Vars.v**6 + (0**2*(0*(0*(1.0*2*Cons.E_0*Cons.M*Vars.v**4 + 1.0*0*Vars.v**5 + 1.0*4*Cons.E_2*Cons.M*Vars.v**6) + -Cons.Fcal_2*(4.0*2*Cons.E_0*Cons.M*Vars.v**5 + 4.0*0*Vars.v**6) + 4.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*2*Cons.E_0*Cons.M*Vars.v**6) + 6.0*-Cons.Fcal_2**2*2*Cons.E_0*Cons.M*Vars.v**6) + (0**4*(0*(-1.0*2*Cons.E_0*Cons.M*Vars.v**5 - 1.0*0*Vars.v**6) - 5.0*-Cons.Fcal_2*2*Cons.E_0*Cons.M*Vars.v**6) + 1.0*0**6*2*Cons.E_0*Cons.M*Vars.v**6/-Cons.Fcal_0)/-Cons.Fcal_0)/-Cons.Fcal_0)/-Cons.Fcal_0)/-Cons.Fcal_0)/-Cons.Fcal_0)/(Vars.Fcal_coeff*-Cons.Fcal_0)
+    dvdt_T5 = 1.0/dtdv
+    dydt=np.zeros(8)
+    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(Vars.rfrak_frame, OmegaVec_3p0(Cons,Vars)[1:])
+    dydt[0] = dvdt_T5[0]
+    if(Cons.EvolveSpin1):
+        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1[0], Vars.rfrak_chi1[1],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_3p0(Cons,Vars)),Cons.S_chi1))[1:])
+    else:
+        dydt[1], dydt[2] = 0.0, 0.0
+    if(Cons.EvolveSpin2):
+        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2[0], Vars.rfrak_chi2[1],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_3p0(Cons,Vars)),Cons.S_chi2))[1:])
+    else:
+        dydt[3], dydt[4] = 0.0, 0.0
     return dydt      
 
 @njit(cache=True)
 def Recalculate_3p5(Cons,Vars,y):
     Vars.v = np.array([y[0]])
-    Vars.rfrak_chi1_x = np.array([y[1]])
-    Vars.rfrak_chi1_y = np.array([y[2]])
-    Vars.rfrak_chi2_x = np.array([y[3]])
-    Vars.rfrak_chi2_y = np.array([y[4]])
-    Vars.rfrak_frame_x = np.array([y[5]])
-    Vars.rfrak_frame_y = np.array([y[6]])
-    Vars.rfrak_frame_z = np.array([y[7]])
-    Vars.R = exp(Vars.rfrak_frame_x*Cons.xHat + Vars.rfrak_frame_y*Cons.yHat + Vars.rfrak_frame_z*Cons.zHat)
+    Vars.rfrak_chi1 = np.array([y[1],y[2]])
+    Vars.rfrak_chi2 = np.array([y[3],y[4]])
+    Vars.rfrak_frame = np.array([y[5],y[6],y[7]])
+    Vars.R = exp(Vars.rfrak_frame[0]*Cons.xHat + Vars.rfrak_frame[1]*Cons.yHat + Vars.rfrak_frame[2]*Cons.zHat)
     Vars.nHat = mul(mul(Vars.R,Cons.xHat),conjugate(Vars.R))
     Vars.lambdaHat = mul(mul(Vars.R,Cons.yHat),conjugate(Vars.R))
     Vars.ellHat = mul(mul(Vars.R,Cons.zHat),conjugate(Vars.R))
-    Vars.R_S1 = exp(Vars.rfrak_chi1_x*Cons.xHat + Vars.rfrak_chi1_y*Cons.yHat)
-    Vars.R_S2 = exp(Vars.rfrak_chi2_x*Cons.xHat + Vars.rfrak_chi2_y*Cons.yHat)
+    Vars.R_S1 = exp(Vars.rfrak_chi1[0]*Cons.xHat + Vars.rfrak_chi1[1]*Cons.yHat)
+    Vars.R_S2 = exp(Vars.rfrak_chi2[0]*Cons.xHat + Vars.rfrak_chi2[1]*Cons.yHat)
     Vars.chiVec1 = mul(mul(mul(Cons.S_chi1,Vars.R_S1),Cons.zHat),mul(conjugate(Vars.R_S1),conjugate(Cons.S_chi1)))
     Vars.chiVec2 = mul(mul(mul(Cons.S_chi2,Vars.R_S2),Cons.zHat),mul(conjugate(Vars.R_S2),conjugate(Cons.S_chi2)))
     Vars.chi1_n = np.array([dot(Vars.chiVec1[1:],Vars.nHat[1:])])
@@ -823,15 +961,15 @@ def OmegaVec_chiVec_2_3p5(Cons,Vars):
 
 @njit
 def OmegaVec_3p5(Cons,Vars):
-    gamma_PN_4 = 1.0 - 5.41666666666667*Cons.nu
-    gamma_PN_0 = 1.00000000000000
+    gamma_PN_7 = (Vars.S_ell*(-6.0*Cons.nu**2 - 10.5833333333333*Cons.nu + 5.0) - 2.66666666666667*Vars.Sigma_ell*Cons.delta*Cons.nu**2 + Vars.Sigma_ell*Cons.delta*(3.0 - 10.1666666666667*Cons.nu))/Cons.M**2
+    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
     a_ell_4 = Vars.S_n*(5.77777777777778*Cons.nu**2 + 14.75*Cons.nu + 1.5) + Vars.Sigma_n*Cons.delta*(2.83333333333333*Cons.nu**2 + 9.125*Cons.nu + 1.5)
     gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
     gamma_PN_6 = 0.0123456790123457*Cons.nu**3 + 6.36111111111111*Cons.nu**2 - 2.98177812235564*Cons.nu + 1.0
-    gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
-    gamma_PN_7 = (Vars.S_ell*(-6.0*Cons.nu**2 - 10.5833333333333*Cons.nu + 5.0) - 2.66666666666667*Vars.Sigma_ell*Cons.delta*Cons.nu**2 + Vars.Sigma_ell*Cons.delta*(3.0 - 10.1666666666667*Cons.nu))/Cons.M**2
-    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_0 = 1.00000000000000
     gamma_PN_5 = (Vars.S_ell*(0.888888888888889*Cons.nu + 3.33333333333333) + 2.0*Vars.Sigma_ell*Cons.delta)/Cons.M**2
+    gamma_PN_4 = 1.0 - 5.41666666666667*Cons.nu
     a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
     return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v**2*(a_ell_2 + a_ell_4*Vars.v**2))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + Vars.v*(gamma_PN_3 + Vars.v*(gamma_PN_4 + Vars.v*(gamma_PN_5 + Vars.v*(gamma_PN_6 + gamma_PN_7*Vars.v))))))/Cons.M**3
 
@@ -843,37 +981,63 @@ def TaylorT1_3p5(Cons,Vars):
     Absorption = 0
     dvdt_T1 = (-Absorption - Flux)/dEdV
     dydt=np.zeros(8)
-    rfrak_frame=[Vars.rfrak_frame_x[0],Vars.rfrak_frame_y[0],Vars.rfrak_frame_z[0]]
-    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(rfrak_frame, OmegaVec_3p5(Cons,Vars)[1:])
-    dydt[0] = dvdt_T1[0]
+    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(Vars.rfrak_frame, OmegaVec_3p5(Cons,Vars)[1:])
+    dydt[0] = dvdt_T1[0] 
     if(Cons.EvolveSpin1):
-        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1_x[0], Vars.rfrak_chi1_y[0],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_3p5(Cons,Vars)),Cons.S_chi1))[1:])
+        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1[0], Vars.rfrak_chi1[1],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_3p5(Cons,Vars)),Cons.S_chi1))[1:])
     else:
-        dydt[1] = 0.0
-        dydt[2] = 0.0
+        dydt[1], dydt[2] = 0.0, 0.0
     if(Cons.EvolveSpin2):
-        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2_x[0], Vars.rfrak_chi2_y[0],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_3p5(Cons,Vars)),Cons.S_chi2))[1:])
+        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2[0], Vars.rfrak_chi2[1],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_3p5(Cons,Vars)),Cons.S_chi2))[1:])
     else:
-        dydt[3] = 0.0
-        dydt[4] = 0.0
+        dydt[3], dydt[4] = 0.0, 0.0
+    return dydt
+
+@njit(cache=True)
+def TaylorT4_3p5(Cons,Vars):
+    dvdt_T4 = -2.0*Vars.Fcal_coeff*(1.0*-Cons.Fcal_0 + 1.0*0*Vars.v + 1.0*-Cons.Fcal_2*Vars.v**2 + 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**3 + 1.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*Vars.v**4 + 1.0*-Cons.Fcal_5 - Vars.Fcal_SO_5*Vars.v**5 + 1.0*-Cons.Fcal_6 - Vars.Fcal_SO_6 - Cons.Fcal_lnv_6*Vars.logv*Vars.v**6 + 1.0*-Cons.Fcal_7 - Vars.Fcal_SO_7*Vars.v**7 + (0*(-1.0*-Cons.Fcal_0*Vars.v - 1.0*0*Vars.v**2 - 1.0*-Cons.Fcal_2*Vars.v**3 - 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**4 - 1.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*Vars.v**5 - 1.0*-Cons.Fcal_5 - Vars.Fcal_SO_5*Vars.v**6 - 1.0*-Cons.Fcal_6 - Vars.Fcal_SO_6 - Cons.Fcal_lnv_6*Vars.logv*Vars.v**7) + 4*Cons.E_2*Cons.M*(-1.0*-Cons.Fcal_0*Vars.v**2 - 1.0*0*Vars.v**3 - 1.0*-Cons.Fcal_2*Vars.v**4 - 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**5 - 1.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*Vars.v**6 - 1.0*-Cons.Fcal_5 - Vars.Fcal_SO_5*Vars.v**7) + 5*Vars.E_SO_3*Cons.M*(-1.0*-Cons.Fcal_0*Vars.v**3 - 1.0*0*Vars.v**4 - 1.0*-Cons.Fcal_2*Vars.v**5 - 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**6 - 1.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*Vars.v**7) + 6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*(-1.0*-Cons.Fcal_0*Vars.v**4 - 1.0*0*Vars.v**5 - 1.0*-Cons.Fcal_2*Vars.v**6 - 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**7) + 7*Vars.E_SO_5*Cons.M*(-1.0*-Cons.Fcal_0*Vars.v**5 - 1.0*0*Vars.v**6 - 1.0*-Cons.Fcal_2*Vars.v**7) + 8*Cons.E_6*Cons.M*(-1.0*-Cons.Fcal_0*Vars.v**6 - 1.0*0*Vars.v**7) - 1.0*9*Vars.E_SO_7*Cons.M*-Cons.Fcal_0*Vars.v**7 + (0*(0*(1.0*-Cons.Fcal_0*Vars.v**2 + 1.0*0*Vars.v**3 + 1.0*-Cons.Fcal_2*Vars.v**4 + 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**5 + 1.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*Vars.v**6 + 1.0*-Cons.Fcal_5 - Vars.Fcal_SO_5*Vars.v**7) + 4*Cons.E_2*Cons.M*(2.0*-Cons.Fcal_0*Vars.v**3 + 2.0*0*Vars.v**4 + 2.0*-Cons.Fcal_2*Vars.v**5 + 2.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**6 + 2.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*Vars.v**7) + 5*Vars.E_SO_3*Cons.M*(2.0*-Cons.Fcal_0*Vars.v**4 + 2.0*0*Vars.v**5 + 2.0*-Cons.Fcal_2*Vars.v**6 + 2.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**7) + 6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*(2.0*-Cons.Fcal_0*Vars.v**5 + 2.0*0*Vars.v**6 + 2.0*-Cons.Fcal_2*Vars.v**7) + 7*Vars.E_SO_5*Cons.M*(2.0*-Cons.Fcal_0*Vars.v**6 + 2.0*0*Vars.v**7) + 2.0*8*Cons.E_6*Cons.M*-Cons.Fcal_0*Vars.v**7) + 4*Cons.E_2*Cons.M*(4*Cons.E_2*Cons.M*(1.0*-Cons.Fcal_0*Vars.v**4 + 1.0*0*Vars.v**5 + 1.0*-Cons.Fcal_2*Vars.v**6 + 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**7) + 5*Vars.E_SO_3*Cons.M*(2.0*-Cons.Fcal_0*Vars.v**5 + 2.0*0*Vars.v**6 + 2.0*-Cons.Fcal_2*Vars.v**7) + 6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*(2.0*-Cons.Fcal_0*Vars.v**6 + 2.0*0*Vars.v**7) + 2.0*7*Vars.E_SO_5*Cons.M*-Cons.Fcal_0*Vars.v**7) + 5*Vars.E_SO_3*Cons.M*(5*Vars.E_SO_3*Cons.M*(1.0*-Cons.Fcal_0*Vars.v**6 + 1.0*0*Vars.v**7) + 2.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*-Cons.Fcal_0*Vars.v**7) + (0*(0*(0*(-1.0*-Cons.Fcal_0*Vars.v**3 - 1.0*0*Vars.v**4 - 1.0*-Cons.Fcal_2*Vars.v**5 - 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**6 - 1.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*Vars.v**7) + 4*Cons.E_2*Cons.M*(-3.0*-Cons.Fcal_0*Vars.v**4 - 3.0*0*Vars.v**5 - 3.0*-Cons.Fcal_2*Vars.v**6 - 3.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**7) + 5*Vars.E_SO_3*Cons.M*(-3.0*-Cons.Fcal_0*Vars.v**5 - 3.0*0*Vars.v**6 - 3.0*-Cons.Fcal_2*Vars.v**7) + 6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*(-3.0*-Cons.Fcal_0*Vars.v**6 - 3.0*0*Vars.v**7) - 3.0*7*Vars.E_SO_5*Cons.M*-Cons.Fcal_0*Vars.v**7) + 4*Cons.E_2*Cons.M*(4*Cons.E_2*Cons.M*(-3.0*-Cons.Fcal_0*Vars.v**5 - 3.0*0*Vars.v**6 - 3.0*-Cons.Fcal_2*Vars.v**7) + 5*Vars.E_SO_3*Cons.M*(-6.0*-Cons.Fcal_0*Vars.v**6 - 6.0*0*Vars.v**7) - 6.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*-Cons.Fcal_0*Vars.v**7) - 3.0*5*Vars.E_SO_3*Cons.M**2*-Cons.Fcal_0*Vars.v**7) + 4*Cons.E_2*Cons.M**2*(4*Cons.E_2*Cons.M*(-1.0*-Cons.Fcal_0*Vars.v**6 - 1.0*0*Vars.v**7) - 3.0*5*Vars.E_SO_3*Cons.M*-Cons.Fcal_0*Vars.v**7) + (0*(0*(0*(0*(1.0*-Cons.Fcal_0*Vars.v**4 + 1.0*0*Vars.v**5 + 1.0*-Cons.Fcal_2*Vars.v**6 + 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**7) + 4*Cons.E_2*Cons.M*(4.0*-Cons.Fcal_0*Vars.v**5 + 4.0*0*Vars.v**6 + 4.0*-Cons.Fcal_2*Vars.v**7) + 5*Vars.E_SO_3*Cons.M*(4.0*-Cons.Fcal_0*Vars.v**6 + 4.0*0*Vars.v**7) + 4.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*-Cons.Fcal_0*Vars.v**7) + 4*Cons.E_2*Cons.M*(4*Cons.E_2*Cons.M*(6.0*-Cons.Fcal_0*Vars.v**6 + 6.0*0*Vars.v**7) + 12.0*5*Vars.E_SO_3*Cons.M*-Cons.Fcal_0*Vars.v**7)) + 4.0*4*Cons.E_2*Cons.M**3*-Cons.Fcal_0*Vars.v**7) + (0**3*(0*(0*(-1.0*-Cons.Fcal_0*Vars.v**5 - 1.0*0*Vars.v**6 - 1.0*-Cons.Fcal_2*Vars.v**7) + 4*Cons.E_2*Cons.M*(-5.0*-Cons.Fcal_0*Vars.v**6 - 5.0*0*Vars.v**7) - 5.0*5*Vars.E_SO_3*Cons.M*-Cons.Fcal_0*Vars.v**7) - 10.0*4*Cons.E_2*Cons.M**2*-Cons.Fcal_0*Vars.v**7) + (0**5*(0*(1.0*-Cons.Fcal_0*Vars.v**6 + 1.0*0*Vars.v**7) + 6.0*4*Cons.E_2*Cons.M*-Cons.Fcal_0*Vars.v**7) - 1.0*0**7*-Cons.Fcal_0*Vars.v**7/2*Cons.E_0*Cons.M)/2*Cons.E_0*Cons.M)/2*Cons.E_0*Cons.M)/2*Cons.E_0*Cons.M)/2*Cons.E_0*Cons.M)/2*Cons.E_0*Cons.M)/2*Cons.E_0*Cons.M)/(Cons.nu*Vars.v*2*Cons.E_0*Cons.M)
+    dydt=np.zeros(8)
+    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(Vars.rfrak_frame, OmegaVec_3p5(Cons,Vars)[1:])
+    dydt[0] = dvdt_T4[0]
+    if(Cons.EvolveSpin1):
+        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1[0], Vars.rfrak_chi1[1],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_3p5(Cons,Vars)),Cons.S_chi1))[1:])
+    else:
+        dydt[1], dydt[2] = 0.0, 0.0
+    if(Cons.EvolveSpin2):
+        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2[0], Vars.rfrak_chi2[1],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_3p5(Cons,Vars)),Cons.S_chi2))[1:])
+    else:
+        dydt[3], dydt[4] = 0.0, 0.0
+    return dydt      
+
+@njit(cache=True)
+def TaylorT5_3p5(Cons,Vars):
+    dtdv = -0.5*Cons.nu*Vars.v*(1.0*2*Cons.E_0*Cons.M + 1.0*0*Vars.v + 1.0*4*Cons.E_2*Cons.M*Vars.v**2 + 1.0*5*Vars.E_SO_3*Cons.M*Vars.v**3 + 1.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*Vars.v**4 + 1.0*7*Vars.E_SO_5*Cons.M*Vars.v**5 + 1.0*8*Cons.E_6*Cons.M*Vars.v**6 + 1.0*9*Vars.E_SO_7*Cons.M*Vars.v**7 + (0*(-1.0*2*Cons.E_0*Cons.M*Vars.v - 1.0*0*Vars.v**2 - 1.0*4*Cons.E_2*Cons.M*Vars.v**3 - 1.0*5*Vars.E_SO_3*Cons.M*Vars.v**4 - 1.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*Vars.v**5 - 1.0*7*Vars.E_SO_5*Cons.M*Vars.v**6 - 1.0*8*Cons.E_6*Cons.M*Vars.v**7) + -Cons.Fcal_2*(-1.0*2*Cons.E_0*Cons.M*Vars.v**2 - 1.0*0*Vars.v**3 - 1.0*4*Cons.E_2*Cons.M*Vars.v**4 - 1.0*5*Vars.E_SO_3*Cons.M*Vars.v**5 - 1.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*Vars.v**6 - 1.0*7*Vars.E_SO_5*Cons.M*Vars.v**7) + -Cons.Fcal_3 - Vars.Fcal_SO_3*(-1.0*2*Cons.E_0*Cons.M*Vars.v**3 - 1.0*0*Vars.v**4 - 1.0*4*Cons.E_2*Cons.M*Vars.v**5 - 1.0*5*Vars.E_SO_3*Cons.M*Vars.v**6 - 1.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*Vars.v**7) + -Cons.Fcal_4 - Vars.Fcal_SQ_4*(-1.0*2*Cons.E_0*Cons.M*Vars.v**4 - 1.0*0*Vars.v**5 - 1.0*4*Cons.E_2*Cons.M*Vars.v**6 - 1.0*5*Vars.E_SO_3*Cons.M*Vars.v**7) + -Cons.Fcal_5 - Vars.Fcal_SO_5*(-1.0*2*Cons.E_0*Cons.M*Vars.v**5 - 1.0*0*Vars.v**6 - 1.0*4*Cons.E_2*Cons.M*Vars.v**7) + -Cons.Fcal_6 - Vars.Fcal_SO_6 - Cons.Fcal_lnv_6*Vars.logv*(-1.0*2*Cons.E_0*Cons.M*Vars.v**6 - 1.0*0*Vars.v**7) - 1.0*-Cons.Fcal_7 - Vars.Fcal_SO_7*2*Cons.E_0*Cons.M*Vars.v**7 + (0*(0*(1.0*2*Cons.E_0*Cons.M*Vars.v**2 + 1.0*0*Vars.v**3 + 1.0*4*Cons.E_2*Cons.M*Vars.v**4 + 1.0*5*Vars.E_SO_3*Cons.M*Vars.v**5 + 1.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*Vars.v**6 + 1.0*7*Vars.E_SO_5*Cons.M*Vars.v**7) + -Cons.Fcal_2*(2.0*2*Cons.E_0*Cons.M*Vars.v**3 + 2.0*0*Vars.v**4 + 2.0*4*Cons.E_2*Cons.M*Vars.v**5 + 2.0*5*Vars.E_SO_3*Cons.M*Vars.v**6 + 2.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*Vars.v**7) + -Cons.Fcal_3 - Vars.Fcal_SO_3*(2.0*2*Cons.E_0*Cons.M*Vars.v**4 + 2.0*0*Vars.v**5 + 2.0*4*Cons.E_2*Cons.M*Vars.v**6 + 2.0*5*Vars.E_SO_3*Cons.M*Vars.v**7) + -Cons.Fcal_4 - Vars.Fcal_SQ_4*(2.0*2*Cons.E_0*Cons.M*Vars.v**5 + 2.0*0*Vars.v**6 + 2.0*4*Cons.E_2*Cons.M*Vars.v**7) + -Cons.Fcal_5 - Vars.Fcal_SO_5*(2.0*2*Cons.E_0*Cons.M*Vars.v**6 + 2.0*0*Vars.v**7) + 2.0*-Cons.Fcal_6 - Vars.Fcal_SO_6 - Cons.Fcal_lnv_6*Vars.logv*2*Cons.E_0*Cons.M*Vars.v**7) + -Cons.Fcal_2*(-Cons.Fcal_2*(1.0*2*Cons.E_0*Cons.M*Vars.v**4 + 1.0*0*Vars.v**5 + 1.0*4*Cons.E_2*Cons.M*Vars.v**6 + 1.0*5*Vars.E_SO_3*Cons.M*Vars.v**7) + -Cons.Fcal_3 - Vars.Fcal_SO_3*(2.0*2*Cons.E_0*Cons.M*Vars.v**5 + 2.0*0*Vars.v**6 + 2.0*4*Cons.E_2*Cons.M*Vars.v**7) + -Cons.Fcal_4 - Vars.Fcal_SQ_4*(2.0*2*Cons.E_0*Cons.M*Vars.v**6 + 2.0*0*Vars.v**7) + 2.0*-Cons.Fcal_5 - Vars.Fcal_SO_5*2*Cons.E_0*Cons.M*Vars.v**7) + -Cons.Fcal_3 - Vars.Fcal_SO_3*(-Cons.Fcal_3 - Vars.Fcal_SO_3*(1.0*2*Cons.E_0*Cons.M*Vars.v**6 + 1.0*0*Vars.v**7) + 2.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*2*Cons.E_0*Cons.M*Vars.v**7) + (0*(0*(0*(-1.0*2*Cons.E_0*Cons.M*Vars.v**3 - 1.0*0*Vars.v**4 - 1.0*4*Cons.E_2*Cons.M*Vars.v**5 - 1.0*5*Vars.E_SO_3*Cons.M*Vars.v**6 - 1.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*Vars.v**7) + -Cons.Fcal_2*(-3.0*2*Cons.E_0*Cons.M*Vars.v**4 - 3.0*0*Vars.v**5 - 3.0*4*Cons.E_2*Cons.M*Vars.v**6 - 3.0*5*Vars.E_SO_3*Cons.M*Vars.v**7) + -Cons.Fcal_3 - Vars.Fcal_SO_3*(-3.0*2*Cons.E_0*Cons.M*Vars.v**5 - 3.0*0*Vars.v**6 - 3.0*4*Cons.E_2*Cons.M*Vars.v**7) + -Cons.Fcal_4 - Vars.Fcal_SQ_4*(-3.0*2*Cons.E_0*Cons.M*Vars.v**6 - 3.0*0*Vars.v**7) - 3.0*-Cons.Fcal_5 - Vars.Fcal_SO_5*2*Cons.E_0*Cons.M*Vars.v**7) + -Cons.Fcal_2*(-Cons.Fcal_2*(-3.0*2*Cons.E_0*Cons.M*Vars.v**5 - 3.0*0*Vars.v**6 - 3.0*4*Cons.E_2*Cons.M*Vars.v**7) + -Cons.Fcal_3 - Vars.Fcal_SO_3*(-6.0*2*Cons.E_0*Cons.M*Vars.v**6 - 6.0*0*Vars.v**7) - 6.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*2*Cons.E_0*Cons.M*Vars.v**7) - 3.0*-Cons.Fcal_3 - Vars.Fcal_SO_3**2*2*Cons.E_0*Cons.M*Vars.v**7) + -Cons.Fcal_2**2*(-Cons.Fcal_2*(-1.0*2*Cons.E_0*Cons.M*Vars.v**6 - 1.0*0*Vars.v**7) - 3.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*2*Cons.E_0*Cons.M*Vars.v**7) + (0*(0*(0*(0*(1.0*2*Cons.E_0*Cons.M*Vars.v**4 + 1.0*0*Vars.v**5 + 1.0*4*Cons.E_2*Cons.M*Vars.v**6 + 1.0*5*Vars.E_SO_3*Cons.M*Vars.v**7) + -Cons.Fcal_2*(4.0*2*Cons.E_0*Cons.M*Vars.v**5 + 4.0*0*Vars.v**6 + 4.0*4*Cons.E_2*Cons.M*Vars.v**7) + -Cons.Fcal_3 - Vars.Fcal_SO_3*(4.0*2*Cons.E_0*Cons.M*Vars.v**6 + 4.0*0*Vars.v**7) + 4.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*2*Cons.E_0*Cons.M*Vars.v**7) + -Cons.Fcal_2*(-Cons.Fcal_2*(6.0*2*Cons.E_0*Cons.M*Vars.v**6 + 6.0*0*Vars.v**7) + 12.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*2*Cons.E_0*Cons.M*Vars.v**7)) + 4.0*-Cons.Fcal_2**3*2*Cons.E_0*Cons.M*Vars.v**7) + (0**3*(0*(0*(-1.0*2*Cons.E_0*Cons.M*Vars.v**5 - 1.0*0*Vars.v**6 - 1.0*4*Cons.E_2*Cons.M*Vars.v**7) + -Cons.Fcal_2*(-5.0*2*Cons.E_0*Cons.M*Vars.v**6 - 5.0*0*Vars.v**7) - 5.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*2*Cons.E_0*Cons.M*Vars.v**7) - 10.0*-Cons.Fcal_2**2*2*Cons.E_0*Cons.M*Vars.v**7) + (0**5*(0*(1.0*2*Cons.E_0*Cons.M*Vars.v**6 + 1.0*0*Vars.v**7) + 6.0*-Cons.Fcal_2*2*Cons.E_0*Cons.M*Vars.v**7) - 1.0*0**7*2*Cons.E_0*Cons.M*Vars.v**7/-Cons.Fcal_0)/-Cons.Fcal_0)/-Cons.Fcal_0)/-Cons.Fcal_0)/-Cons.Fcal_0)/-Cons.Fcal_0)/-Cons.Fcal_0)/(Vars.Fcal_coeff*-Cons.Fcal_0)
+    dvdt_T5 = 1.0/dtdv
+    dydt=np.zeros(8)
+    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(Vars.rfrak_frame, OmegaVec_3p5(Cons,Vars)[1:])
+    dydt[0] = dvdt_T5[0]
+    if(Cons.EvolveSpin1):
+        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1[0], Vars.rfrak_chi1[1],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_3p5(Cons,Vars)),Cons.S_chi1))[1:])
+    else:
+        dydt[1], dydt[2] = 0.0, 0.0
+    if(Cons.EvolveSpin2):
+        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2[0], Vars.rfrak_chi2[1],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_3p5(Cons,Vars)),Cons.S_chi2))[1:])
+    else:
+        dydt[3], dydt[4] = 0.0, 0.0
     return dydt      
 
 @njit(cache=True)
 def Recalculate_4p0(Cons,Vars,y):
     Vars.v = np.array([y[0]])
-    Vars.rfrak_chi1_x = np.array([y[1]])
-    Vars.rfrak_chi1_y = np.array([y[2]])
-    Vars.rfrak_chi2_x = np.array([y[3]])
-    Vars.rfrak_chi2_y = np.array([y[4]])
-    Vars.rfrak_frame_x = np.array([y[5]])
-    Vars.rfrak_frame_y = np.array([y[6]])
-    Vars.rfrak_frame_z = np.array([y[7]])
-    Vars.R = exp(Vars.rfrak_frame_x*Cons.xHat + Vars.rfrak_frame_y*Cons.yHat + Vars.rfrak_frame_z*Cons.zHat)
+    Vars.rfrak_chi1 = np.array([y[1],y[2]])
+    Vars.rfrak_chi2 = np.array([y[3],y[4]])
+    Vars.rfrak_frame = np.array([y[5],y[6],y[7]])
+    Vars.R = exp(Vars.rfrak_frame[0]*Cons.xHat + Vars.rfrak_frame[1]*Cons.yHat + Vars.rfrak_frame[2]*Cons.zHat)
     Vars.nHat = mul(mul(Vars.R,Cons.xHat),conjugate(Vars.R))
     Vars.lambdaHat = mul(mul(Vars.R,Cons.yHat),conjugate(Vars.R))
     Vars.ellHat = mul(mul(Vars.R,Cons.zHat),conjugate(Vars.R))
-    Vars.R_S1 = exp(Vars.rfrak_chi1_x*Cons.xHat + Vars.rfrak_chi1_y*Cons.yHat)
-    Vars.R_S2 = exp(Vars.rfrak_chi2_x*Cons.xHat + Vars.rfrak_chi2_y*Cons.yHat)
+    Vars.R_S1 = exp(Vars.rfrak_chi1[0]*Cons.xHat + Vars.rfrak_chi1[1]*Cons.yHat)
+    Vars.R_S2 = exp(Vars.rfrak_chi2[0]*Cons.xHat + Vars.rfrak_chi2[1]*Cons.yHat)
     Vars.chiVec1 = mul(mul(mul(Cons.S_chi1,Vars.R_S1),Cons.zHat),mul(conjugate(Vars.R_S1),conjugate(Cons.S_chi1)))
     Vars.chiVec2 = mul(mul(mul(Cons.S_chi2,Vars.R_S2),Cons.zHat),mul(conjugate(Vars.R_S2),conjugate(Cons.S_chi2)))
     Vars.chi1_n = np.array([dot(Vars.chiVec1[1:],Vars.nHat[1:])])
@@ -915,15 +1079,15 @@ def OmegaVec_chiVec_2_4p0(Cons,Vars):
 
 @njit
 def OmegaVec_4p0(Cons,Vars):
-    gamma_PN_4 = 1.0 - 5.41666666666667*Cons.nu
-    gamma_PN_0 = 1.00000000000000
+    gamma_PN_7 = (Vars.S_ell*(-6.0*Cons.nu**2 - 10.5833333333333*Cons.nu + 5.0) - 2.66666666666667*Vars.Sigma_ell*Cons.delta*Cons.nu**2 + Vars.Sigma_ell*Cons.delta*(3.0 - 10.1666666666667*Cons.nu))/Cons.M**2
+    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
     a_ell_4 = Vars.S_n*(5.77777777777778*Cons.nu**2 + 14.75*Cons.nu + 1.5) + Vars.Sigma_n*Cons.delta*(2.83333333333333*Cons.nu**2 + 9.125*Cons.nu + 1.5)
     gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
     gamma_PN_6 = 0.0123456790123457*Cons.nu**3 + 6.36111111111111*Cons.nu**2 - 2.98177812235564*Cons.nu + 1.0
-    gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
-    gamma_PN_7 = (Vars.S_ell*(-6.0*Cons.nu**2 - 10.5833333333333*Cons.nu + 5.0) - 2.66666666666667*Vars.Sigma_ell*Cons.delta*Cons.nu**2 + Vars.Sigma_ell*Cons.delta*(3.0 - 10.1666666666667*Cons.nu))/Cons.M**2
-    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_0 = 1.00000000000000
     gamma_PN_5 = (Vars.S_ell*(0.888888888888889*Cons.nu + 3.33333333333333) + 2.0*Vars.Sigma_ell*Cons.delta)/Cons.M**2
+    gamma_PN_4 = 1.0 - 5.41666666666667*Cons.nu
     a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
     return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v**2*(a_ell_2 + a_ell_4*Vars.v**2))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + Vars.v*(gamma_PN_3 + Vars.v*(gamma_PN_4 + Vars.v*(gamma_PN_5 + Vars.v*(gamma_PN_6 + gamma_PN_7*Vars.v))))))/Cons.M**3
 
@@ -935,19 +1099,49 @@ def TaylorT1_4p0(Cons,Vars):
     Absorption = 0
     dvdt_T1 = (-Absorption - Flux)/dEdV
     dydt=np.zeros(8)
-    rfrak_frame=[Vars.rfrak_frame_x[0],Vars.rfrak_frame_y[0],Vars.rfrak_frame_z[0]]
-    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(rfrak_frame, OmegaVec_4p0(Cons,Vars)[1:])
-    dydt[0] = dvdt_T1[0]
+    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(Vars.rfrak_frame, OmegaVec_4p0(Cons,Vars)[1:])
+    dydt[0] = dvdt_T1[0] 
     if(Cons.EvolveSpin1):
-        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1_x[0], Vars.rfrak_chi1_y[0],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_4p0(Cons,Vars)),Cons.S_chi1))[1:])
+        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1[0], Vars.rfrak_chi1[1],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_4p0(Cons,Vars)),Cons.S_chi1))[1:])
     else:
-        dydt[1] = 0.0
-        dydt[2] = 0.0
+        dydt[1], dydt[2] = 0.0, 0.0
     if(Cons.EvolveSpin2):
-        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2_x[0], Vars.rfrak_chi2_y[0],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_4p0(Cons,Vars)),Cons.S_chi2))[1:])
+        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2[0], Vars.rfrak_chi2[1],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_4p0(Cons,Vars)),Cons.S_chi2))[1:])
     else:
-        dydt[3] = 0.0
-        dydt[4] = 0.0
+        dydt[3], dydt[4] = 0.0, 0.0
+    return dydt
+
+@njit(cache=True)
+def TaylorT4_4p0(Cons,Vars):
+    dvdt_T4 = -2.0*Vars.Fcal_coeff*(1.0*-Cons.Fcal_0 + 1.0*0*Vars.v + 1.0*-Cons.Fcal_2*Vars.v**2 + 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**3 + 1.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*Vars.v**4 + 1.0*-Cons.Fcal_5 - Vars.Fcal_SO_5*Vars.v**5 + 1.0*-Cons.Fcal_6 - Vars.Fcal_SO_6 - Cons.Fcal_lnv_6*Vars.logv*Vars.v**6 + 1.0*-Cons.Fcal_7 - Vars.Fcal_SO_7*Vars.v**7 + 1.0*-Cons.Fcal_8 - Vars.Fcal_SO_8 - Cons.Fcal_lnv_8*Vars.logv*Vars.v**8 + (0*(-1.0*-Cons.Fcal_0*Vars.v - 1.0*0*Vars.v**2 - 1.0*-Cons.Fcal_2*Vars.v**3 - 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**4 - 1.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*Vars.v**5 - 1.0*-Cons.Fcal_5 - Vars.Fcal_SO_5*Vars.v**6 - 1.0*-Cons.Fcal_6 - Vars.Fcal_SO_6 - Cons.Fcal_lnv_6*Vars.logv*Vars.v**7 - 1.0*-Cons.Fcal_7 - Vars.Fcal_SO_7*Vars.v**8) + 4*Cons.E_2*Cons.M*(-1.0*-Cons.Fcal_0*Vars.v**2 - 1.0*0*Vars.v**3 - 1.0*-Cons.Fcal_2*Vars.v**4 - 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**5 - 1.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*Vars.v**6 - 1.0*-Cons.Fcal_5 - Vars.Fcal_SO_5*Vars.v**7 - 1.0*-Cons.Fcal_6 - Vars.Fcal_SO_6 - Cons.Fcal_lnv_6*Vars.logv*Vars.v**8) + 5*Vars.E_SO_3*Cons.M*(-1.0*-Cons.Fcal_0*Vars.v**3 - 1.0*0*Vars.v**4 - 1.0*-Cons.Fcal_2*Vars.v**5 - 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**6 - 1.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*Vars.v**7 - 1.0*-Cons.Fcal_5 - Vars.Fcal_SO_5*Vars.v**8) + 6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*(-1.0*-Cons.Fcal_0*Vars.v**4 - 1.0*0*Vars.v**5 - 1.0*-Cons.Fcal_2*Vars.v**6 - 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**7 - 1.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*Vars.v**8) + 7*Vars.E_SO_5*Cons.M*(-1.0*-Cons.Fcal_0*Vars.v**5 - 1.0*0*Vars.v**6 - 1.0*-Cons.Fcal_2*Vars.v**7 - 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**8) + 8*Cons.E_6*Cons.M*(-1.0*-Cons.Fcal_0*Vars.v**6 - 1.0*0*Vars.v**7 - 1.0*-Cons.Fcal_2*Vars.v**8) + 9*Vars.E_SO_7*Cons.M*(-1.0*-Cons.Fcal_0*Vars.v**7 - 1.0*0*Vars.v**8) - 1.0*10*Cons.E_8*Cons.M + Cons.E_lnv_8*Cons.M*(10*Vars.logv + 1)*-Cons.Fcal_0*Vars.v**8 + (0*(0*(1.0*-Cons.Fcal_0*Vars.v**2 + 1.0*0*Vars.v**3 + 1.0*-Cons.Fcal_2*Vars.v**4 + 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**5 + 1.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*Vars.v**6 + 1.0*-Cons.Fcal_5 - Vars.Fcal_SO_5*Vars.v**7 + 1.0*-Cons.Fcal_6 - Vars.Fcal_SO_6 - Cons.Fcal_lnv_6*Vars.logv*Vars.v**8) + 4*Cons.E_2*Cons.M*(2.0*-Cons.Fcal_0*Vars.v**3 + 2.0*0*Vars.v**4 + 2.0*-Cons.Fcal_2*Vars.v**5 + 2.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**6 + 2.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*Vars.v**7 + 2.0*-Cons.Fcal_5 - Vars.Fcal_SO_5*Vars.v**8) + 5*Vars.E_SO_3*Cons.M*(2.0*-Cons.Fcal_0*Vars.v**4 + 2.0*0*Vars.v**5 + 2.0*-Cons.Fcal_2*Vars.v**6 + 2.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**7 + 2.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*Vars.v**8) + 6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*(2.0*-Cons.Fcal_0*Vars.v**5 + 2.0*0*Vars.v**6 + 2.0*-Cons.Fcal_2*Vars.v**7 + 2.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**8) + 7*Vars.E_SO_5*Cons.M*(2.0*-Cons.Fcal_0*Vars.v**6 + 2.0*0*Vars.v**7 + 2.0*-Cons.Fcal_2*Vars.v**8) + 8*Cons.E_6*Cons.M*(2.0*-Cons.Fcal_0*Vars.v**7 + 2.0*0*Vars.v**8) + 2.0*9*Vars.E_SO_7*Cons.M*-Cons.Fcal_0*Vars.v**8) + 4*Cons.E_2*Cons.M*(4*Cons.E_2*Cons.M*(1.0*-Cons.Fcal_0*Vars.v**4 + 1.0*0*Vars.v**5 + 1.0*-Cons.Fcal_2*Vars.v**6 + 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**7 + 1.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*Vars.v**8) + 5*Vars.E_SO_3*Cons.M*(2.0*-Cons.Fcal_0*Vars.v**5 + 2.0*0*Vars.v**6 + 2.0*-Cons.Fcal_2*Vars.v**7 + 2.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**8) + 6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*(2.0*-Cons.Fcal_0*Vars.v**6 + 2.0*0*Vars.v**7 + 2.0*-Cons.Fcal_2*Vars.v**8) + 7*Vars.E_SO_5*Cons.M*(2.0*-Cons.Fcal_0*Vars.v**7 + 2.0*0*Vars.v**8) + 2.0*8*Cons.E_6*Cons.M*-Cons.Fcal_0*Vars.v**8) + 5*Vars.E_SO_3*Cons.M*(5*Vars.E_SO_3*Cons.M*(1.0*-Cons.Fcal_0*Vars.v**6 + 1.0*0*Vars.v**7 + 1.0*-Cons.Fcal_2*Vars.v**8) + 6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*(2.0*-Cons.Fcal_0*Vars.v**7 + 2.0*0*Vars.v**8) + 2.0*7*Vars.E_SO_5*Cons.M*-Cons.Fcal_0*Vars.v**8) + 1.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M**2*-Cons.Fcal_0*Vars.v**8 + (0*(0*(0*(-1.0*-Cons.Fcal_0*Vars.v**3 - 1.0*0*Vars.v**4 - 1.0*-Cons.Fcal_2*Vars.v**5 - 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**6 - 1.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*Vars.v**7 - 1.0*-Cons.Fcal_5 - Vars.Fcal_SO_5*Vars.v**8) + 4*Cons.E_2*Cons.M*(-3.0*-Cons.Fcal_0*Vars.v**4 - 3.0*0*Vars.v**5 - 3.0*-Cons.Fcal_2*Vars.v**6 - 3.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**7 - 3.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*Vars.v**8) + 5*Vars.E_SO_3*Cons.M*(-3.0*-Cons.Fcal_0*Vars.v**5 - 3.0*0*Vars.v**6 - 3.0*-Cons.Fcal_2*Vars.v**7 - 3.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**8) + 6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*(-3.0*-Cons.Fcal_0*Vars.v**6 - 3.0*0*Vars.v**7 - 3.0*-Cons.Fcal_2*Vars.v**8) + 7*Vars.E_SO_5*Cons.M*(-3.0*-Cons.Fcal_0*Vars.v**7 - 3.0*0*Vars.v**8) - 3.0*8*Cons.E_6*Cons.M*-Cons.Fcal_0*Vars.v**8) + 4*Cons.E_2*Cons.M*(4*Cons.E_2*Cons.M*(-3.0*-Cons.Fcal_0*Vars.v**5 - 3.0*0*Vars.v**6 - 3.0*-Cons.Fcal_2*Vars.v**7 - 3.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**8) + 5*Vars.E_SO_3*Cons.M*(-6.0*-Cons.Fcal_0*Vars.v**6 - 6.0*0*Vars.v**7 - 6.0*-Cons.Fcal_2*Vars.v**8) + 6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*(-6.0*-Cons.Fcal_0*Vars.v**7 - 6.0*0*Vars.v**8) - 6.0*7*Vars.E_SO_5*Cons.M*-Cons.Fcal_0*Vars.v**8) + 5*Vars.E_SO_3*Cons.M*(5*Vars.E_SO_3*Cons.M*(-3.0*-Cons.Fcal_0*Vars.v**7 - 3.0*0*Vars.v**8) - 6.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*-Cons.Fcal_0*Vars.v**8)) + 4*Cons.E_2*Cons.M*(4*Cons.E_2*Cons.M*(4*Cons.E_2*Cons.M*(-1.0*-Cons.Fcal_0*Vars.v**6 - 1.0*0*Vars.v**7 - 1.0*-Cons.Fcal_2*Vars.v**8) + 5*Vars.E_SO_3*Cons.M*(-3.0*-Cons.Fcal_0*Vars.v**7 - 3.0*0*Vars.v**8) - 3.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*-Cons.Fcal_0*Vars.v**8) - 3.0*5*Vars.E_SO_3*Cons.M**2*-Cons.Fcal_0*Vars.v**8) + (0*(0*(0*(0*(1.0*-Cons.Fcal_0*Vars.v**4 + 1.0*0*Vars.v**5 + 1.0*-Cons.Fcal_2*Vars.v**6 + 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**7 + 1.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*Vars.v**8) + 4*Cons.E_2*Cons.M*(4.0*-Cons.Fcal_0*Vars.v**5 + 4.0*0*Vars.v**6 + 4.0*-Cons.Fcal_2*Vars.v**7 + 4.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**8) + 5*Vars.E_SO_3*Cons.M*(4.0*-Cons.Fcal_0*Vars.v**6 + 4.0*0*Vars.v**7 + 4.0*-Cons.Fcal_2*Vars.v**8) + 6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*(4.0*-Cons.Fcal_0*Vars.v**7 + 4.0*0*Vars.v**8) + 4.0*7*Vars.E_SO_5*Cons.M*-Cons.Fcal_0*Vars.v**8) + 4*Cons.E_2*Cons.M*(4*Cons.E_2*Cons.M*(6.0*-Cons.Fcal_0*Vars.v**6 + 6.0*0*Vars.v**7 + 6.0*-Cons.Fcal_2*Vars.v**8) + 5*Vars.E_SO_3*Cons.M*(12.0*-Cons.Fcal_0*Vars.v**7 + 12.0*0*Vars.v**8) + 12.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*-Cons.Fcal_0*Vars.v**8) + 6.0*5*Vars.E_SO_3*Cons.M**2*-Cons.Fcal_0*Vars.v**8) + 4*Cons.E_2*Cons.M**2*(4*Cons.E_2*Cons.M*(4.0*-Cons.Fcal_0*Vars.v**7 + 4.0*0*Vars.v**8) + 12.0*5*Vars.E_SO_3*Cons.M*-Cons.Fcal_0*Vars.v**8)) + 1.0*4*Cons.E_2*Cons.M**4*-Cons.Fcal_0*Vars.v**8 + (0**2*(0*(0*(0*(-1.0*-Cons.Fcal_0*Vars.v**5 - 1.0*0*Vars.v**6 - 1.0*-Cons.Fcal_2*Vars.v**7 - 1.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*Vars.v**8) + 4*Cons.E_2*Cons.M*(-5.0*-Cons.Fcal_0*Vars.v**6 - 5.0*0*Vars.v**7 - 5.0*-Cons.Fcal_2*Vars.v**8) + 5*Vars.E_SO_3*Cons.M*(-5.0*-Cons.Fcal_0*Vars.v**7 - 5.0*0*Vars.v**8) - 5.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*-Cons.Fcal_0*Vars.v**8) + 4*Cons.E_2*Cons.M*(4*Cons.E_2*Cons.M*(-10.0*-Cons.Fcal_0*Vars.v**7 - 10.0*0*Vars.v**8) - 20.0*5*Vars.E_SO_3*Cons.M*-Cons.Fcal_0*Vars.v**8)) - 10.0*4*Cons.E_2*Cons.M**3*-Cons.Fcal_0*Vars.v**8) + (0**4*(0*(0*(1.0*-Cons.Fcal_0*Vars.v**6 + 1.0*0*Vars.v**7 + 1.0*-Cons.Fcal_2*Vars.v**8) + 4*Cons.E_2*Cons.M*(6.0*-Cons.Fcal_0*Vars.v**7 + 6.0*0*Vars.v**8) + 6.0*5*Vars.E_SO_3*Cons.M*-Cons.Fcal_0*Vars.v**8) + 15.0*4*Cons.E_2*Cons.M**2*-Cons.Fcal_0*Vars.v**8) + (0**6*(0*(-1.0*-Cons.Fcal_0*Vars.v**7 - 1.0*0*Vars.v**8) - 7.0*4*Cons.E_2*Cons.M*-Cons.Fcal_0*Vars.v**8) + 1.0*0**8*-Cons.Fcal_0*Vars.v**8/2*Cons.E_0*Cons.M)/2*Cons.E_0*Cons.M)/2*Cons.E_0*Cons.M)/2*Cons.E_0*Cons.M)/2*Cons.E_0*Cons.M)/2*Cons.E_0*Cons.M)/2*Cons.E_0*Cons.M)/2*Cons.E_0*Cons.M)/(Cons.nu*Vars.v*2*Cons.E_0*Cons.M)
+    dydt=np.zeros(8)
+    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(Vars.rfrak_frame, OmegaVec_4p0(Cons,Vars)[1:])
+    dydt[0] = dvdt_T4[0]
+    if(Cons.EvolveSpin1):
+        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1[0], Vars.rfrak_chi1[1],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_4p0(Cons,Vars)),Cons.S_chi1))[1:])
+    else:
+        dydt[1], dydt[2] = 0.0, 0.0
+    if(Cons.EvolveSpin2):
+        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2[0], Vars.rfrak_chi2[1],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_4p0(Cons,Vars)),Cons.S_chi2))[1:])
+    else:
+        dydt[3], dydt[4] = 0.0, 0.0
+    return dydt      
+
+@njit(cache=True)
+def TaylorT5_4p0(Cons,Vars):
+    dtdv = -0.5*Cons.nu*Vars.v*(1.0*2*Cons.E_0*Cons.M + 1.0*0*Vars.v + 1.0*4*Cons.E_2*Cons.M*Vars.v**2 + 1.0*5*Vars.E_SO_3*Cons.M*Vars.v**3 + 1.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*Vars.v**4 + 1.0*7*Vars.E_SO_5*Cons.M*Vars.v**5 + 1.0*8*Cons.E_6*Cons.M*Vars.v**6 + 1.0*9*Vars.E_SO_7*Cons.M*Vars.v**7 + 1.0*10*Cons.E_8*Cons.M + Cons.E_lnv_8*Cons.M*(10*Vars.logv + 1)*Vars.v**8 + (0*(-1.0*2*Cons.E_0*Cons.M*Vars.v - 1.0*0*Vars.v**2 - 1.0*4*Cons.E_2*Cons.M*Vars.v**3 - 1.0*5*Vars.E_SO_3*Cons.M*Vars.v**4 - 1.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*Vars.v**5 - 1.0*7*Vars.E_SO_5*Cons.M*Vars.v**6 - 1.0*8*Cons.E_6*Cons.M*Vars.v**7 - 1.0*9*Vars.E_SO_7*Cons.M*Vars.v**8) + -Cons.Fcal_2*(-1.0*2*Cons.E_0*Cons.M*Vars.v**2 - 1.0*0*Vars.v**3 - 1.0*4*Cons.E_2*Cons.M*Vars.v**4 - 1.0*5*Vars.E_SO_3*Cons.M*Vars.v**5 - 1.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*Vars.v**6 - 1.0*7*Vars.E_SO_5*Cons.M*Vars.v**7 - 1.0*8*Cons.E_6*Cons.M*Vars.v**8) + -Cons.Fcal_3 - Vars.Fcal_SO_3*(-1.0*2*Cons.E_0*Cons.M*Vars.v**3 - 1.0*0*Vars.v**4 - 1.0*4*Cons.E_2*Cons.M*Vars.v**5 - 1.0*5*Vars.E_SO_3*Cons.M*Vars.v**6 - 1.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*Vars.v**7 - 1.0*7*Vars.E_SO_5*Cons.M*Vars.v**8) + -Cons.Fcal_4 - Vars.Fcal_SQ_4*(-1.0*2*Cons.E_0*Cons.M*Vars.v**4 - 1.0*0*Vars.v**5 - 1.0*4*Cons.E_2*Cons.M*Vars.v**6 - 1.0*5*Vars.E_SO_3*Cons.M*Vars.v**7 - 1.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*Vars.v**8) + -Cons.Fcal_5 - Vars.Fcal_SO_5*(-1.0*2*Cons.E_0*Cons.M*Vars.v**5 - 1.0*0*Vars.v**6 - 1.0*4*Cons.E_2*Cons.M*Vars.v**7 - 1.0*5*Vars.E_SO_3*Cons.M*Vars.v**8) + -Cons.Fcal_6 - Vars.Fcal_SO_6 - Cons.Fcal_lnv_6*Vars.logv*(-1.0*2*Cons.E_0*Cons.M*Vars.v**6 - 1.0*0*Vars.v**7 - 1.0*4*Cons.E_2*Cons.M*Vars.v**8) + -Cons.Fcal_7 - Vars.Fcal_SO_7*(-1.0*2*Cons.E_0*Cons.M*Vars.v**7 - 1.0*0*Vars.v**8) - 1.0*-Cons.Fcal_8 - Vars.Fcal_SO_8 - Cons.Fcal_lnv_8*Vars.logv*2*Cons.E_0*Cons.M*Vars.v**8 + (0*(0*(1.0*2*Cons.E_0*Cons.M*Vars.v**2 + 1.0*0*Vars.v**3 + 1.0*4*Cons.E_2*Cons.M*Vars.v**4 + 1.0*5*Vars.E_SO_3*Cons.M*Vars.v**5 + 1.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*Vars.v**6 + 1.0*7*Vars.E_SO_5*Cons.M*Vars.v**7 + 1.0*8*Cons.E_6*Cons.M*Vars.v**8) + -Cons.Fcal_2*(2.0*2*Cons.E_0*Cons.M*Vars.v**3 + 2.0*0*Vars.v**4 + 2.0*4*Cons.E_2*Cons.M*Vars.v**5 + 2.0*5*Vars.E_SO_3*Cons.M*Vars.v**6 + 2.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*Vars.v**7 + 2.0*7*Vars.E_SO_5*Cons.M*Vars.v**8) + -Cons.Fcal_3 - Vars.Fcal_SO_3*(2.0*2*Cons.E_0*Cons.M*Vars.v**4 + 2.0*0*Vars.v**5 + 2.0*4*Cons.E_2*Cons.M*Vars.v**6 + 2.0*5*Vars.E_SO_3*Cons.M*Vars.v**7 + 2.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*Vars.v**8) + -Cons.Fcal_4 - Vars.Fcal_SQ_4*(2.0*2*Cons.E_0*Cons.M*Vars.v**5 + 2.0*0*Vars.v**6 + 2.0*4*Cons.E_2*Cons.M*Vars.v**7 + 2.0*5*Vars.E_SO_3*Cons.M*Vars.v**8) + -Cons.Fcal_5 - Vars.Fcal_SO_5*(2.0*2*Cons.E_0*Cons.M*Vars.v**6 + 2.0*0*Vars.v**7 + 2.0*4*Cons.E_2*Cons.M*Vars.v**8) + -Cons.Fcal_6 - Vars.Fcal_SO_6 - Cons.Fcal_lnv_6*Vars.logv*(2.0*2*Cons.E_0*Cons.M*Vars.v**7 + 2.0*0*Vars.v**8) + 2.0*-Cons.Fcal_7 - Vars.Fcal_SO_7*2*Cons.E_0*Cons.M*Vars.v**8) + -Cons.Fcal_2*(-Cons.Fcal_2*(1.0*2*Cons.E_0*Cons.M*Vars.v**4 + 1.0*0*Vars.v**5 + 1.0*4*Cons.E_2*Cons.M*Vars.v**6 + 1.0*5*Vars.E_SO_3*Cons.M*Vars.v**7 + 1.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*Vars.v**8) + -Cons.Fcal_3 - Vars.Fcal_SO_3*(2.0*2*Cons.E_0*Cons.M*Vars.v**5 + 2.0*0*Vars.v**6 + 2.0*4*Cons.E_2*Cons.M*Vars.v**7 + 2.0*5*Vars.E_SO_3*Cons.M*Vars.v**8) + -Cons.Fcal_4 - Vars.Fcal_SQ_4*(2.0*2*Cons.E_0*Cons.M*Vars.v**6 + 2.0*0*Vars.v**7 + 2.0*4*Cons.E_2*Cons.M*Vars.v**8) + -Cons.Fcal_5 - Vars.Fcal_SO_5*(2.0*2*Cons.E_0*Cons.M*Vars.v**7 + 2.0*0*Vars.v**8) + 2.0*-Cons.Fcal_6 - Vars.Fcal_SO_6 - Cons.Fcal_lnv_6*Vars.logv*2*Cons.E_0*Cons.M*Vars.v**8) + -Cons.Fcal_3 - Vars.Fcal_SO_3*(-Cons.Fcal_3 - Vars.Fcal_SO_3*(1.0*2*Cons.E_0*Cons.M*Vars.v**6 + 1.0*0*Vars.v**7 + 1.0*4*Cons.E_2*Cons.M*Vars.v**8) + -Cons.Fcal_4 - Vars.Fcal_SQ_4*(2.0*2*Cons.E_0*Cons.M*Vars.v**7 + 2.0*0*Vars.v**8) + 2.0*-Cons.Fcal_5 - Vars.Fcal_SO_5*2*Cons.E_0*Cons.M*Vars.v**8) + 1.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4**2*2*Cons.E_0*Cons.M*Vars.v**8 + (0*(0*(0*(-1.0*2*Cons.E_0*Cons.M*Vars.v**3 - 1.0*0*Vars.v**4 - 1.0*4*Cons.E_2*Cons.M*Vars.v**5 - 1.0*5*Vars.E_SO_3*Cons.M*Vars.v**6 - 1.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*Vars.v**7 - 1.0*7*Vars.E_SO_5*Cons.M*Vars.v**8) + -Cons.Fcal_2*(-3.0*2*Cons.E_0*Cons.M*Vars.v**4 - 3.0*0*Vars.v**5 - 3.0*4*Cons.E_2*Cons.M*Vars.v**6 - 3.0*5*Vars.E_SO_3*Cons.M*Vars.v**7 - 3.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*Vars.v**8) + -Cons.Fcal_3 - Vars.Fcal_SO_3*(-3.0*2*Cons.E_0*Cons.M*Vars.v**5 - 3.0*0*Vars.v**6 - 3.0*4*Cons.E_2*Cons.M*Vars.v**7 - 3.0*5*Vars.E_SO_3*Cons.M*Vars.v**8) + -Cons.Fcal_4 - Vars.Fcal_SQ_4*(-3.0*2*Cons.E_0*Cons.M*Vars.v**6 - 3.0*0*Vars.v**7 - 3.0*4*Cons.E_2*Cons.M*Vars.v**8) + -Cons.Fcal_5 - Vars.Fcal_SO_5*(-3.0*2*Cons.E_0*Cons.M*Vars.v**7 - 3.0*0*Vars.v**8) - 3.0*-Cons.Fcal_6 - Vars.Fcal_SO_6 - Cons.Fcal_lnv_6*Vars.logv*2*Cons.E_0*Cons.M*Vars.v**8) + -Cons.Fcal_2*(-Cons.Fcal_2*(-3.0*2*Cons.E_0*Cons.M*Vars.v**5 - 3.0*0*Vars.v**6 - 3.0*4*Cons.E_2*Cons.M*Vars.v**7 - 3.0*5*Vars.E_SO_3*Cons.M*Vars.v**8) + -Cons.Fcal_3 - Vars.Fcal_SO_3*(-6.0*2*Cons.E_0*Cons.M*Vars.v**6 - 6.0*0*Vars.v**7 - 6.0*4*Cons.E_2*Cons.M*Vars.v**8) + -Cons.Fcal_4 - Vars.Fcal_SQ_4*(-6.0*2*Cons.E_0*Cons.M*Vars.v**7 - 6.0*0*Vars.v**8) - 6.0*-Cons.Fcal_5 - Vars.Fcal_SO_5*2*Cons.E_0*Cons.M*Vars.v**8) + -Cons.Fcal_3 - Vars.Fcal_SO_3*(-Cons.Fcal_3 - Vars.Fcal_SO_3*(-3.0*2*Cons.E_0*Cons.M*Vars.v**7 - 3.0*0*Vars.v**8) - 6.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*2*Cons.E_0*Cons.M*Vars.v**8)) + -Cons.Fcal_2*(-Cons.Fcal_2*(-Cons.Fcal_2*(-1.0*2*Cons.E_0*Cons.M*Vars.v**6 - 1.0*0*Vars.v**7 - 1.0*4*Cons.E_2*Cons.M*Vars.v**8) + -Cons.Fcal_3 - Vars.Fcal_SO_3*(-3.0*2*Cons.E_0*Cons.M*Vars.v**7 - 3.0*0*Vars.v**8) - 3.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*2*Cons.E_0*Cons.M*Vars.v**8) - 3.0*-Cons.Fcal_3 - Vars.Fcal_SO_3**2*2*Cons.E_0*Cons.M*Vars.v**8) + (0*(0*(0*(0*(1.0*2*Cons.E_0*Cons.M*Vars.v**4 + 1.0*0*Vars.v**5 + 1.0*4*Cons.E_2*Cons.M*Vars.v**6 + 1.0*5*Vars.E_SO_3*Cons.M*Vars.v**7 + 1.0*6*Cons.E_4*Cons.M + 6*Vars.E_SQ_4*Cons.M*Vars.v**8) + -Cons.Fcal_2*(4.0*2*Cons.E_0*Cons.M*Vars.v**5 + 4.0*0*Vars.v**6 + 4.0*4*Cons.E_2*Cons.M*Vars.v**7 + 4.0*5*Vars.E_SO_3*Cons.M*Vars.v**8) + -Cons.Fcal_3 - Vars.Fcal_SO_3*(4.0*2*Cons.E_0*Cons.M*Vars.v**6 + 4.0*0*Vars.v**7 + 4.0*4*Cons.E_2*Cons.M*Vars.v**8) + -Cons.Fcal_4 - Vars.Fcal_SQ_4*(4.0*2*Cons.E_0*Cons.M*Vars.v**7 + 4.0*0*Vars.v**8) + 4.0*-Cons.Fcal_5 - Vars.Fcal_SO_5*2*Cons.E_0*Cons.M*Vars.v**8) + -Cons.Fcal_2*(-Cons.Fcal_2*(6.0*2*Cons.E_0*Cons.M*Vars.v**6 + 6.0*0*Vars.v**7 + 6.0*4*Cons.E_2*Cons.M*Vars.v**8) + -Cons.Fcal_3 - Vars.Fcal_SO_3*(12.0*2*Cons.E_0*Cons.M*Vars.v**7 + 12.0*0*Vars.v**8) + 12.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*2*Cons.E_0*Cons.M*Vars.v**8) + 6.0*-Cons.Fcal_3 - Vars.Fcal_SO_3**2*2*Cons.E_0*Cons.M*Vars.v**8) + -Cons.Fcal_2**2*(-Cons.Fcal_2*(4.0*2*Cons.E_0*Cons.M*Vars.v**7 + 4.0*0*Vars.v**8) + 12.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*2*Cons.E_0*Cons.M*Vars.v**8)) + 1.0*-Cons.Fcal_2**4*2*Cons.E_0*Cons.M*Vars.v**8 + (0**2*(0*(0*(0*(-1.0*2*Cons.E_0*Cons.M*Vars.v**5 - 1.0*0*Vars.v**6 - 1.0*4*Cons.E_2*Cons.M*Vars.v**7 - 1.0*5*Vars.E_SO_3*Cons.M*Vars.v**8) + -Cons.Fcal_2*(-5.0*2*Cons.E_0*Cons.M*Vars.v**6 - 5.0*0*Vars.v**7 - 5.0*4*Cons.E_2*Cons.M*Vars.v**8) + -Cons.Fcal_3 - Vars.Fcal_SO_3*(-5.0*2*Cons.E_0*Cons.M*Vars.v**7 - 5.0*0*Vars.v**8) - 5.0*-Cons.Fcal_4 - Vars.Fcal_SQ_4*2*Cons.E_0*Cons.M*Vars.v**8) + -Cons.Fcal_2*(-Cons.Fcal_2*(-10.0*2*Cons.E_0*Cons.M*Vars.v**7 - 10.0*0*Vars.v**8) - 20.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*2*Cons.E_0*Cons.M*Vars.v**8)) - 10.0*-Cons.Fcal_2**3*2*Cons.E_0*Cons.M*Vars.v**8) + (0**4*(0*(0*(1.0*2*Cons.E_0*Cons.M*Vars.v**6 + 1.0*0*Vars.v**7 + 1.0*4*Cons.E_2*Cons.M*Vars.v**8) + -Cons.Fcal_2*(6.0*2*Cons.E_0*Cons.M*Vars.v**7 + 6.0*0*Vars.v**8) + 6.0*-Cons.Fcal_3 - Vars.Fcal_SO_3*2*Cons.E_0*Cons.M*Vars.v**8) + 15.0*-Cons.Fcal_2**2*2*Cons.E_0*Cons.M*Vars.v**8) + (0**6*(0*(-1.0*2*Cons.E_0*Cons.M*Vars.v**7 - 1.0*0*Vars.v**8) - 7.0*-Cons.Fcal_2*2*Cons.E_0*Cons.M*Vars.v**8) + 1.0*0**8*2*Cons.E_0*Cons.M*Vars.v**8/-Cons.Fcal_0)/-Cons.Fcal_0)/-Cons.Fcal_0)/-Cons.Fcal_0)/-Cons.Fcal_0)/-Cons.Fcal_0)/-Cons.Fcal_0)/-Cons.Fcal_0)/(Vars.Fcal_coeff*-Cons.Fcal_0)
+    dvdt_T5 = 1.0/dtdv
+    dydt=np.zeros(8)
+    [dydt[5],dydt[6],dydt[7]] = FrameFromAngularVelocityIntegrand(Vars.rfrak_frame, OmegaVec_4p0(Cons,Vars)[1:])
+    dydt[0] = dvdt_T5[0]
+    if(Cons.EvolveSpin1):
+        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1[0], Vars.rfrak_chi1[1],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_4p0(Cons,Vars)),Cons.S_chi1))[1:])
+    else:
+        dydt[1], dydt[2] = 0.0, 0.0
+    if(Cons.EvolveSpin2):
+        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2[0], Vars.rfrak_chi2[1],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_4p0(Cons,Vars)),Cons.S_chi2))[1:])
+    else:
+        dydt[3], dydt[4] = 0.0, 0.0
     return dydt      
 
 class PNEv:
@@ -962,7 +1156,7 @@ class PNEv:
             PNEv.terminal2=False
         return dydt
         
-    def Evolution(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_frame,\
+    def Evolution(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_frame,
         t_PNStart=False, t_PNEnd=False, PNEvolutionOrder=3.5, TaylorTn=1, StepsPerOrbit=32, ForwardInTime=True, tol=1e-8, MinStep=1e-7): 
         # Initialization of constants
         PNEv.terminal1=True
@@ -988,11 +1182,29 @@ class PNEv:
             51:TaylorT1_2p5,
             61:TaylorT1_3p0,
             71:TaylorT1_3p5,
-            81:TaylorT1_4p0}
+            81:TaylorT1_4p0,
+            4:TaylorT4_0,
+            14:TaylorT4_0p50,
+            24:TaylorT4_1p0,
+            34:TaylorT4_1p5,
+            44:TaylorT4_2p0,
+            54:TaylorT4_2p5,
+            64:TaylorT4_3p0,
+            74:TaylorT4_3p5,
+            84:TaylorT4_4p0,
+            5:TaylorT5_0,
+            15:TaylorT5_0p50,
+            25:TaylorT5_1p0,
+            35:TaylorT5_1p5,
+            45:TaylorT5_2p0,
+            55:TaylorT5_2p5,
+            65:TaylorT5_3p0,
+            75:TaylorT5_3p5,
+            85:TaylorT5_4p0}
         z=np.array([0.0])
         PNEv.Cons=Cons(z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,True,True)
-        PNEv.Vars=Vars(z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z)
-        Initialization(PNEv.Cons,xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_frame[0], rfrak_frame[1], rfrak_frame[2])
+        PNEv.Vars=Vars(z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z)
+        Initialization(PNEv.Cons,xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_frame)
     
         def terminate(t,y):
             return 1.0*PNEv.terminal1*PNEv.terminal2
@@ -1007,8 +1219,8 @@ class PNEv:
         time=np.delete(time, -1)
        
         # Integrate
-        yy=solve_ivp(PNEv.Integrand, [time[0],time[-1]], [v_i,0.0,\
-            0.0,0.0,0.0,rfrak_frame[0],rfrak_frame[1],rfrak_frame[2]], method='DOP853',\
+        yy=solve_ivp(PNEv.Integrand, [time[0],time[-1]], [v_i,0.0,
+            0.0,0.0,0.0,rfrak_frame[0],rfrak_frame[1],rfrak_frame[2]], method='DOP853',
             t_eval=time, dense_output=True, events=terminate, rtol=tol, atol=tol)           
         if ForwardInTime:
             PNEv.NotForward=False
@@ -1018,8 +1230,8 @@ class PNEv:
                 TStart=t_PNStart
             while time[-1]>TStart:
                 time.append(time[-1]-(2*PNEv.Cons.M*(256*PNEv.Cons.nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit)[0])
-            yyForward=solve_ivp(PNEv.Integrand, [time[0],time[-1]], [v_i,0.0,\
-                0.0,0.0,0.0,rfrak_frame[0],rfrak_frame[1],rfrak_frame[2]], method='DOP853',\
+            yyForward=solve_ivp(PNEv.Integrand, [time[0],time[-1]], [v_i,0.0,
+                0.0,0.0,0.0,rfrak_frame[0],rfrak_frame[1],rfrak_frame[2]], method='DOP853',
                 t_eval=time, dense_output=True, rtol=tol, atol=tol)
             yy.t=np.append(yyForward.t[1:][::-1],yy.t)
             data=np.empty((8,len(yy.t)))

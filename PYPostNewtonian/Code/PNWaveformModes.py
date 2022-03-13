@@ -125,18 +125,14 @@ class Constants:
         self.hHat_8_6_6=hHat_8_6_6
         self.hHat_8_8_6=hHat_8_8_6
 
-VarsSpec=[('v', float64[:]),('rfrak_chi1_x', float64[:]),('rfrak_chi1_y', float64[:]),('rfrak_chi2_x', float64[:]),('rfrak_chi2_y', float64[:]),('rfrak_frame_x', float64[:]),('rfrak_frame_y', float64[:]),('rfrak_frame_z', float64[:]),('R_S1', float64[:]),('R_S2', float64[:]),('chiVec1', float64[:]),('chiVec2', float64[:]),('chi1_n', float64[:]),('chi1_lambda', float64[:]),('chi1_ell', float64[:]),('chi2_n', float64[:]),('chi2_lambda', float64[:]),('chi2_ell', float64[:]),('S_ell', float64[:]),('S_n', float64[:]),('S_lambda', float64[:]),('Sigma_ell', float64[:]),('Sigma_n', float64[:]),('Sigma_lambda', float64[:]),('S1_ell', float64[:]),('S1_n', float64[:]),('S1_lambda', float64[:]),('S2_ell', float64[:]),('S2_n', float64[:]),('S2_lambda', float64[:]),('logv', float64[:]),('rhOverM_coeff', float64[:]),('hHat_spin_Symm_2_2_3', complex128[:]),('hHat_spin_Symm_2_2_4', complex128[:]),('hHat_spin_Symm_2_1_2', complex128[:]),('hHat_spin_Symm_2_1_4', complex128[:]),('hHat_spin_Symm_2_0_4', complex128[:]),('hHat_spin_Symm_3_3_4', complex128[:]),('hHat_spin_Symm_3_2_3', complex128[:]),('hHat_spin_Symm_3_1_4', complex128[:]),('hHat_spin_Symm_4_3_4', complex128[:]),('hHat_spin_Symm_4_1_4', complex128[:]),('hHat_spin_Asymm_2_2_2', complex128[:]),('hHat_spin_Asymm_2_2_4', complex128[:]),('hHat_spin_Asymm_2_1_3', complex128[:]),('hHat_spin_Asymm_2_1_4', complex128[:]),('hHat_spin_Asymm_2_0_2', complex128[:]),('hHat_spin_Asymm_2_0_4', complex128[:]),('hHat_spin_Asymm_3_3_3', complex128[:]),('hHat_spin_Asymm_3_2_4', complex128[:]),('hHat_spin_Asymm_3_1_3', complex128[:]),('hHat_spin_Asymm_3_0_4', complex128[:]),('hHat_spin_Asymm_4_4_4', complex128[:]),('hHat_spin_Asymm_4_2_4', complex128[:]),('hHat_spin_Asymm_4_0_4', complex128[:])]
+VarsSpec=[('v', float64[:]),('rfrak_chi1', float64[:]),('rfrak_chi2', float64[:]),('rfrak_frame', float64[:]),('R_S1', float64[:]),('R_S2', float64[:]),('chiVec1', float64[:]),('chiVec2', float64[:]),('chi1_n', float64[:]),('chi1_lambda', float64[:]),('chi1_ell', float64[:]),('chi2_n', float64[:]),('chi2_lambda', float64[:]),('chi2_ell', float64[:]),('S_ell', float64[:]),('S_n', float64[:]),('S_lambda', float64[:]),('Sigma_ell', float64[:]),('Sigma_n', float64[:]),('Sigma_lambda', float64[:]),('S1_ell', float64[:]),('S1_n', float64[:]),('S1_lambda', float64[:]),('S2_ell', float64[:]),('S2_n', float64[:]),('S2_lambda', float64[:]),('logv', float64[:]),('rhOverM_coeff', float64[:]),('hHat_spin_Symm_2_2_3', complex128[:]),('hHat_spin_Symm_2_2_4', complex128[:]),('hHat_spin_Symm_2_1_2', complex128[:]),('hHat_spin_Symm_2_1_4', complex128[:]),('hHat_spin_Symm_2_0_4', complex128[:]),('hHat_spin_Symm_3_3_4', complex128[:]),('hHat_spin_Symm_3_2_3', complex128[:]),('hHat_spin_Symm_3_1_4', complex128[:]),('hHat_spin_Symm_4_3_4', complex128[:]),('hHat_spin_Symm_4_1_4', complex128[:]),('hHat_spin_Asymm_2_2_2', complex128[:]),('hHat_spin_Asymm_2_2_4', complex128[:]),('hHat_spin_Asymm_2_1_3', complex128[:]),('hHat_spin_Asymm_2_1_4', complex128[:]),('hHat_spin_Asymm_2_0_2', complex128[:]),('hHat_spin_Asymm_2_0_4', complex128[:]),('hHat_spin_Asymm_3_3_3', complex128[:]),('hHat_spin_Asymm_3_2_4', complex128[:]),('hHat_spin_Asymm_3_1_3', complex128[:]),('hHat_spin_Asymm_3_0_4', complex128[:]),('hHat_spin_Asymm_4_4_4', complex128[:]),('hHat_spin_Asymm_4_2_4', complex128[:]),('hHat_spin_Asymm_4_0_4', complex128[:])]
 @jitclass(VarsSpec)
 class Variables:
-    def __init__(self,v,rfrak_chi1_x,rfrak_chi1_y,rfrak_chi2_x,rfrak_chi2_y,rfrak_frame_x,rfrak_frame_y,rfrak_frame_z,R_S1,R_S2,chiVec1,chiVec2,chi1_n,chi1_lambda,chi1_ell,chi2_n,chi2_lambda,chi2_ell,S_ell,S_n,S_lambda,Sigma_ell,Sigma_n,Sigma_lambda,S1_ell,S1_n,S1_lambda,S2_ell,S2_n,S2_lambda,logv,rhOverM_coeff,hHat_spin_Symm_2_2_3,hHat_spin_Symm_2_2_4,hHat_spin_Symm_2_1_2,hHat_spin_Symm_2_1_4,hHat_spin_Symm_2_0_4,hHat_spin_Symm_3_3_4,hHat_spin_Symm_3_2_3,hHat_spin_Symm_3_1_4,hHat_spin_Symm_4_3_4,hHat_spin_Symm_4_1_4,hHat_spin_Asymm_2_2_2,hHat_spin_Asymm_2_2_4,hHat_spin_Asymm_2_1_3,hHat_spin_Asymm_2_1_4,hHat_spin_Asymm_2_0_2,hHat_spin_Asymm_2_0_4,hHat_spin_Asymm_3_3_3,hHat_spin_Asymm_3_2_4,hHat_spin_Asymm_3_1_3,hHat_spin_Asymm_3_0_4,hHat_spin_Asymm_4_4_4,hHat_spin_Asymm_4_2_4,hHat_spin_Asymm_4_0_4):
+    def __init__(self,v,rfrak_chi1,rfrak_chi2,rfrak_frame,R_S1,R_S2,chiVec1,chiVec2,chi1_n,chi1_lambda,chi1_ell,chi2_n,chi2_lambda,chi2_ell,S_ell,S_n,S_lambda,Sigma_ell,Sigma_n,Sigma_lambda,S1_ell,S1_n,S1_lambda,S2_ell,S2_n,S2_lambda,logv,rhOverM_coeff,hHat_spin_Symm_2_2_3,hHat_spin_Symm_2_2_4,hHat_spin_Symm_2_1_2,hHat_spin_Symm_2_1_4,hHat_spin_Symm_2_0_4,hHat_spin_Symm_3_3_4,hHat_spin_Symm_3_2_3,hHat_spin_Symm_3_1_4,hHat_spin_Symm_4_3_4,hHat_spin_Symm_4_1_4,hHat_spin_Asymm_2_2_2,hHat_spin_Asymm_2_2_4,hHat_spin_Asymm_2_1_3,hHat_spin_Asymm_2_1_4,hHat_spin_Asymm_2_0_2,hHat_spin_Asymm_2_0_4,hHat_spin_Asymm_3_3_3,hHat_spin_Asymm_3_2_4,hHat_spin_Asymm_3_1_3,hHat_spin_Asymm_3_0_4,hHat_spin_Asymm_4_4_4,hHat_spin_Asymm_4_2_4,hHat_spin_Asymm_4_0_4):
         self.v=v
-        self.rfrak_chi1_x=rfrak_chi1_x
-        self.rfrak_chi1_y=rfrak_chi1_y
-        self.rfrak_chi2_x=rfrak_chi2_x
-        self.rfrak_chi2_y=rfrak_chi2_y
-        self.rfrak_frame_x=rfrak_frame_x
-        self.rfrak_frame_y=rfrak_frame_y
-        self.rfrak_frame_z=rfrak_frame_z
+        self.rfrak_chi1=rfrak_chi1
+        self.rfrak_chi2=rfrak_chi2
+        self.rfrak_frame=rfrak_frame
         self.R_S1=R_S1
         self.R_S2=R_S2
         self.chiVec1=chiVec1
@@ -186,7 +182,7 @@ class Variables:
         self.hHat_spin_Asymm_4_0_4=hHat_spin_Asymm_4_0_4
 
 @njit(cache=True)
-def Initialization(Cons, xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_frame_x_i, rfrak_frame_y_i, rfrak_frame_z_i): 
+def Initialization(Cons, xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_frame_i): 
     Cons.xHat=xHat_i
     Cons.yHat=yHat_i
     Cons.zHat=zHat_i
@@ -282,15 +278,11 @@ def Initialization(Cons, xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_ch
 @njit(cache=True)
 def Recalculate_0(Cons,Vars,y):
     Vars.v = np.array([y[0]])
-    Vars.rfrak_chi1_x = np.array([y[1]])
-    Vars.rfrak_chi1_y = np.array([y[2]])
-    Vars.rfrak_chi2_x = np.array([y[3]])
-    Vars.rfrak_chi2_y = np.array([y[4]])
-    Vars.rfrak_frame_x = np.array([y[5]])
-    Vars.rfrak_frame_y = np.array([y[6]])
-    Vars.rfrak_frame_z = np.array([y[7]])
-    Vars.R_S1 = exp(Vars.rfrak_chi1_x*Cons.xHat + Vars.rfrak_chi1_y*Cons.yHat)
-    Vars.R_S2 = exp(Vars.rfrak_chi2_x*Cons.xHat + Vars.rfrak_chi2_y*Cons.yHat)
+    Vars.rfrak_chi1 = np.array([y[1],y[2]])
+    Vars.rfrak_chi2 = np.array([y[3],y[4]])
+    Vars.rfrak_frame = np.array([y[5],y[6],y[7]])
+    Vars.R_S1 = exp(Vars.rfrak_chi1[0]*Cons.xHat + Vars.rfrak_chi1[1]*Cons.yHat)
+    Vars.R_S2 = exp(Vars.rfrak_chi2[0]*Cons.xHat + Vars.rfrak_chi2[1]*Cons.yHat)
     Vars.rhOverM_coeff = 8*sqrt(5)*Cons.nu*Vars.v**2*sqrt(pi)/5
 
 @njit(cache=True)
@@ -312,15 +304,11 @@ def Modes_0(modes,Cons,Vars):
 @njit(cache=True)
 def Recalculate_0p50(Cons,Vars,y):
     Vars.v = np.array([y[0]])
-    Vars.rfrak_chi1_x = np.array([y[1]])
-    Vars.rfrak_chi1_y = np.array([y[2]])
-    Vars.rfrak_chi2_x = np.array([y[3]])
-    Vars.rfrak_chi2_y = np.array([y[4]])
-    Vars.rfrak_frame_x = np.array([y[5]])
-    Vars.rfrak_frame_y = np.array([y[6]])
-    Vars.rfrak_frame_z = np.array([y[7]])
-    Vars.R_S1 = exp(Vars.rfrak_chi1_x*Cons.xHat + Vars.rfrak_chi1_y*Cons.yHat)
-    Vars.R_S2 = exp(Vars.rfrak_chi2_x*Cons.xHat + Vars.rfrak_chi2_y*Cons.yHat)
+    Vars.rfrak_chi1 = np.array([y[1],y[2]])
+    Vars.rfrak_chi2 = np.array([y[3],y[4]])
+    Vars.rfrak_frame = np.array([y[5],y[6],y[7]])
+    Vars.R_S1 = exp(Vars.rfrak_chi1[0]*Cons.xHat + Vars.rfrak_chi1[1]*Cons.yHat)
+    Vars.R_S2 = exp(Vars.rfrak_chi2[0]*Cons.xHat + Vars.rfrak_chi2[1]*Cons.yHat)
     Vars.rhOverM_coeff = 8*sqrt(5)*Cons.nu*Vars.v**2*sqrt(pi)/5
 
 @njit(cache=True)
@@ -357,16 +345,12 @@ def Modes_0p50(modes,Cons,Vars):
 @njit(cache=True)
 def Recalculate_1p0(Cons,Vars,y):
     Vars.v = np.array([y[0]])
-    Vars.rfrak_chi1_x = np.array([y[1]])
-    Vars.rfrak_chi1_y = np.array([y[2]])
-    Vars.rfrak_chi2_x = np.array([y[3]])
-    Vars.rfrak_chi2_y = np.array([y[4]])
-    Vars.rfrak_frame_x = np.array([y[5]])
-    Vars.rfrak_frame_y = np.array([y[6]])
-    Vars.rfrak_frame_z = np.array([y[7]])
-    Vars.R = exp(Vars.rfrak_frame_x*Cons.xHat + Vars.rfrak_frame_y*Cons.yHat + Vars.rfrak_frame_z*Cons.zHat)
-    Vars.R_S1 = exp(Vars.rfrak_chi1_x*Cons.xHat + Vars.rfrak_chi1_y*Cons.yHat)
-    Vars.R_S2 = exp(Vars.rfrak_chi2_x*Cons.xHat + Vars.rfrak_chi2_y*Cons.yHat)
+    Vars.rfrak_chi1 = np.array([y[1],y[2]])
+    Vars.rfrak_chi2 = np.array([y[3],y[4]])
+    Vars.rfrak_frame = np.array([y[5],y[6],y[7]])
+    Vars.R = exp(Vars.rfrak_frame[0]*Cons.xHat + Vars.rfrak_frame[1]*Cons.yHat + Vars.rfrak_frame[2]*Cons.zHat)
+    Vars.R_S1 = exp(Vars.rfrak_chi1[0]*Cons.xHat + Vars.rfrak_chi1[1]*Cons.yHat)
+    Vars.R_S2 = exp(Vars.rfrak_chi2[0]*Cons.xHat + Vars.rfrak_chi2[1]*Cons.yHat)
     Vars.chiVec1 = mul(mul(mul(Cons.S_chi1,Vars.R_S1),Cons.zHat),mul(conjugate(Vars.R_S1),conjugate(Cons.S_chi1)))
     Vars.chiVec2 = mul(mul(mul(Cons.S_chi2,Vars.R_S2),Cons.zHat),mul(conjugate(Vars.R_S2),conjugate(Cons.S_chi2)))
     Vars.chi1_n = np.array([Vars.chiVec1[1]])
@@ -432,15 +416,11 @@ def Modes_1p0(modes,Cons,Vars):
 @njit(cache=True)
 def Recalculate_1p5(Cons,Vars,y):
     Vars.v = np.array([y[0]])
-    Vars.rfrak_chi1_x = np.array([y[1]])
-    Vars.rfrak_chi1_y = np.array([y[2]])
-    Vars.rfrak_chi2_x = np.array([y[3]])
-    Vars.rfrak_chi2_y = np.array([y[4]])
-    Vars.rfrak_frame_x = np.array([y[5]])
-    Vars.rfrak_frame_y = np.array([y[6]])
-    Vars.rfrak_frame_z = np.array([y[7]])
-    Vars.R_S1 = exp(Vars.rfrak_chi1_x*Cons.xHat + Vars.rfrak_chi1_y*Cons.yHat)
-    Vars.R_S2 = exp(Vars.rfrak_chi2_x*Cons.xHat + Vars.rfrak_chi2_y*Cons.yHat)
+    Vars.rfrak_chi1 = np.array([y[1],y[2]])
+    Vars.rfrak_chi2 = np.array([y[3],y[4]])
+    Vars.rfrak_frame = np.array([y[5],y[6],y[7]])
+    Vars.R_S1 = exp(Vars.rfrak_chi1[0]*Cons.xHat + Vars.rfrak_chi1[1]*Cons.yHat)
+    Vars.R_S2 = exp(Vars.rfrak_chi2[0]*Cons.xHat + Vars.rfrak_chi2[1]*Cons.yHat)
     Vars.chiVec1 = mul(mul(mul(Cons.S_chi1,Vars.R_S1),Cons.zHat),mul(conjugate(Vars.R_S1),conjugate(Cons.S_chi1)))
     Vars.chiVec2 = mul(mul(mul(Cons.S_chi2,Vars.R_S2),Cons.zHat),mul(conjugate(Vars.R_S2),conjugate(Cons.S_chi2)))
     Vars.chi1_n = np.array([Vars.chiVec1[1]])
@@ -539,16 +519,11 @@ def Modes_1p5(modes,Cons,Vars):
 @njit(cache=True)
 def Recalculate_2p0(Cons,Vars,y):
     Vars.v = np.array([y[0]])
-    Vars.rfrak_chi1_x = np.array([y[1]])
-    Vars.rfrak_chi1_y = np.array([y[2]])
-    Vars.rfrak_chi2_x = np.array([y[3]])
-    Vars.rfrak_chi2_y = np.array([y[4]])
-    Vars.rfrak_frame_x = np.array([y[5]])
-    Vars.rfrak_frame_y = np.array([y[6]])
-    Vars.rfrak_frame_z = np.array([y[7]])
-    Vars.R = exp(Vars.rfrak_frame_x*Cons.xHat + Vars.rfrak_frame_y*Cons.yHat + Vars.rfrak_frame_z*Cons.zHat)
-    Vars.R_S1 = exp(Vars.rfrak_chi1_x*Cons.xHat + Vars.rfrak_chi1_y*Cons.yHat)
-    Vars.R_S2 = exp(Vars.rfrak_chi2_x*Cons.xHat + Vars.rfrak_chi2_y*Cons.yHat)
+    Vars.rfrak_chi1 = np.array([y[1],y[2]])
+    Vars.rfrak_chi2 = np.array([y[3],y[4]])
+    Vars.rfrak_frame = np.array([y[5],y[6],y[7]])
+    Vars.R_S1 = exp(Vars.rfrak_chi1[0]*Cons.xHat + Vars.rfrak_chi1[1]*Cons.yHat)
+    Vars.R_S2 = exp(Vars.rfrak_chi2[0]*Cons.xHat + Vars.rfrak_chi2[1]*Cons.yHat)
     Vars.chiVec1 = mul(mul(mul(Cons.S_chi1,Vars.R_S1),Cons.zHat),mul(conjugate(Vars.R_S1),conjugate(Cons.S_chi1)))
     Vars.chiVec2 = mul(mul(mul(Cons.S_chi2,Vars.R_S2),Cons.zHat),mul(conjugate(Vars.R_S2),conjugate(Cons.S_chi2)))
     Vars.chi1_n = np.array([Vars.chiVec1[1]])
@@ -697,15 +672,11 @@ def Modes_2p0(modes,Cons,Vars):
 @njit(cache=True)
 def Recalculate_2p5(Cons,Vars,y):
     Vars.v = np.array([y[0]])
-    Vars.rfrak_chi1_x = np.array([y[1]])
-    Vars.rfrak_chi1_y = np.array([y[2]])
-    Vars.rfrak_chi2_x = np.array([y[3]])
-    Vars.rfrak_chi2_y = np.array([y[4]])
-    Vars.rfrak_frame_x = np.array([y[5]])
-    Vars.rfrak_frame_y = np.array([y[6]])
-    Vars.rfrak_frame_z = np.array([y[7]])
-    Vars.R_S1 = exp(Vars.rfrak_chi1_x*Cons.xHat + Vars.rfrak_chi1_y*Cons.yHat)
-    Vars.R_S2 = exp(Vars.rfrak_chi2_x*Cons.xHat + Vars.rfrak_chi2_y*Cons.yHat)
+    Vars.rfrak_chi1 = np.array([y[1],y[2]])
+    Vars.rfrak_chi2 = np.array([y[3],y[4]])
+    Vars.rfrak_frame = np.array([y[5],y[6],y[7]])
+    Vars.R_S1 = exp(Vars.rfrak_chi1[0]*Cons.xHat + Vars.rfrak_chi1[1]*Cons.yHat)
+    Vars.R_S2 = exp(Vars.rfrak_chi2[0]*Cons.xHat + Vars.rfrak_chi2[1]*Cons.yHat)
     Vars.chiVec1 = mul(mul(mul(Cons.S_chi1,Vars.R_S1),Cons.zHat),mul(conjugate(Vars.R_S1),conjugate(Cons.S_chi1)))
     Vars.chiVec2 = mul(mul(mul(Cons.S_chi2,Vars.R_S2),Cons.zHat),mul(conjugate(Vars.R_S2),conjugate(Cons.S_chi2)))
     Vars.chi1_n = np.array([Vars.chiVec1[1]])
@@ -889,15 +860,11 @@ def Modes_2p5(modes,Cons,Vars):
 @njit(cache=True)
 def Recalculate_3p0(Cons,Vars,y):
     Vars.v = np.array([y[0]])
-    Vars.rfrak_chi1_x = np.array([y[1]])
-    Vars.rfrak_chi1_y = np.array([y[2]])
-    Vars.rfrak_chi2_x = np.array([y[3]])
-    Vars.rfrak_chi2_y = np.array([y[4]])
-    Vars.rfrak_frame_x = np.array([y[5]])
-    Vars.rfrak_frame_y = np.array([y[6]])
-    Vars.rfrak_frame_z = np.array([y[7]])
-    Vars.R_S1 = exp(Vars.rfrak_chi1_x*Cons.xHat + Vars.rfrak_chi1_y*Cons.yHat)
-    Vars.R_S2 = exp(Vars.rfrak_chi2_x*Cons.xHat + Vars.rfrak_chi2_y*Cons.yHat)
+    Vars.rfrak_chi1 = np.array([y[1],y[2]])
+    Vars.rfrak_chi2 = np.array([y[3],y[4]])
+    Vars.rfrak_frame = np.array([y[5],y[6],y[7]])
+    Vars.R_S1 = exp(Vars.rfrak_chi1[0]*Cons.xHat + Vars.rfrak_chi1[1]*Cons.yHat)
+    Vars.R_S2 = exp(Vars.rfrak_chi2[0]*Cons.xHat + Vars.rfrak_chi2[1]*Cons.yHat)
     Vars.chiVec1 = mul(mul(mul(Cons.S_chi1,Vars.R_S1),Cons.zHat),mul(conjugate(Vars.R_S1),conjugate(Cons.S_chi1)))
     Vars.chiVec2 = mul(mul(mul(Cons.S_chi2,Vars.R_S2),Cons.zHat),mul(conjugate(Vars.R_S2),conjugate(Cons.S_chi2)))
     Vars.chi1_n = np.array([Vars.chiVec1[1]])
@@ -1117,15 +1084,11 @@ def Modes_3p0(modes,Cons,Vars):
 @njit(cache=True)
 def Recalculate_3p5(Cons,Vars,y):
     Vars.v = np.array([y[0]])
-    Vars.rfrak_chi1_x = np.array([y[1]])
-    Vars.rfrak_chi1_y = np.array([y[2]])
-    Vars.rfrak_chi2_x = np.array([y[3]])
-    Vars.rfrak_chi2_y = np.array([y[4]])
-    Vars.rfrak_frame_x = np.array([y[5]])
-    Vars.rfrak_frame_y = np.array([y[6]])
-    Vars.rfrak_frame_z = np.array([y[7]])
-    Vars.R_S1 = exp(Vars.rfrak_chi1_x*Cons.xHat + Vars.rfrak_chi1_y*Cons.yHat)
-    Vars.R_S2 = exp(Vars.rfrak_chi2_x*Cons.xHat + Vars.rfrak_chi2_y*Cons.yHat)
+    Vars.rfrak_chi1 = np.array([y[1],y[2]])
+    Vars.rfrak_chi2 = np.array([y[3],y[4]])
+    Vars.rfrak_frame = np.array([y[5],y[6],y[7]])
+    Vars.R_S1 = exp(Vars.rfrak_chi1[0]*Cons.xHat + Vars.rfrak_chi1[1]*Cons.yHat)
+    Vars.R_S2 = exp(Vars.rfrak_chi2[0]*Cons.xHat + Vars.rfrak_chi2[1]*Cons.yHat)
     Vars.chiVec1 = mul(mul(mul(Cons.S_chi1,Vars.R_S1),Cons.zHat),mul(conjugate(Vars.R_S1),conjugate(Cons.S_chi1)))
     Vars.chiVec2 = mul(mul(mul(Cons.S_chi2,Vars.R_S2),Cons.zHat),mul(conjugate(Vars.R_S2),conjugate(Cons.S_chi2)))
     Vars.chi1_n = np.array([Vars.chiVec1[1]])
@@ -1345,15 +1308,11 @@ def Modes_3p5(modes,Cons,Vars):
 @njit(cache=True)
 def Recalculate_4p0(Cons,Vars,y):
     Vars.v = np.array([y[0]])
-    Vars.rfrak_chi1_x = np.array([y[1]])
-    Vars.rfrak_chi1_y = np.array([y[2]])
-    Vars.rfrak_chi2_x = np.array([y[3]])
-    Vars.rfrak_chi2_y = np.array([y[4]])
-    Vars.rfrak_frame_x = np.array([y[5]])
-    Vars.rfrak_frame_y = np.array([y[6]])
-    Vars.rfrak_frame_z = np.array([y[7]])
-    Vars.R_S1 = exp(Vars.rfrak_chi1_x*Cons.xHat + Vars.rfrak_chi1_y*Cons.yHat)
-    Vars.R_S2 = exp(Vars.rfrak_chi2_x*Cons.xHat + Vars.rfrak_chi2_y*Cons.yHat)
+    Vars.rfrak_chi1 = np.array([y[1],y[2]])
+    Vars.rfrak_chi2 = np.array([y[3],y[4]])
+    Vars.rfrak_frame = np.array([y[5],y[6],y[7]])
+    Vars.R_S1 = exp(Vars.rfrak_chi1[0]*Cons.xHat + Vars.rfrak_chi1[1]*Cons.yHat)
+    Vars.R_S2 = exp(Vars.rfrak_chi2[0]*Cons.xHat + Vars.rfrak_chi2[1]*Cons.yHat)
     Vars.chiVec1 = mul(mul(mul(Cons.S_chi1,Vars.R_S1),Cons.zHat),mul(conjugate(Vars.R_S1),conjugate(Cons.S_chi1)))
     Vars.chiVec2 = mul(mul(mul(Cons.S_chi2,Vars.R_S2),Cons.zHat),mul(conjugate(Vars.R_S2),conjugate(Cons.S_chi2)))
     Vars.chi1_n = np.array([Vars.chiVec1[1]])
@@ -1593,8 +1552,8 @@ def Modes(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_fra
     zz=np.array([0.0])
     z=np.array([0.0*1j])
     Cons=Constants(zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z)
-    Vars=Variables(zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z)
-    Initialization(Cons, xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_frame[0], rfrak_frame[1], rfrak_frame[2])
+    Vars=Variables(zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z)
+    Initialization(Cons, xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_frame)
     for i in range(len(y[0])):
         Recalculate.get(2*PNWaveformModeOrder)(Cons,Vars,y[:,i])
         WaveformModes.get(2*PNWaveformModeOrder)(ModeData[i,:],Cons,Vars)

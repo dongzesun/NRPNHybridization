@@ -47,7 +47,7 @@ def Optimize5D(x):
 def Align(x):
     """
     Generate PN waveform and align it with NR waveform.
-    x=[delta, chi1_x, chi1_y, chi1_z, chi2_x, chi2_y, chi2_z]
+    x=[q, chi1_x, chi1_y, chi1_z, chi2_x, chi2_y, chi2_z]
     """
     clock1=time.time()
     global mint, minima, R_delta, W_PN, W_PN_corot, t_end0, t_pre, t_end, omega_0, omega_PN,\
@@ -56,7 +56,7 @@ def Align(x):
         Normalization, lowbound, upbound, scale
     t_start=t_starts
     iter_num+=1
-    [delta, chi1_x, chi1_y, chi1_z, chi2_x, chi2_y, chi2_z]=x
+    [q, chi1_x, chi1_y, chi1_z, chi2_x, chi2_y, chi2_z]=x
     chi1_0=[chi1_x, chi1_y, chi1_z]
     chi2_0=[chi2_x, chi2_y, chi2_z]
     chi1Mag=quaternion.quaternion(0,chi1_0[0],chi1_0[1],chi1_0[2]).abs()
@@ -69,9 +69,9 @@ def Align(x):
     if chi2Mag>1e-12:
         S_chi2_0=np.sqrt(chi2Mag)*np.sqrt(\
             -quaternion.quaternion(0,chi2_0[0],chi2_0[1],chi2_0[2]).normalized()*zHat).normalized()
-    print(("Call # {4}, generating PN with parameters delta={0}, omega_0={1}, chi1_0={2}, chi2_0={3},"
-        +"t_PNstart={5}, t_PNend={6}.").format(delta, omega_0,chi1_0, chi2_0,iter_num, t_PNStart, t_PNEnd))
-    W_PN_corot=PostNewtonian.PNWaveform(delta, omega_0,chi1_0, chi2_0,quaternion.quaternion(0.88402943,  0.04116993, -0.01997798, -0.46518586),\
+    print(("Call # {4}, generating PN with parameters q={0}, omega_0={1}, chi1_0={2}, chi2_0={3},"
+        +"t_PNstart={5}, t_PNend={6}.").format(q, omega_0,chi1_0, chi2_0,iter_num, t_PNStart, t_PNEnd))
+    W_PN_corot=PostNewtonian.PNWaveform(q, omega_0,chi1_0, chi2_0,quaternion.quaternion(0.88402943,  0.04116993, -0.01997798, -0.46518586),\
         t_start, t_PNStart, t_PNEnd)
     W_PN_corot.data[:,2]=0.0*W_PN_corot.data[:,2] # Not cosider memory effect since NR dosen't have corrrect memory.
     W_PN=scri.to_inertial_frame(W_PN_corot.copy())
@@ -186,16 +186,18 @@ def Hybridize(t_start, data_dir, out_dir, debug=0, OptimizePNParas=0):
     i_1=abs(tA-t_start).argmin()
     m1=mA[i_1]
     m2=mB[i_1]
-    delta=(m1-m2)/(m1+m2)
-    
+    q=m1/m2
+    if m1<m2:
+        q=1/q
+
 # Align Waveforms
     t_starts=t_start
-    PNParas=np.append(np.append(delta, chiA[i_1]), chiB[i_1])
+    PNParas=np.append(np.append(q, chiA[i_1]), chiB[i_1])
     iter_num=0
     if OptimizePNParas:
-        PNPara=least_squares(Align, np.append(np.append(delta, chiA[i_1]), chiB[i_1]),\
-            bounds=(np.append(np.append(delta-0.1, chiA[i_1]-0.2), chiB[i_1]-0.2),\
-            np.append(np.append(delta+0.1, chiA[i_1]+0.2), chiB[i_1]+0.2)), x_scale='jac')
+        PNPara=least_squares(Align, np.append(np.append(q, chiA[i_1]), chiB[i_1]),\
+            bounds=(np.append(np.append(min(q*0.9,1.0), chiA[i_1]-0.2), chiB[i_1]-0.2),\
+            np.append(np.append(q*1.1, chiA[i_1]+0.2), chiB[i_1]+0.2)), x_scale='jac')
         print(PNPara)
         PNParas=PNPara.x
     t_PNStart, t_PNEnd=False, t_end-t_start

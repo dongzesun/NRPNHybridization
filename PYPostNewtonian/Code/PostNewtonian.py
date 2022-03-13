@@ -5,9 +5,9 @@ import numpy as np
 import quaternionic
 import quaternion
 
-def PNWaveform(delta,omega_0,chi1_0,chi2_0,frame_0,t_0=0.0, t_PNStart=False, t_PNEnd=False, PNEvolutionOrder=3.5, PNWaveformModeOrder=3.5, TaylorTn=1, StepsPerOrbit=32, ForwardInTime=True, tol=1e-8, MinStep=1e-7):
+def PNWaveform(q,omega_0,chi1_0,chi2_0,frame_0,t_0=0.0, t_PNStart=False, t_PNEnd=False, PNEvolutionOrder=3.5, PNWaveformModeOrder=3.5, TaylorTn=1, StepsPerOrbit=32, ForwardInTime=True, tol=1e-8, MinStep=1e-7):
     """
-    delta = (m1-m2)/(m1+m2), float number,
+    q = m1/m2, float number,
     omega_0: magnititude of angular velocity at t_0, float number,
     chi1_0 and chi2_0: spin vectors at t_0, 3-d vectors,
     frame_0: the frame quaternion at t_0, quaternionic_array object,
@@ -33,27 +33,27 @@ def PNWaveform(delta,omega_0,chi1_0,chi2_0,frame_0,t_0=0.0, t_PNStart=False, t_P
         message=("TaylorTn must be an int number in [1,4,5].")
         raise ValueError(message)          
         
-    xHat=quaternionic.array([0.0,1.0,0.0,0.0])
-    yHat=quaternionic.array([0.0,0.0,1.0,0.0])
-    zHat=quaternionic.array([0.0,0.0,0.0,1.0])
-    m1=(1+delta)/2.0
-    m2=(1-delta)/2.0
+    xHat=quaternionic.x
+    yHat=quaternionic.y
+    zHat=quaternionic.z
+    m1=q/(1+q)
+    m2=1/(1+q)
     v_0=omega_0**(1/3)
-    chi1Mag=np.sqrt(quaternionic.array([0,chi1_0[0],chi1_0[1],chi1_0[2]]).norm)
-    chi2Mag=np.sqrt(quaternionic.array([0,chi2_0[0],chi2_0[1],chi2_0[2]]).norm)
+    chi1Mag=quaternionic.array([0,chi1_0[0],chi1_0[1],chi1_0[2]]).abs
+    chi2Mag=quaternionic.array([0,chi2_0[0],chi2_0[1],chi2_0[2]]).abs
     
     # Quaternions that rotate z-axis to spin vectors
-    S_chi1_0=quaternionic.array([0.0,0.0,0.0,0.0]) 
-    S_chi2_0=quaternionic.array([0.0,0.0,0.0,0.0])
+    S_chi1_0=0.0*quaternionic.one 
+    S_chi2_0=0.0*quaternionic.one
     if chi1Mag>1e-12:
-        S_chi1_0=np.sqrt(chi1Mag)*np.sqrt(\
+        S_chi1_0=np.sqrt(chi1Mag)*np.sqrt(
             -quaternionic.array([0,chi1_0[0],chi1_0[1],chi1_0[2]]).normalized*zHat).normalized
     if chi2Mag>1e-12:
-        S_chi2_0=np.sqrt(chi2Mag)*np.sqrt(\
+        S_chi2_0=np.sqrt(chi2Mag)*np.sqrt(
             -quaternionic.array([0,chi2_0[0],chi2_0[1],chi2_0[2]]).normalized*zHat).normalized
         
     rfrak_frame_0=np.log(frame_0).vec # logarithm of frame quaternion
-    PN=PNEvolution.PNEv.Evolution(xHat, yHat, zHat, m1, m2, v_0,S_chi1_0, S_chi2_0, rfrak_frame_0, t_PNStart, t_PNEnd,\
+    PN=PNEvolution.PNEv.Evolution(xHat, yHat, zHat, m1, m2, v_0,S_chi1_0, S_chi2_0, rfrak_frame_0, t_PNStart, t_PNEnd,
         PNEvolutionOrder, TaylorTn, StepsPerOrbit, ForwardInTime, tol, MinStep)# Evolve PN parameters, PN.t is PN time, PN.y=[v, chi1_x, chi1_y
         # chi2_x, chi2_y, rfrak_frame_x, rfrak_frame_y, rfrak_frame_z]
 

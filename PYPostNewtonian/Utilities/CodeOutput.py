@@ -55,7 +55,7 @@ class CodeConstructor:
                             pass
         self.Atoms = []
         for sym in self.Variables:
-            if sym in AtomSet or str(sym) in set(['xHat','yHat','zHat','S_chi1','S_chi2','R_S1','R_S2','rfrak_chi1_x','rfrak_chi1_y','rfrak_chi2_x','rfrak_chi2_y','rfrak_frame_x','rfrak_frame_y','rfrak_frame_z']):
+            if sym in AtomSet or str(sym) in set(['xHat','yHat','zHat','S_chi1','S_chi2','R_S1','R_S2','rfrak_chi1','rfrak_chi2','rfrak_frame']):
                 self.Atoms.append(sym)
 
     @staticmethod
@@ -216,10 +216,10 @@ class CodeConstructor:
                 if atom.fundamental and str(atom).find('rfrak_chi')==-1:
                     return '    {0}=np.array([{0}_i])'.format(self.Variables[atom])
                 elif atom.fundamental and str(atom).find('rfrak_chi')!=-1:
-                    return '    {0}=np.array([0.0])'.format(self.Variables[atom])
+                    return '    {0}=np.array([0.0,0.0])'.format(self.Variables[atom])
                 else:
                     return '    {0}={1}'.format(self.Variables[atom], Initialize(atom))
-        Initializations  = [Initialization(atom) for atom in self.Atoms]
+        Initializations  = [Initialization(atom) for atom in self.Atoms if atom.constant or str(atom).find('chiVec')!=-1 or str(atom).find('R_S')!=-1 or str(atom).find('rfrak_chi')!=-1]
         return '\n'.join(Initializations)
     
     def CppInitializationModes(self, Indent=4):
@@ -490,7 +490,7 @@ class CodeConstructor:
                 pass
         return '\n'.join(Evaluations)
     
-    def CppEvaluateT45(self, NumTerms,DenTerms, Expressions=None):
+    def CppEvaluateT45(self, NumTerms, DenTerms, Constructor, Expressions=None):
         """Declare and define the `Expressions` for C++
 
         The output of this function declares are defines the
@@ -508,20 +508,29 @@ class CodeConstructor:
             A=str(atom)
             while (A.find('Num')!=-1):
                 j=A.find('Num')
-                B=A[0:j]+'{0}'.format(NumTerms.get(str(A[j:j+4])))+A[j+4:]
-                C=B[0:j+2]+'Vars.'+B[j+2:]
-                A=C
+                Subs=str(NumTerms.get(str(A[j:j+4])))
+                k=Subs.find('0*')
+                B=''
+                if k!=0 and(A[k-1].isalnum() or A[k-1]=='_' or A[k-1]!='.' or k==-1):
+                    B=A[0:j]+Subs+A[j+4:]
+                else:
+                    B=A[0:j]+'0'+A[j+4:]
+                A=B
             while (A.find('Den')!=-1):
                 j=A.find('Den')
-                B=A[0:j]+'{0}'.format(DenTerms.get(str(A[j:j+4])))+A[j+4:]
-                C=B[0:j+1]+'Vars.'+B[j+1:]
-                A=C
+                Subs=str(DenTerms.get(str(A[j:j+4])))
+                k=Subs.find('0*')
+                B=''
+                if k!=0 and(A[k-1].isalnum() or A[k-1]=='_' or A[k-1]!='.' or k==-1):
+                    B=A[0:j]+Subs+A[j+4:]
+                else:
+                    B=A[0:j]+'0'+A[j+4:]
+                A=B
             while (A.find('PolynomialVariable')!=-1):
                 j=A.find('PolynomialVariable')
                 B=A[0:j]+'v'+A[j+18:]
                 A=B
-            
-            for i in self.Atoms:
+            for i in Constructor.Atoms:
                 try:
                     if i.constant:
                         j=0
