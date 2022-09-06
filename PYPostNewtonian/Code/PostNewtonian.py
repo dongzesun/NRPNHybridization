@@ -1,7 +1,7 @@
 import scri
 from PYPostNewtonian.Code import PNEvolution
 from PYPostNewtonian.Code import PNWaveformModes
-from PYPostNewtonian.Code import PNPsi2Modes
+from PYPostNewtonian.Code import PNPsiMModes
 import numpy as np
 import quaternionic
 import quaternion
@@ -68,8 +68,8 @@ def PNWaveform(q,M,omega_0,chi1_0,chi2_0,frame_0,t_0=0.0, t_PNStart=False, t_PNE
         W_PN_corot.data, W_PN_corot.ells = PNWaveformModes.Modes(xHat, yHat, zHat, m1, m2, v_0,S_chi1_0, S_chi2_0, rfrak_frame_0, PN.y, PNWaveformModeOrder)
         W_PN_corot.dataType=scri.h
         W_PN_corot.data=-W_PN_corot.data
-    elif datatype=="psi2":
-        W_PN_corot.data, W_PN_corot.ells = PNPsi2Modes.Modes(xHat, yHat, zHat, m1, m2, v_0,S_chi1_0, S_chi2_0, rfrak_frame_0, PN.y, PNWaveformModeOrder)
+    elif datatype=="Psi_M":
+        W_PN_corot.data, W_PN_corot.ells = PNPsiMModes.Modes(xHat, yHat, zHat, m1, m2, v_0,S_chi1_0, S_chi2_0, rfrak_frame_0, PN.y, PNWaveformModeOrder)
         W_PN_corot.dataType=scri.psi2
         W_PN_corot.data[:,0]=W_PN_corot.data[:,0]-1.0
 

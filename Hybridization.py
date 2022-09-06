@@ -132,12 +132,12 @@ def Mismatch(W1,W2,t1,t2):
     """
     W2_spline=SplineArray(W2.t, W2.data)
     matchingtt=W1.t[(W1.t>=t1)&(W1.t<=t2)]
-    h1h2=np.linalg.norm(simpson(W2_spline(matchingtt)*np.conjugate(W1.data[(W1.t>=t1)&(W1.t<=t2),:]), matchingtt, axis=0))
-    h1h1=np.linalg.norm(simpson(W2_spline(matchingtt)*np.conjugate(W2_spline(matchingtt)), matchingtt, axis=0))
-    h2h2=np.linalg.norm(simpson(W1.data[(W1.t>=t1)&(W1.t<=t2),:]*np.conjugate(W1.data[(W1.t>=t1)&(W1.t<=t2),:]), matchingtt, axis=0))
+    h1h2=np.sum(simpson(W2_spline(matchingtt)*np.conjugate(W1.data[(W1.t>=t1)&(W1.t<=t2),:]), matchingtt, axis=0))
+    h1h1=np.sum(simpson(W2_spline(matchingtt)*np.conjugate(W2_spline(matchingtt)), matchingtt, axis=0))
+    h2h2=np.sum(simpson(W1.data[(W1.t>=t1)&(W1.t<=t2),:]*np.conjugate(W1.data[(W1.t>=t1)&(W1.t<=t2),:]), matchingtt, axis=0))
     return 1-h1h2/np.sqrt(h1h1*h2h2)
 
-def Residue(W1,W2,t1,t2):
+def SquaredError(W1,W2,t1,t2):
     """
     Calculate the residue of W1 and W2 between t1 and t2.
     """
@@ -285,9 +285,9 @@ def Hybridize(t_start, data_dir, cce_dir, out_dir, length, debug=0, OptimizePNPa
         W_PN.data=np.append(0.0*W_PN.data[:,0:4],np.copy(W_PN.data),axis=1)
         W_PN.ells=0,8
         W_PN.dataType=scri.h
-        W_PN_Psi2_corot=PostNewtonian.PNWaveform(PhyParas[0],PhyParas[1], omega_00, PhyParas[2:5], PhyParas[5:8], frame_0, t_start, datatype="psi2")
-        W_PN_Psi2=scri.to_inertial_frame(W_PN_Psi2_corot.copy())
-        tp1, W_NR, tp2, idx=PNBMS.PN_BMS_w_time_phase(abd,W_PN,W_PN_Psi2,t_start,t_start+length,None)
+        W_PN_PsiM_corot=PostNewtonian.PNWaveform(PhyParas[0],PhyParas[1], omega_00, PhyParas[2:5], PhyParas[5:8], frame_0, t_start, datatype="Psi_M")
+        W_PN_PsiM=scri.to_inertial_frame(W_PN_PsiM_corot.copy())
+        tp1, W_NR, tp2, idx=PNBMS.PN_BMS_w_time_phase(abd,W_PN,W_PN_PsiM,t_start,t_start+length,None)
         W_NR_corot=scri.to_corotating_frame(W_NR.copy())
     print("Map to superrest frame used ",time.time()-clock0)
     
@@ -408,8 +408,8 @@ def Hybridize(t_start, data_dir, cce_dir, out_dir, length, debug=0, OptimizePNPa
     W_NR=scri.rotate_physical_system(W_NR, R_delta)
     print("Mismatch over longer region: ",Mismatch(W_NR,W_PN,t_start-length,t_start+length))
     print("Mismatch over matching window: ",Mismatch(W_NR,W_PN,t_start,t_start+length))
-    print("Residue over longer region: ",Residue(W_NR,W_PN,t_start-length,t_start+length))
-    print("Residue over matching window: ",Residue(W_NR,W_PN,t_start,t_start+length))
+    print("SquaredError over longer region: ",SquaredError(W_NR,W_PN,t_start-length,t_start+length))
+    print("SquaredError over matching window: ",SquaredError(W_NR,W_PN,t_start,t_start+length))
     PhyParas=Parameterize_to_Physical(np.copy(PNParas))
     logR_delta=np.append(minima.x[0],minima.x[1:]+omega_mean*minima.x[0]/2)
     PhyParas[8:]=logR_delta
