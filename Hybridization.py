@@ -137,7 +137,7 @@ def Mismatch(W1,W2,t1,t2):
     h2h2=np.sum(simpson(W1.data[(W1.t>=t1)&(W1.t<=t2),:]*np.conjugate(W1.data[(W1.t>=t1)&(W1.t<=t2),:]), matchingtt, axis=0))
     return 1-h1h2/np.sqrt(h1h1*h2h2)
 
-def SquaredError(W1,W2,t1,t2):
+def SquaredError(W1,W2,t1,t2,mode=None):
     """
     Calculate the residue of W1 and W2 between t1 and t2.
     """
@@ -145,6 +145,8 @@ def SquaredError(W1,W2,t1,t2):
     matchingtt=W1.t[(W1.t>=t1)&(W1.t<=t2)]
     h1h2=np.sum(simpson(abs(W2_spline(matchingtt)-W1.data[(W1.t>=t1)&(W1.t<=t2),:])**2.0, matchingtt, axis=0))
     h1h1=np.sum(simpson(abs(W1.data[(W1.t>=t1)&(W1.t<=t2),:])**2.0, matchingtt, axis=0))
+    if mode != None:
+        h1h2=np.sum(simpson(abs(W2_spline(matchingtt)-W1.data[(W1.t>=t1)&(W1.t<=t2),:])[:,mode]**2.0, matchingtt, axis=0))
     return 0.5*h1h2/h1h1
 
 def Align(x):
@@ -231,8 +233,8 @@ def Optimize11D(x):
     iter_num+=1
     
     Phys=Parameterize_to_Physical(np.copy(x))
-    print(("Call # {4}, generating PN with parameters q={0}, M={7}, omega_0={1}, chi1_0={2}, chi2_0={3},"
-        +"t_PNstart={5}, t_PNend={6}.").format(Phys[0], omega_00,Phys[2:5], Phys[5:8],iter_num, t_PNStart, t_PNEnd, Phys[1]))
+    #print(("Call # {4}, generating PN with parameters q={0}, M={7}, omega_0={1}, chi1_0={2}, chi2_0={3},"
+    #    +"t_PNstart={5}, t_PNend={6}.").format(Phys[0], omega_00,Phys[2:5], Phys[5:8],iter_num, t_PNStart, t_PNEnd, Phys[1]))
     W_PN_corot=PostNewtonian.PNWaveform(Phys[0],Phys[1], omega_00, Phys[2:5], Phys[5:8], frame_0, t_start, t_PNStart, t_PNEnd)
     if PNIter==0:
         ZeroModes=[2,8,16,26,38,52,68] # Memory modes
@@ -264,6 +266,7 @@ def Hybridize(t_start, data_dir, cce_dir, out_dir, length, debug=0, OptimizePNPa
         Normalization, xHat, yHat, zHat, t_PNStart, t_PNEnd, lowbound, upbound, scale, frame_0,\
         spin1,spin2,chiA,chiB,NormalizationChi,chi1_i,chi2_i,q_0,NormalizationOmega,omega_NR_matching,t_delta,Mc_0,cc,coeff2,coeff3,coeff4,coeff5,WaveformNorm_NR_matching,PNParas,direction,PNIter,omega_00,PhyParas
     print('Iteration #',PNIter,'between BMS and PN parameters fixing.')
+
 # Get NR waveform
     abd=scri.SpEC.create_abd_from_h5("CCE",h=cce_dir+'/Strain.h5',Psi4=cce_dir+'/Psi4.h5',Psi3=cce_dir+'/Psi3.h5',Psi2=cce_dir+'/Psi2.h5',Psi1=cce_dir+'/Psi1.h5',Psi0=cce_dir+'/Psi0.h5')
     t0=-abd.t[np.argmax(np.linalg.norm(abd.sigma.bar,axis=1))]
@@ -395,6 +398,7 @@ def Hybridize(t_start, data_dir, cce_dir, out_dir, length, debug=0, OptimizePNPa
         upbound12D=PNParas+[0.2,0.1,0.2,0.2,np.pi/4,np.pi/4,np.pi/4,np.pi/4,np.pi/omega_0/2.0,np.pi/4,np.pi/4,np.pi/4]
         minima12D=minimize(Optimize11D,PNParas,method='Nelder-Mead',bounds=Bounds(lowbound12D,upbound12D),options={'return_all':True,'xatol': 3e-16, 'fatol': 1e-15,'maxfev':2000,'adaptive':True})
         #minima12D=least_squares(Optimize11D, minima12D.x,bounds=(lowbound12D,upbound12D),ftol=3e-16, xtol=3e-16, gtol=1e-15,x_scale='jac',max_nfev=5000)
+        #print(minima12D)
         PNParas=minima12D.x
 
     t_PNStart, t_PNEnd=-40000, -500-t_start
@@ -410,6 +414,9 @@ def Hybridize(t_start, data_dir, cce_dir, out_dir, length, debug=0, OptimizePNPa
     print("Mismatch over matching window: ",Mismatch(W_NR,W_PN,t_start,t_start+length))
     print("SquaredError over longer region: ",SquaredError(W_NR,W_PN,t_start-length,t_start+length))
     print("SquaredError over matching window: ",SquaredError(W_NR,W_PN,t_start,t_start+length))
+    print("SquaredError of (2,2) mode: ",SquaredError(W_NR,W_PN,t_start,t_start+length,mode=4))
+    print("SquaredError (2,1) mode: ",SquaredError(W_NR,W_PN,t_start,t_start+length,mode=3))
+    print("SquaredError (2,0) mode: ",SquaredError(W_NR,W_PN,t_start,t_start+length,mode=2))
     PhyParas=Parameterize_to_Physical(np.copy(PNParas))
     logR_delta=np.append(minima.x[0],minima.x[1:]+omega_mean*minima.x[0]/2)
     PhyParas[8:]=logR_delta
@@ -432,115 +439,116 @@ def Hybridize(t_start, data_dir, cce_dir, out_dir, length, debug=0, OptimizePNPa
         plt.savefig(out_dir+"/hybridCheckOmega",dpi=1000)
         plt.clf()
         
-    """
-# Hybridize waveform
-    PNData_spline=SplineArray(W_PN.t, W_PN.data)
-    tTemp=np.array(np.append(W_PN.t[W_PN.t<t_start], W_NR.t[W_NR.t>=t_start]))
-    dataTemp=np.empty((len(tTemp), len(W_NR.LM)), dtype=complex)
-    Smooth=np.resize(scri.utilities.transition_function(matchingt, t_start, t_end0), (len(W_NR.LM), len(matchingt))).T
-    # Hybridize data
-    matching_data=(1-Smooth)*PNData_spline(matchingt)+Smooth*W_NR.data[(W_NR.t>=t_start)&(W_NR.t<=t_end0),:]
-    dataTemp[tTemp<t_start,:]=W_PN.data[W_PN.t<t_start,:]
-    dataTemp[(tTemp>=t_start)&(tTemp<=t_end0),:]=matching_data
-    dataTemp[tTemp>t_end0,:]=W_NR.data[W_NR.t>t_end0,:]
-    # Delete indices that cause tiny time step
-    minstep=min(min(np.diff(W_NR.t[(W_NR.t>t_pre)&(W_NR.t<t_end)])),min(np.diff(W_PN.t[(W_PN.t>t_pre)&(W_PN.t<t_end)])))
-    BadIndices=np.nonzero(np.append(np.diff(tTemp)<minstep,0)&(tTemp>t_pre)&(tTemp<t_end))
-    while len(BadIndices[0])>0:
-        tTemp=np.delete(tTemp,BadIndices)
-        dataTemp=np.delete(dataTemp,BadIndices,axis=0)
+    try:
+        """
+    # Hybridize waveform
+        PNData_spline=SplineArray(W_PN.t, W_PN.data)
+        tTemp=np.array(np.append(W_PN.t[W_PN.t<t_start], W_NR.t[W_NR.t>=t_start]))
+        dataTemp=np.empty((len(tTemp), len(W_NR.LM)), dtype=complex)
+        Smooth=np.resize(scri.utilities.transition_function(matchingt, t_start, t_end0), (len(W_NR.LM), len(matchingt))).T
+        # Hybridize data
+        matching_data=(1-Smooth)*PNData_spline(matchingt)+Smooth*W_NR.data[(W_NR.t>=t_start)&(W_NR.t<=t_end0),:]
+        dataTemp[tTemp<t_start,:]=W_PN.data[W_PN.t<t_start,:]
+        dataTemp[(tTemp>=t_start)&(tTemp<=t_end0),:]=matching_data
+        dataTemp[tTemp>t_end0,:]=W_NR.data[W_NR.t>t_end0,:]
+        # Delete indices that cause tiny time step
+        minstep=min(min(np.diff(W_NR.t[(W_NR.t>t_pre)&(W_NR.t<t_end)])),min(np.diff(W_PN.t[(W_PN.t>t_pre)&(W_PN.t<t_end)])))
         BadIndices=np.nonzero(np.append(np.diff(tTemp)<minstep,0)&(tTemp>t_pre)&(tTemp<t_end))
-    # Construct Hybrid waveform
-    W_H=scri.WaveformModes()
-    W_H.t=tTemp
-    W_H.data=dataTemp
-    ell_min, ell_max = min(W_NR.LM[:, 0]), max(W_NR.LM[:, 0])
-    W_H.ells = ell_min, ell_max
+        while len(BadIndices[0])>0:
+            tTemp=np.delete(tTemp,BadIndices)
+            dataTemp=np.delete(dataTemp,BadIndices,axis=0)
+            BadIndices=np.nonzero(np.append(np.diff(tTemp)<minstep,0)&(tTemp>t_pre)&(tTemp<t_end))
+        # Construct Hybrid waveform
+        W_H=scri.WaveformModes()
+        W_H.t=tTemp
+        W_H.data=dataTemp
+        ell_min, ell_max = min(W_NR.LM[:, 0]), max(W_NR.LM[:, 0])
+        W_H.ells = ell_min, ell_max
+        """
+    # Plot results   
+        t1=-30000
+        t2=0
+        plt.subplot(311)
+        plt.plot(W_NR.t, W_NR.data[:,4].real-W_NR.data[:,4].imag, label='NR', linewidth=1)
+        plt.plot(W_PN.t, W_PN.data[:,4].real-W_PN.data[:,4].imag, label='PN', linewidth=1)
+        #plt.plot(W_H.t, W_H.data[:,4].real-W_H.data[:,4].imag, ls='--', label='Hybrid', linewidth=1)
+        #plt.xlim((t_start-25*np.pi/omega_0, t_end0+25*np.pi/omega_0))
+        plt.xlim((t1,t2))
+        plt.ylim((-0.15,0.15))
+        plt.ylabel("(2,2) mode")
+        plt.legend(['NR', 'PN', 'Hybrid'], loc="upper right")
+        plt.axvline(t_start, linestyle='dotted')
+        plt.axvline(t_end0, linestyle='dotted')
+        plt.subplot(312)
+        plt.plot(W_NR.t, W_NR.data[:,3].real-W_NR.data[:,3].imag, label='NR', linewidth=1)
+        plt.plot(W_PN.t, W_PN.data[:,3].real-W_PN.data[:,3].imag, label='PN', linewidth=1)
+        #plt.plot(W_H.t, W_H.data[:,3].real-W_H.data[:,3].imag, ls='--', label='Hybrid', linewidth=1)
+        #plt.xlim((t_start-25*np.pi/omega_0, t_end0+25*np.pi/omega_0))
+        plt.xlim((t1,t2))
+        plt.ylim((-0.03,0.03))
+        plt.ylabel("(2,1) mode")
+        plt.axvline(t_start, linestyle='dotted')
+        plt.axvline(t_end0, linestyle='dotted')
+        plt.subplot(313)
+        plt.plot(W_NR.t, W_NR.data[:,2].real-W_NR.data[:,2].imag, label='NR', linewidth=1)
+        plt.plot(W_PN.t, W_PN.data[:,2].real-W_PN.data[:,2].imag, label='PN', linewidth=1)
+        #plt.plot(W_H.t, W_H.data[:,2].real-W_H.data[:,2].imag, ls='--', label='Hybrid', linewidth=1)
+        #plt.xlim((t_start-25*np.pi/omega_0, t_end0+25*np.pi/omega_0))
+        plt.xlim((t1,t2))
+        plt.ylim((-0.01,0.02))
+        plt.ylabel("(2,0) mode")
+        plt.xlabel("Time")
+        plt.axvline(t_start, linestyle='dotted')
+        plt.axvline(t_end0, linestyle='dotted')
+        plt.savefig(out_dir+"/hybridCheckResults",dpi=1000)
+        plt.clf()
 
-# Plot results   
-    #t1=-55000
-    t2=t_start+20000
-    plt.subplot(311)
-    plt.plot(W_NR.t, W_NR.data[:,4].real-W_NR.data[:,4].imag, label='NR', linewidth=1)
-    plt.plot(W_PN.t, W_PN.data[:,4].real-W_PN.data[:,4].imag, label='PN', linewidth=1)
-    #plt.plot(W_H.t, W_H.data[:,4].real-W_H.data[:,4].imag, ls='--', label='Hybrid', linewidth=1)
-    #plt.xlim((t_start-25*np.pi/omega_0, t_end0+25*np.pi/omega_0))
-    plt.xlim((t1,t2))
-    plt.ylim((-0.15,0.15))
-    plt.ylabel("(2,2) mode")
-    plt.legend(['NR', 'PN', 'Hybrid'], loc="upper right")
-    plt.axvline(t_start, linestyle='dotted')
-    plt.axvline(t_end0, linestyle='dotted')
-    plt.subplot(312)
-    plt.plot(W_NR.t, W_NR.data[:,3].real-W_NR.data[:,3].imag, label='NR', linewidth=1)
-    plt.plot(W_PN.t, W_PN.data[:,3].real-W_PN.data[:,3].imag, label='PN', linewidth=1)
-    #plt.plot(W_H.t, W_H.data[:,3].real-W_H.data[:,3].imag, ls='--', label='Hybrid', linewidth=1)
-    #plt.xlim((t_start-25*np.pi/omega_0, t_end0+25*np.pi/omega_0))
-    plt.xlim((t1,t2))
-    plt.ylim((-0.03,0.03))
-    plt.ylabel("(2,1) mode")
-    plt.axvline(t_start, linestyle='dotted')
-    plt.axvline(t_end0, linestyle='dotted')
-    plt.subplot(313)
-    plt.plot(W_NR.t, W_NR.data[:,2].real-W_NR.data[:,2].imag, label='NR', linewidth=1)
-    plt.plot(W_PN.t, W_PN.data[:,2].real-W_PN.data[:,2].imag, label='PN', linewidth=1)
-    #plt.plot(W_H.t, W_H.data[:,2].real-W_H.data[:,2].imag, ls='--', label='Hybrid', linewidth=1)
-    #plt.xlim((t_start-25*np.pi/omega_0, t_end0+25*np.pi/omega_0))
-    plt.xlim((t1,t2))
-    plt.ylim((-0.01,0.02))
-    plt.ylabel("(2,0) mode")
-    plt.xlabel("Time")
-    plt.axvline(t_start, linestyle='dotted')
-    plt.axvline(t_end0, linestyle='dotted')
-    plt.savefig(out_dir+"/hybridCheckResults",dpi=1000)
-    plt.clf()
-    
-    global W_NR1    
-    W_NR1=W_NR.copy()
-    W_NR=W_NR.interpolate(W_PN.t)
-    plt.subplot(411)
-    plt.plot(W_PN.t, np.abs((W_NR.data[:,4].real-W_NR.data[:,4].imag)\
-        -(W_PN.data[:,4].real-W_PN.data[:,4].imag)), linewidth=1)
-    plt.yscale('log')
-    plt.xlim((-95000,-5000))#t_start-25*np.pi/omega_0, t_end0+25*np.pi/omega_0))
-    plt.ylabel("(2,2) mode Error")
-    plt.axvline(t_start, linestyle='dotted')
-    plt.axvline(t_end0, linestyle='dotted')
-    plt.subplot(412)
-    plt.plot(W_PN.t, np.abs((W_NR.data[:,3].real-W_NR.data[:,3].imag)\
-        -(W_PN.data[:,3].real-W_PN.data[:,3].imag)), linewidth=1)
-    plt.yscale('log')
-    plt.xlim((-95000,-5000))#plt.xlim((t_start-25*np.pi/omega_0, t_end0+25*np.pi/omega_0))
-    plt.ylabel("(2,1) mode Error")
-    plt.axvline(t_start, linestyle='dotted')
-    plt.axvline(t_end0, linestyle='dotted')
-    plt.subplot(413)
-    plt.plot(W_PN.t, np.abs((W_NR.data[:,2].real-W_NR.data[:,2].imag)\
-        -(W_PN.data[:,2].real-W_PN.data[:,2].imag)), linewidth=1)
-    plt.yscale('log')
-    plt.xlim((-95000,-5000))#plt.xlim((t_start-25*np.pi/omega_0, t_end0+25*np.pi/omega_0))
-    plt.ylabel("(2,0) mode Error")
-    plt.xlabel("Time")
-    plt.axvline(t_start, linestyle='dotted')
-    plt.axvline(t_end0, linestyle='dotted')
-    plt.subplot(414)
-    plt.plot(W_PN.t, np.linalg.norm((W_NR.data.real-W_NR.data.imag)\
-        -(W_PN.data.real-W_PN.data.imag),axis=1), linewidth=1)
-    plt.yscale('log')
-    plt.xlim((-95000,-5000))#plt.xlim((t_start-25*np.pi/omega_0, t_end0+25*np.pi/omega_0))
-    plt.ylabel("(2,0) mode Error")
-    plt.xlabel("Time")
-    plt.axvline(t_start, linestyle='dotted')
-    plt.axvline(t_end0, linestyle='dotted')
-    plt.savefig(out_dir+"/hybridCheckResultsError",dpi=1000)
-    plt.clf()
-    
-# Output results 
-    outname=out_dir+'/hybridPN.h5'
-    scri.SpEC.write_to_h5(W_PN, outname, file_write_mode='w')
-    outname=out_dir+'/hybridHybrid'+str(t_start)+'.h5'
-    scri.SpEC.write_to_h5(W_H, outname, file_write_mode='w')
-    """
+        global W_NR1    
+        W_NR1=W_NR.copy()
+        W_NR=W_NR.interpolate(W_PN.t)
+        plt.subplot(311)
+        plt.plot(W_PN.t, np.abs(W_NR.data[:,4]-W_PN.data[:,4]), linewidth=1)
+        plt.yscale('log')
+        plt.xlim((t1,t2))#t_start-25*np.pi/omega_0, t_end0+25*np.pi/omega_0))
+        plt.ylabel("(2,2) mode Error")
+        plt.axvline(t_start, linestyle='dotted')
+        plt.axvline(t_end0, linestyle='dotted')
+        plt.subplot(312)
+        plt.plot(W_PN.t, np.abs(W_NR.data[:,3]-W_PN.data[:,3]), linewidth=1)
+        plt.yscale('log')
+        plt.xlim((t1,t2))#plt.xlim((t_start-25*np.pi/omega_0, t_end0+25*np.pi/omega_0))
+        plt.ylabel("(2,1) mode Error")
+        plt.axvline(t_start, linestyle='dotted')
+        plt.axvline(t_end0, linestyle='dotted')
+        plt.subplot(313)
+        plt.plot(W_PN.t, np.abs(W_NR.data[:,2]-W_PN.data[:,2]), linewidth=1)
+        plt.yscale('log')
+        plt.xlim((t1,t2))#plt.xlim((t_start-25*np.pi/omega_0, t_end0+25*np.pi/omega_0))
+        plt.ylabel("(2,0) mode Error")
+        plt.xlabel("Time")
+        plt.axvline(t_start, linestyle='dotted')
+        plt.axvline(t_end0, linestyle='dotted')
+        """
+        plt.subplot(414)
+        plt.plot(W_PN.t, np.linalg.norm((W_NR.data.real-W_NR.data.imag)\
+            -(W_PN.data.real-W_PN.data.imag),axis=1), linewidth=1)
+        plt.yscale('log')
+        plt.xlim((t1,t2))#plt.xlim((t_start-25*np.pi/omega_0, t_end0+25*np.pi/omega_0))
+        plt.ylabel("Norm Error")
+        plt.xlabel("Time")
+        plt.axvline(t_start, linestyle='dotted')
+        plt.axvline(t_end0, linestyle='dotted')
+        """
+        plt.savefig(out_dir+"/hybridCheckResultsError",dpi=1000)
+        plt.clf()
+
+    # Output results 
+        outname=out_dir+'/hybridPN.h5'
+        scri.SpEC.write_to_h5(W_PN, outname, file_write_mode='w')
+        outname=out_dir+'/hybridHybrid'+str(t_start)+'.h5'
+        scri.SpEC.write_to_h5(W_H, outname, file_write_mode='w')
+    except:
+        pass
     print("All done, total time:",time.time()-clock0)
 
 # Run the code
@@ -609,3 +617,4 @@ def Plot_Cost_Funciton():
     h1h1=np.linalg.norm(np.real(simpson(PNData_spline(matchingt)*np.conjugate(PNData_spline(matchingt)), matchingt, axis=0)))
     h2h2=np.linalg.norm(np.real(simpson(PNData_spline(matchingt+dt)*np.conjugate(PNData_spline(matchingt+dt)), matchingt, axis=0)))
     print(h1h2,h1h1,h2h2,1-h1h2/np.sqrt(h1h1*h2h2))
+"""
