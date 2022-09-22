@@ -142,15 +142,14 @@ class Constants:
         self.hHat_8_0_4=hHat_8_0_4
         self.hHat_8_0_6=hHat_8_0_6
 
-VarsSpec=[('v', float64[:]),('rfrak_chi1', float64[:]),('rfrak_chi2', float64[:]),('rfrak_frame', float64[:]),('R', float64[:]),('R_S1', float64[:]),('R_S2', float64[:]),('chiVec1', float64[:]),('chiVec2', float64[:]),('chi1_n', float64[:]),('chi1_lambda', float64[:]),('chi1_ell', float64[:]),('chi2_n', float64[:]),('chi2_lambda', float64[:]),('chi2_ell', float64[:]),('S_ell', float64[:]),('S_n', float64[:]),('S_lambda', float64[:]),('Sigma_ell', float64[:]),('Sigma_n', float64[:]),('Sigma_lambda', float64[:]),('logv', float64[:]),('rhOverM_coeff', float64[:]),('hHat_spin_Symm_2_2_3', complex128[:]),('hHat_spin_Symm_2_2_4', complex128[:]),('hHat_spin_Symm_2_1_2', complex128[:]),('hHat_spin_Symm_2_1_4', complex128[:]),('hHat_spin_Symm_2_0_3', complex128[:]),('hHat_spin_Symm_2_0_4', complex128[:]),('hHat_spin_Symm_3_3_4', complex128[:]),('hHat_spin_Symm_3_2_3', complex128[:]),('hHat_spin_Symm_3_1_4', complex128[:]),('hHat_spin_Symm_4_3_4', complex128[:]),('hHat_spin_Symm_4_1_4', complex128[:]),('hHat_spin_Symm_4_0_3', complex128[:]),('hHat_spin_Symm_4_0_4', complex128[:]),('hHat_spin_Asymm_2_2_2', complex128[:]),('hHat_spin_Asymm_2_2_4', complex128[:]),('hHat_spin_Asymm_2_1_3', complex128[:]),('hHat_spin_Asymm_2_1_4', complex128[:]),('hHat_spin_Asymm_2_0_2', complex128[:]),('hHat_spin_Asymm_2_0_4', complex128[:]),('hHat_spin_Asymm_3_3_3', complex128[:]),('hHat_spin_Asymm_3_2_4', complex128[:]),('hHat_spin_Asymm_3_1_3', complex128[:]),('hHat_spin_Asymm_3_0_4', complex128[:]),('hHat_spin_Asymm_4_4_4', complex128[:]),('hHat_spin_Asymm_4_2_4', complex128[:]),('hHat_spin_Asymm_4_1_3', complex128[:]),('hHat_spin_Asymm_4_1_4', complex128[:]),('hHat_spin_Asymm_4_0_4', complex128[:])]
+VarsSpec=[('v', float64[:]),('rfrak_chi1', float64[:]),('rfrak_chi2', float64[:]),('rfrak_frame', float64[:]),('R_S1', float64[:]),('R_S2', float64[:]),('chiVec1', float64[:]),('chiVec2', float64[:]),('chi1_n', float64[:]),('chi1_lambda', float64[:]),('chi1_ell', float64[:]),('chi2_n', float64[:]),('chi2_lambda', float64[:]),('chi2_ell', float64[:]),('S_ell', float64[:]),('S_n', float64[:]),('S_lambda', float64[:]),('Sigma_ell', float64[:]),('Sigma_n', float64[:]),('Sigma_lambda', float64[:]),('x', float64[:]),('logv', float64[:]),('rhOverM_coeff', float64[:]),('hHat_spin_Symm_2_2_3', complex128[:]),('hHat_spin_Symm_2_2_4', complex128[:]),('hHat_spin_Symm_2_1_2', complex128[:]),('hHat_spin_Symm_2_1_4', complex128[:]),('hHat_spin_Symm_2_0_3', complex128[:]),('hHat_spin_Symm_2_0_4', complex128[:]),('hHat_spin_Symm_2_0_5', complex128[:]),('hHat_spin_Symm_2_0_6', complex128[:]),('hHat_spin_Symm_2_0_7', complex128[:]),('hHat_spin_Symm_3_3_4', complex128[:]),('hHat_spin_Symm_3_2_3', complex128[:]),('hHat_spin_Symm_3_1_4', complex128[:]),('hHat_spin_Symm_3_3_7', complex128[:]),('hHat_spin_Symm_3_1_7', complex128[:]),('hHat_spin_Symm_4_3_4', complex128[:]),('hHat_spin_Symm_4_1_4', complex128[:]),('hHat_spin_Symm_4_0_3', complex128[:]),('hHat_spin_Symm_4_0_4', complex128[:]),('hHat_spin_Symm_4_0_5', complex128[:]),('hHat_spin_Symm_4_0_6', complex128[:]),('hHat_spin_Symm_4_0_7', complex128[:]),('hHat_spin_Symm_6_0_5', complex128[:]),('hHat_spin_Symm_6_0_6', complex128[:]),('hHat_spin_Symm_6_0_7', complex128[:]),('hHat_spin_Symm_8_0_7', complex128[:]),('hHat_spin_Asymm_2_2_2', complex128[:]),('hHat_spin_Asymm_2_2_4', complex128[:]),('hHat_spin_Asymm_2_1_3', complex128[:]),('hHat_spin_Asymm_2_1_4', complex128[:]),('hHat_spin_Asymm_2_0_2', complex128[:]),('hHat_spin_Asymm_2_0_4', complex128[:]),('hHat_spin_Asymm_3_3_3', complex128[:]),('hHat_spin_Asymm_3_2_4', complex128[:]),('hHat_spin_Asymm_3_1_3', complex128[:]),('hHat_spin_Asymm_3_0_4', complex128[:]),('hHat_spin_Asymm_4_4_4', complex128[:]),('hHat_spin_Asymm_4_2_4', complex128[:]),('hHat_spin_Asymm_4_1_3', complex128[:]),('hHat_spin_Asymm_4_1_4', complex128[:]),('hHat_spin_Asymm_4_0_4', complex128[:])]
 @jitclass(VarsSpec)
 class Variables:
-    def __init__(self,v,rfrak_chi1,rfrak_chi2,rfrak_frame,R,R_S1,R_S2,chiVec1,chiVec2,chi1_n,chi1_lambda,chi1_ell,chi2_n,chi2_lambda,chi2_ell,S_ell,S_n,S_lambda,Sigma_ell,Sigma_n,Sigma_lambda,logv,rhOverM_coeff,hHat_spin_Symm_2_2_3,hHat_spin_Symm_2_2_4,hHat_spin_Symm_2_1_2,hHat_spin_Symm_2_1_4,hHat_spin_Symm_2_0_3,hHat_spin_Symm_2_0_4,hHat_spin_Symm_3_3_4,hHat_spin_Symm_3_2_3,hHat_spin_Symm_3_1_4,hHat_spin_Symm_4_3_4,hHat_spin_Symm_4_1_4,hHat_spin_Symm_4_0_3,hHat_spin_Symm_4_0_4,hHat_spin_Asymm_2_2_2,hHat_spin_Asymm_2_2_4,hHat_spin_Asymm_2_1_3,hHat_spin_Asymm_2_1_4,hHat_spin_Asymm_2_0_2,hHat_spin_Asymm_2_0_4,hHat_spin_Asymm_3_3_3,hHat_spin_Asymm_3_2_4,hHat_spin_Asymm_3_1_3,hHat_spin_Asymm_3_0_4,hHat_spin_Asymm_4_4_4,hHat_spin_Asymm_4_2_4,hHat_spin_Asymm_4_1_3,hHat_spin_Asymm_4_1_4,hHat_spin_Asymm_4_0_4):
+    def __init__(self,v,rfrak_chi1,rfrak_chi2,rfrak_frame,R_S1,R_S2,chiVec1,chiVec2,chi1_n,chi1_lambda,chi1_ell,chi2_n,chi2_lambda,chi2_ell,S_ell,S_n,S_lambda,Sigma_ell,Sigma_n,Sigma_lambda,x,logv,rhOverM_coeff,hHat_spin_Symm_2_2_3,hHat_spin_Symm_2_2_4,hHat_spin_Symm_2_1_2,hHat_spin_Symm_2_1_4,hHat_spin_Symm_2_0_3,hHat_spin_Symm_2_0_4,hHat_spin_Symm_2_0_5,hHat_spin_Symm_2_0_6,hHat_spin_Symm_2_0_7,hHat_spin_Symm_3_3_4,hHat_spin_Symm_3_2_3,hHat_spin_Symm_3_1_4,hHat_spin_Symm_3_3_7,hHat_spin_Symm_3_1_7,hHat_spin_Symm_4_3_4,hHat_spin_Symm_4_1_4,hHat_spin_Symm_4_0_3,hHat_spin_Symm_4_0_4,hHat_spin_Symm_4_0_5,hHat_spin_Symm_4_0_6,hHat_spin_Symm_4_0_7,hHat_spin_Symm_6_0_5,hHat_spin_Symm_6_0_6,hHat_spin_Symm_6_0_7,hHat_spin_Symm_8_0_7,hHat_spin_Asymm_2_2_2,hHat_spin_Asymm_2_2_4,hHat_spin_Asymm_2_1_3,hHat_spin_Asymm_2_1_4,hHat_spin_Asymm_2_0_2,hHat_spin_Asymm_2_0_4,hHat_spin_Asymm_3_3_3,hHat_spin_Asymm_3_2_4,hHat_spin_Asymm_3_1_3,hHat_spin_Asymm_3_0_4,hHat_spin_Asymm_4_4_4,hHat_spin_Asymm_4_2_4,hHat_spin_Asymm_4_1_3,hHat_spin_Asymm_4_1_4,hHat_spin_Asymm_4_0_4):
         self.v=v
         self.rfrak_chi1=rfrak_chi1
         self.rfrak_chi2=rfrak_chi2
         self.rfrak_frame=rfrak_frame
-        self.R=R
         self.R_S1=R_S1
         self.R_S2=R_S2
         self.chiVec1=chiVec1
@@ -167,6 +166,7 @@ class Variables:
         self.Sigma_ell=Sigma_ell
         self.Sigma_n=Sigma_n
         self.Sigma_lambda=Sigma_lambda
+        self.x=x
         self.logv=logv
         self.rhOverM_coeff=rhOverM_coeff
         self.hHat_spin_Symm_2_2_3=hHat_spin_Symm_2_2_3
@@ -175,13 +175,25 @@ class Variables:
         self.hHat_spin_Symm_2_1_4=hHat_spin_Symm_2_1_4
         self.hHat_spin_Symm_2_0_3=hHat_spin_Symm_2_0_3
         self.hHat_spin_Symm_2_0_4=hHat_spin_Symm_2_0_4
+        self.hHat_spin_Symm_2_0_5=hHat_spin_Symm_2_0_5
+        self.hHat_spin_Symm_2_0_6=hHat_spin_Symm_2_0_6
+        self.hHat_spin_Symm_2_0_7=hHat_spin_Symm_2_0_7
         self.hHat_spin_Symm_3_3_4=hHat_spin_Symm_3_3_4
         self.hHat_spin_Symm_3_2_3=hHat_spin_Symm_3_2_3
         self.hHat_spin_Symm_3_1_4=hHat_spin_Symm_3_1_4
+        self.hHat_spin_Symm_3_3_7=hHat_spin_Symm_3_3_7
+        self.hHat_spin_Symm_3_1_7=hHat_spin_Symm_3_1_7
         self.hHat_spin_Symm_4_3_4=hHat_spin_Symm_4_3_4
         self.hHat_spin_Symm_4_1_4=hHat_spin_Symm_4_1_4
         self.hHat_spin_Symm_4_0_3=hHat_spin_Symm_4_0_3
         self.hHat_spin_Symm_4_0_4=hHat_spin_Symm_4_0_4
+        self.hHat_spin_Symm_4_0_5=hHat_spin_Symm_4_0_5
+        self.hHat_spin_Symm_4_0_6=hHat_spin_Symm_4_0_6
+        self.hHat_spin_Symm_4_0_7=hHat_spin_Symm_4_0_7
+        self.hHat_spin_Symm_6_0_5=hHat_spin_Symm_6_0_5
+        self.hHat_spin_Symm_6_0_6=hHat_spin_Symm_6_0_6
+        self.hHat_spin_Symm_6_0_7=hHat_spin_Symm_6_0_7
+        self.hHat_spin_Symm_8_0_7=hHat_spin_Symm_8_0_7
         self.hHat_spin_Asymm_2_2_2=hHat_spin_Asymm_2_2_2
         self.hHat_spin_Asymm_2_2_4=hHat_spin_Asymm_2_2_4
         self.hHat_spin_Asymm_2_1_3=hHat_spin_Asymm_2_1_3
@@ -317,7 +329,7 @@ def Recalculate_0(Cons,Vars,y):
     Vars.rfrak_frame = np.array([y[5],y[6],y[7]])
     Vars.R_S1 = exp(Vars.rfrak_chi1[0]*Cons.xHat + Vars.rfrak_chi1[1]*Cons.yHat)
     Vars.R_S2 = exp(Vars.rfrak_chi2[0]*Cons.xHat + Vars.rfrak_chi2[1]*Cons.yHat)
-    Vars.rhOverM_coeff = 8*sqrt(5)*Cons.nu*Vars.v**2*sqrt(pi)/5
+    Vars.rhOverM_coeff = -8*sqrt(5)*Cons.nu*Vars.v**2*sqrt(pi)/5
 
 @njit(cache=True)
 def Modes_0(modes,Cons,Vars):
@@ -351,7 +363,7 @@ def Recalculate_0p50(Cons,Vars,y):
     Vars.rfrak_frame = np.array([y[5],y[6],y[7]])
     Vars.R_S1 = exp(Vars.rfrak_chi1[0]*Cons.xHat + Vars.rfrak_chi1[1]*Cons.yHat)
     Vars.R_S2 = exp(Vars.rfrak_chi2[0]*Cons.xHat + Vars.rfrak_chi2[1]*Cons.yHat)
-    Vars.rhOverM_coeff = 8*sqrt(5)*Cons.nu*Vars.v**2*sqrt(pi)/5
+    Vars.rhOverM_coeff = -8*sqrt(5)*Cons.nu*Vars.v**2*sqrt(pi)/5
 
 @njit(cache=True)
 def Modes_0p50(modes,Cons,Vars):
@@ -412,7 +424,7 @@ def Recalculate_1p0(Cons,Vars,y):
     Vars.Sigma_ell = Cons.M*(-Cons.M1*Vars.chi1_ell + Cons.M2*Vars.chi2_ell)
     Vars.Sigma_n = Cons.M*(-Cons.M1*Vars.chi1_n + Cons.M2*Vars.chi2_n)
     Vars.Sigma_lambda = Cons.M*(-Cons.M1*Vars.chi1_lambda + Cons.M2*Vars.chi2_lambda)
-    Vars.rhOverM_coeff = 8*sqrt(5)*Cons.nu*Vars.v**2*sqrt(pi)/5
+    Vars.rhOverM_coeff = -8*sqrt(5)*Cons.nu*Vars.v**2*sqrt(pi)/5
     Vars.hHat_spin_Symm_2_1_2 = I*Vars.Sigma_ell/(2*Cons.M**2)
     Vars.hHat_spin_Asymm_2_2_2 = (-Vars.Sigma_lambda - I*Vars.Sigma_n)/(2*Cons.M**2)
     Vars.hHat_spin_Asymm_2_0_2 = sqrt(6)*I*Vars.Sigma_n/(6*Cons.M**2)
@@ -494,7 +506,7 @@ def Recalculate_1p5(Cons,Vars,y):
     Vars.Sigma_ell = Cons.M*(-Cons.M1*Vars.chi1_ell + Cons.M2*Vars.chi2_ell)
     Vars.Sigma_n = Cons.M*(-Cons.M1*Vars.chi1_n + Cons.M2*Vars.chi2_n)
     Vars.Sigma_lambda = Cons.M*(-Cons.M1*Vars.chi1_lambda + Cons.M2*Vars.chi2_lambda)
-    Vars.rhOverM_coeff = 8*sqrt(5)*Cons.nu*Vars.v**2*sqrt(pi)/5
+    Vars.rhOverM_coeff = -8*sqrt(5)*Cons.nu*Vars.v**2*sqrt(pi)/5
     Vars.hHat_spin_Symm_2_2_3 = (-6*Vars.S_ell - 2*Vars.Sigma_ell*Cons.delta)/(3*Cons.M**2) + 0.0*I
     Vars.hHat_spin_Symm_2_1_2 = I*Vars.Sigma_ell/(2*Cons.M**2)
     Vars.hHat_spin_Symm_2_0_3 = -0.347760353971534*sqrt(5)*Vars.S_ell/Cons.M**2 - 0.170755767555554*sqrt(5)*Vars.Sigma_ell*Cons.delta/Cons.M**2 + 0.0*I
@@ -592,7 +604,6 @@ def Recalculate_2p0(Cons,Vars,y):
     Vars.rfrak_chi1 = np.array([y[1],y[2]])
     Vars.rfrak_chi2 = np.array([y[3],y[4]])
     Vars.rfrak_frame = np.array([y[5],y[6],y[7]])
-    Vars.R = exp(Vars.rfrak_frame[0]*Cons.xHat + Vars.rfrak_frame[1]*Cons.yHat + Vars.rfrak_frame[2]*Cons.zHat)
     Vars.R_S1 = exp(Vars.rfrak_chi1[0]*Cons.xHat + Vars.rfrak_chi1[1]*Cons.yHat)
     Vars.R_S2 = exp(Vars.rfrak_chi2[0]*Cons.xHat + Vars.rfrak_chi2[1]*Cons.yHat)
     Vars.chiVec1 = mul(mul(conjugate(exp(y[5]*Cons.xHat+y[6]*Cons.yHat+y[7]*Cons.zHat)),mul(mul(mul(Cons.S_chi1,Vars.R_S1),Cons.zHat),mul(conjugate(Vars.R_S1),conjugate(Cons.S_chi1)))),exp(y[5]*Cons.xHat+y[6]*Cons.yHat+y[7]*Cons.zHat))
@@ -609,7 +620,7 @@ def Recalculate_2p0(Cons,Vars,y):
     Vars.Sigma_ell = Cons.M*(-Cons.M1*Vars.chi1_ell + Cons.M2*Vars.chi2_ell)
     Vars.Sigma_n = Cons.M*(-Cons.M1*Vars.chi1_n + Cons.M2*Vars.chi2_n)
     Vars.Sigma_lambda = Cons.M*(-Cons.M1*Vars.chi1_lambda + Cons.M2*Vars.chi2_lambda)
-    Vars.rhOverM_coeff = 8*sqrt(5)*Cons.nu*Vars.v**2*sqrt(pi)/5
+    Vars.rhOverM_coeff = -8*sqrt(5)*Cons.nu*Vars.v**2*sqrt(pi)/5
     Vars.hHat_spin_Symm_2_2_3 = (-6*Vars.S_ell - 2*Vars.Sigma_ell*Cons.delta)/(3*Cons.M**2) + 0.0*I
     Vars.hHat_spin_Symm_2_2_4 = -(-336*Vars.S_ell**2 - 336*Vars.S_ell*Vars.Sigma_ell*Cons.delta - 280*Vars.S_lambda**2 + 840*I*Vars.S_lambda*Vars.S_n + 616*Vars.S_n**2 + 14*Cons.delta*(-6*Vars.Sigma_ell**2*Cons.delta - 5*Vars.Sigma_lambda**2*Cons.delta + 5*I*Vars.Sigma_lambda*(4*I*Vars.S_lambda + 6*Vars.S_n + 3*Vars.Sigma_n*Cons.delta) + Vars.Sigma_n*(30*I*Vars.S_lambda + 44*Vars.S_n + 11*Vars.Sigma_n*Cons.delta)))/(4*84**Cons.M)
     Vars.hHat_spin_Symm_2_1_2 = I*Vars.Sigma_ell/(2*Cons.M**2)
@@ -753,7 +764,6 @@ def Recalculate_2p5(Cons,Vars,y):
     Vars.rfrak_chi1 = np.array([y[1],y[2]])
     Vars.rfrak_chi2 = np.array([y[3],y[4]])
     Vars.rfrak_frame = np.array([y[5],y[6],y[7]])
-    Vars.R = exp(Vars.rfrak_frame[0]*Cons.xHat + Vars.rfrak_frame[1]*Cons.yHat + Vars.rfrak_frame[2]*Cons.zHat)
     Vars.R_S1 = exp(Vars.rfrak_chi1[0]*Cons.xHat + Vars.rfrak_chi1[1]*Cons.yHat)
     Vars.R_S2 = exp(Vars.rfrak_chi2[0]*Cons.xHat + Vars.rfrak_chi2[1]*Cons.yHat)
     Vars.chiVec1 = mul(mul(conjugate(exp(y[5]*Cons.xHat+y[6]*Cons.yHat+y[7]*Cons.zHat)),mul(mul(mul(Cons.S_chi1,Vars.R_S1),Cons.zHat),mul(conjugate(Vars.R_S1),conjugate(Cons.S_chi1)))),exp(y[5]*Cons.xHat+y[6]*Cons.yHat+y[7]*Cons.zHat))
@@ -770,13 +780,14 @@ def Recalculate_2p5(Cons,Vars,y):
     Vars.Sigma_ell = Cons.M*(-Cons.M1*Vars.chi1_ell + Cons.M2*Vars.chi2_ell)
     Vars.Sigma_n = Cons.M*(-Cons.M1*Vars.chi1_n + Cons.M2*Vars.chi2_n)
     Vars.Sigma_lambda = Cons.M*(-Cons.M1*Vars.chi1_lambda + Cons.M2*Vars.chi2_lambda)
-    Vars.rhOverM_coeff = 8*sqrt(5)*Cons.nu*Vars.v**2*sqrt(pi)/5
+    Vars.rhOverM_coeff = -8*sqrt(5)*Cons.nu*Vars.v**2*sqrt(pi)/5
     Vars.hHat_spin_Symm_2_2_3 = (-6*Vars.S_ell - 2*Vars.Sigma_ell*Cons.delta)/(3*Cons.M**2) + 0.0*I
     Vars.hHat_spin_Symm_2_2_4 = -(-336*Vars.S_ell**2 - 336*Vars.S_ell*Vars.Sigma_ell*Cons.delta - 280*Vars.S_lambda**2 + 840*I*Vars.S_lambda*Vars.S_n + 616*Vars.S_n**2 + 14*Cons.delta*(-6*Vars.Sigma_ell**2*Cons.delta - 5*Vars.Sigma_lambda**2*Cons.delta + 5*I*Vars.Sigma_lambda*(4*I*Vars.S_lambda + 6*Vars.S_n + 3*Vars.Sigma_n*Cons.delta) + Vars.Sigma_n*(30*I*Vars.S_lambda + 44*Vars.S_n + 11*Vars.Sigma_n*Cons.delta)))/(4*84**Cons.M)
     Vars.hHat_spin_Symm_2_1_2 = I*Vars.Sigma_ell/(2*Cons.M**2)
     Vars.hHat_spin_Symm_2_1_4 = -I*(86*Vars.S_ell*Cons.delta + Vars.Sigma_ell*(79 - 139*Cons.nu))/(42*Cons.M**2)
     Vars.hHat_spin_Symm_2_0_3 = -0.347760353971534*sqrt(5)*Vars.S_ell/Cons.M**2 - 0.170755767555554*sqrt(5)*Vars.Sigma_ell*Cons.delta/Cons.M**2 + 0.0*I
     Vars.hHat_spin_Symm_2_0_4 = 0.0869400884928835*sqrt(5)*Cons.delta*(3*Vars.S_ell*Vars.Sigma_ell + Vars.S_lambda*Vars.Sigma_lambda + Vars.S_n*Vars.Sigma_n)/Cons.M**4 - 0.0869400884928835*sqrt(5)*Cons.nu*(3*Vars.Sigma_ell**2 + Vars.Sigma_lambda**2 + Vars.Sigma_n**2)/Cons.M**4 + sqrt(6)*(-42*Vars.S_lambda + 42*Vars.S_n - 21*Cons.delta*(Vars.Sigma_lambda - Vars.Sigma_n))*(2*Vars.S_lambda + 2*Vars.S_n + Cons.delta*(Vars.Sigma_lambda + Vars.Sigma_n))/(126*Cons.M**4) + 0.000679219441350652*sqrt(5)*(384*Vars.S_ell**2 + 128*Vars.S_lambda**2 + 128*Vars.S_n**2 + 99*Vars.Sigma_ell**2 + 24*Vars.Sigma_lambda**2 + 24*Vars.Sigma_n**2)/Cons.M**4 + 0.0*I
+    Vars.hHat_spin_Symm_2_0_5 = -0.228217732293819*Cons.nu*(319*sqrt(5)*Vars.S_ell/(882*Cons.M**2) + 1775*sqrt(5)*Vars.Sigma_ell*Cons.delta/(9408*Cons.M**2)) - 0.554061322885717*sqrt(5)*Vars.S_ell/Cons.M**2 - 0.083495186827972*sqrt(5)*Vars.Sigma_ell*Cons.delta/Cons.M**2 + 0.0*I
     Vars.hHat_spin_Symm_3_3_4 = 3*sqrt(210)*I*(7*Vars.S_ell*Cons.delta - 3*Vars.Sigma_ell*(3*Cons.nu - 1))/(112*Cons.M**2)
     Vars.hHat_spin_Symm_3_2_3 = 2*sqrt(35)*(Vars.S_ell + Vars.Sigma_ell*Cons.delta)/(21*Cons.M**2) + 0.0*I
     Vars.hHat_spin_Symm_3_1_4 = sqrt(14)*I*(Vars.S_ell*Cons.delta - 5*Vars.Sigma_ell*(3*Cons.nu - 1))/(336*Cons.M**2)
@@ -784,6 +795,8 @@ def Recalculate_2p5(Cons,Vars,y):
     Vars.hHat_spin_Symm_4_1_4 = sqrt(10)*I*(Vars.S_ell*Cons.delta - 3*Vars.Sigma_ell*Cons.nu + Vars.Sigma_ell)/(336*Cons.M**2)
     Vars.hHat_spin_Symm_4_0_3 = -sqrt(2)*(5*Vars.S_ell/(21*Cons.M**2) + 19*Vars.Sigma_ell*Cons.delta/(112*Cons.M**2))/24 + 0.0*I
     Vars.hHat_spin_Symm_4_0_4 = -sqrt(2)*(-2*Cons.delta*(3*Vars.S_ell*Vars.Sigma_ell + Vars.S_lambda*Vars.Sigma_lambda + Vars.S_n*Vars.Sigma_n)/(63*Cons.M**4) + Cons.nu*(6*Vars.Sigma_ell**2 + 2*Vars.Sigma_lambda**2 + 2*Vars.Sigma_n**2)/(63*Cons.M**4) + (-192*Vars.S_ell**2 - 64*Vars.S_lambda**2 - 64*Vars.S_n**2 - 53*Vars.Sigma_ell**2 - 12*Vars.Sigma_lambda**2 - 12*Vars.Sigma_n**2)/(2016*Cons.M**4))/24 + 0.0*I
+    Vars.hHat_spin_Symm_4_0_5 = -0.228217732293819*Cons.nu*(989419*Vars.S_ell/(232848*Cons.M**2) + 361055*Vars.Sigma_ell*Cons.delta/(155232*Cons.M**2)) + 0.197237323832325*Vars.S_ell/Cons.M**2 + 0.151042105850186*Vars.Sigma_ell*Cons.delta/Cons.M**2 + 0.0*I
+    Vars.hHat_spin_Symm_6_0_5 = -0.228217732293819*Cons.nu*(19135*sqrt(13)*Vars.S_ell/(144144*Cons.M**2) + 16655*sqrt(13)*Vars.Sigma_ell*Cons.delta/(192192*Cons.M**2)) + 0.0070371288302107*sqrt(13)*Vars.S_ell/Cons.M**2 + 0.00575536978134986*sqrt(13)*Vars.Sigma_ell*Cons.delta/Cons.M**2 + 0.0*I
     Vars.hHat_spin_Asymm_2_2_2 = (-Vars.Sigma_lambda - I*Vars.Sigma_n)/(2*Cons.M**2)
     Vars.hHat_spin_Asymm_2_2_4 = -(-19*Cons.M**2*Vars.S_lambda*Cons.delta - 182*I*Cons.M**2*Vars.S_n*Cons.delta + Cons.M**2*Vars.Sigma_lambda*(43*Cons.nu - 5) + 14*I*Cons.M**2*Vars.Sigma_n*(20*Cons.nu - 7))/(4*84**Cons.M)
     Vars.hHat_spin_Asymm_2_1_3 = 0.139508928571429*Cons.delta*(-I*Vars.Sigma_lambda + Vars.Sigma_n)/Cons.M**2 + 0.000543375553080522*sqrt(30)*(-61*I*Vars.S_lambda + 61*Vars.S_n)/Cons.M**2 + (4*I*Vars.S_lambda + 25*Vars.S_n + 4*I*Vars.Sigma_lambda*Cons.delta + 13*Vars.Sigma_n*Cons.delta)/(6*Cons.M**2)
@@ -803,7 +816,7 @@ def Recalculate_2p5(Cons,Vars,y):
 @njit(cache=True)
 def Modes_2p5(modes,Cons,Vars):
     # (ell, m) = (2, +/- 0)
-    Symm = Vars.rhOverM_coeff*(Cons.hHat_2_0_0 + Vars.v**2*(Cons.hHat_2_0_2 + Vars.v*(Vars.hHat_spin_Symm_2_0_3 + Vars.v*(Cons.hHat_2_0_4 + Cons.hHat_2_0_5*Vars.v + Vars.hHat_spin_Symm_2_0_4))))
+    Symm = Vars.rhOverM_coeff*(Cons.hHat_2_0_0 + Vars.v**2*(Cons.hHat_2_0_2 + Vars.v*(Vars.hHat_spin_Symm_2_0_3 + Vars.v*(Cons.hHat_2_0_4 + Vars.hHat_spin_Symm_2_0_4 + Vars.v*(Cons.hHat_2_0_5 + Vars.hHat_spin_Symm_2_0_5)))))
     Asymm = Vars.rhOverM_coeff*Vars.v**2*(Vars.hHat_spin_Asymm_2_0_2 + Vars.hHat_spin_Asymm_2_0_4*Vars.v**2)
     modes[2] = (Symm + Asymm)[0]
     # (ell, m) = (2, +/- 1)
@@ -836,7 +849,7 @@ def Modes_2p5(modes,Cons,Vars):
     modes[11] = (Symm + Asymm)[0]
     modes[5] = (-np.conjugate(Symm - Asymm))[0]
     # (ell, m) = (4, +/- 0)
-    Symm = Vars.rhOverM_coeff*(Cons.hHat_4_0_0 + Vars.v**2*(Cons.hHat_4_0_2 + Vars.v*(Vars.hHat_spin_Symm_4_0_3 + Vars.v*(Cons.hHat_4_0_4 + Cons.hHat_4_0_5*Vars.v + Vars.hHat_spin_Symm_4_0_4))))
+    Symm = Vars.rhOverM_coeff*(Cons.hHat_4_0_0 + Vars.v**2*(Cons.hHat_4_0_2 + Vars.v*(Vars.hHat_spin_Symm_4_0_3 + Vars.v*(Cons.hHat_4_0_4 + Vars.hHat_spin_Symm_4_0_4 + Vars.v*(Cons.hHat_4_0_5 + Vars.hHat_spin_Symm_4_0_5)))))
     Asymm = Vars.hHat_spin_Asymm_4_0_4*Vars.rhOverM_coeff*Vars.v**4
     modes[16] = (Symm + Asymm)[0]
     # (ell, m) = (4, +/- 1)
@@ -885,7 +898,7 @@ def Modes_2p5(modes,Cons,Vars):
     modes[31] = (Symm + Asymm)[0]
     modes[21] = (-np.conjugate(Symm - Asymm))[0]
     # (ell, m) = (6, +/- 0)
-    Symm = Vars.rhOverM_coeff*(Cons.hHat_6_0_0 + Vars.v**2*(Cons.hHat_6_0_2 + Vars.v**2*(Cons.hHat_6_0_4 + Cons.hHat_6_0_5*Vars.v)))
+    Symm = Vars.rhOverM_coeff*(Cons.hHat_6_0_0 + Vars.v**2*(Cons.hHat_6_0_2 + Vars.v**2*(Cons.hHat_6_0_4 + Vars.v*(Cons.hHat_6_0_5 + Vars.hHat_spin_Symm_6_0_5))))
     Asymm = 0
     modes[38] = (Symm + Asymm)[0]
     # (ell, m) = (6, +/- 1)
@@ -949,7 +962,6 @@ def Recalculate_3p0(Cons,Vars,y):
     Vars.rfrak_chi1 = np.array([y[1],y[2]])
     Vars.rfrak_chi2 = np.array([y[3],y[4]])
     Vars.rfrak_frame = np.array([y[5],y[6],y[7]])
-    Vars.R = exp(Vars.rfrak_frame[0]*Cons.xHat + Vars.rfrak_frame[1]*Cons.yHat + Vars.rfrak_frame[2]*Cons.zHat)
     Vars.R_S1 = exp(Vars.rfrak_chi1[0]*Cons.xHat + Vars.rfrak_chi1[1]*Cons.yHat)
     Vars.R_S2 = exp(Vars.rfrak_chi2[0]*Cons.xHat + Vars.rfrak_chi2[1]*Cons.yHat)
     Vars.chiVec1 = mul(mul(conjugate(exp(y[5]*Cons.xHat+y[6]*Cons.yHat+y[7]*Cons.zHat)),mul(mul(mul(Cons.S_chi1,Vars.R_S1),Cons.zHat),mul(conjugate(Vars.R_S1),conjugate(Cons.S_chi1)))),exp(y[5]*Cons.xHat+y[6]*Cons.yHat+y[7]*Cons.zHat))
@@ -967,13 +979,15 @@ def Recalculate_3p0(Cons,Vars,y):
     Vars.Sigma_n = Cons.M*(-Cons.M1*Vars.chi1_n + Cons.M2*Vars.chi2_n)
     Vars.Sigma_lambda = Cons.M*(-Cons.M1*Vars.chi1_lambda + Cons.M2*Vars.chi2_lambda)
     Vars.logv = log(Vars.v)
-    Vars.rhOverM_coeff = 8*sqrt(5)*Cons.nu*Vars.v**2*sqrt(pi)/5
+    Vars.rhOverM_coeff = -8*sqrt(5)*Cons.nu*Vars.v**2*sqrt(pi)/5
     Vars.hHat_spin_Symm_2_2_3 = (-6*Vars.S_ell - 2*Vars.Sigma_ell*Cons.delta)/(3*Cons.M**2) + 0.0*I
     Vars.hHat_spin_Symm_2_2_4 = -(-336*Vars.S_ell**2 - 336*Vars.S_ell*Vars.Sigma_ell*Cons.delta - 280*Vars.S_lambda**2 + 840*I*Vars.S_lambda*Vars.S_n + 616*Vars.S_n**2 + 14*Cons.delta*(-6*Vars.Sigma_ell**2*Cons.delta - 5*Vars.Sigma_lambda**2*Cons.delta + 5*I*Vars.Sigma_lambda*(4*I*Vars.S_lambda + 6*Vars.S_n + 3*Vars.Sigma_n*Cons.delta) + Vars.Sigma_n*(30*I*Vars.S_lambda + 44*Vars.S_n + 11*Vars.Sigma_n*Cons.delta)))/(4*84**Cons.M)
     Vars.hHat_spin_Symm_2_1_2 = I*Vars.Sigma_ell/(2*Cons.M**2)
     Vars.hHat_spin_Symm_2_1_4 = -I*(86*Vars.S_ell*Cons.delta + Vars.Sigma_ell*(79 - 139*Cons.nu))/(42*Cons.M**2)
     Vars.hHat_spin_Symm_2_0_3 = -0.347760353971534*sqrt(5)*Vars.S_ell/Cons.M**2 - 0.170755767555554*sqrt(5)*Vars.Sigma_ell*Cons.delta/Cons.M**2 + 0.0*I
     Vars.hHat_spin_Symm_2_0_4 = 0.0869400884928835*sqrt(5)*Cons.delta*(3*Vars.S_ell*Vars.Sigma_ell + Vars.S_lambda*Vars.Sigma_lambda + Vars.S_n*Vars.Sigma_n)/Cons.M**4 - 0.0869400884928835*sqrt(5)*Cons.nu*(3*Vars.Sigma_ell**2 + Vars.Sigma_lambda**2 + Vars.Sigma_n**2)/Cons.M**4 + sqrt(6)*(-42*Vars.S_lambda + 42*Vars.S_n - 21*Cons.delta*(Vars.Sigma_lambda - Vars.Sigma_n))*(2*Vars.S_lambda + 2*Vars.S_n + Cons.delta*(Vars.Sigma_lambda + Vars.Sigma_n))/(126*Cons.M**4) + 0.000679219441350652*sqrt(5)*(384*Vars.S_ell**2 + 128*Vars.S_lambda**2 + 128*Vars.S_n**2 + 99*Vars.Sigma_ell**2 + 24*Vars.Sigma_lambda**2 + 24*Vars.Sigma_n**2)/Cons.M**4 + 0.0*I
+    Vars.hHat_spin_Symm_2_0_5 = -0.228217732293819*Cons.nu*(319*sqrt(5)*Vars.S_ell/(882*Cons.M**2) + 1775*sqrt(5)*Vars.Sigma_ell*Cons.delta/(9408*Cons.M**2)) - 0.554061322885717*sqrt(5)*Vars.S_ell/Cons.M**2 - 0.083495186827972*sqrt(5)*Vars.Sigma_ell*Cons.delta/Cons.M**2 + 0.0*I
+    Vars.hHat_spin_Symm_2_0_6 = -0.228217732293819*Cons.delta*(23*sqrt(5)*Vars.Sigma_ell*pi/(1344*Cons.M**2) + 173191*sqrt(5)*Vars.S_ell*Vars.Sigma_ell/(56448*Cons.M**4)) - 0.228217732293819*Cons.nu*(-31*sqrt(5)*Vars.S_ell*Vars.Sigma_ell*Cons.delta/(42*Cons.M**4) - sqrt(5)*(20832*Vars.S_ell**2 + 142529*Vars.Sigma_ell**2)/(28224*Cons.M**4)) - 0.168446421454962*sqrt(5)*Vars.Sigma_ell**2*Cons.nu**2/Cons.M**4 - 3.03222964888684e-6*sqrt(5)*(63808*Vars.S_ell**2 + 99197*Vars.Sigma_ell**2)/Cons.M**4 + 0.0*I
     Vars.hHat_spin_Symm_3_3_4 = 3*sqrt(210)*I*(7*Vars.S_ell*Cons.delta - 3*Vars.Sigma_ell*(3*Cons.nu - 1))/(112*Cons.M**2)
     Vars.hHat_spin_Symm_3_2_3 = 2*sqrt(35)*(Vars.S_ell + Vars.Sigma_ell*Cons.delta)/(21*Cons.M**2) + 0.0*I
     Vars.hHat_spin_Symm_3_1_4 = sqrt(14)*I*(Vars.S_ell*Cons.delta - 5*Vars.Sigma_ell*(3*Cons.nu - 1))/(336*Cons.M**2)
@@ -981,6 +995,10 @@ def Recalculate_3p0(Cons,Vars,y):
     Vars.hHat_spin_Symm_4_1_4 = sqrt(10)*I*(Vars.S_ell*Cons.delta - 3*Vars.Sigma_ell*Cons.nu + Vars.Sigma_ell)/(336*Cons.M**2)
     Vars.hHat_spin_Symm_4_0_3 = -sqrt(2)*(5*Vars.S_ell/(21*Cons.M**2) + 19*Vars.Sigma_ell*Cons.delta/(112*Cons.M**2))/24 + 0.0*I
     Vars.hHat_spin_Symm_4_0_4 = -sqrt(2)*(-2*Cons.delta*(3*Vars.S_ell*Vars.Sigma_ell + Vars.S_lambda*Vars.Sigma_lambda + Vars.S_n*Vars.Sigma_n)/(63*Cons.M**4) + Cons.nu*(6*Vars.Sigma_ell**2 + 2*Vars.Sigma_lambda**2 + 2*Vars.Sigma_n**2)/(63*Cons.M**4) + (-192*Vars.S_ell**2 - 64*Vars.S_lambda**2 - 64*Vars.S_n**2 - 53*Vars.Sigma_ell**2 - 12*Vars.Sigma_lambda**2 - 12*Vars.Sigma_n**2)/(2016*Cons.M**4))/24 + 0.0*I
+    Vars.hHat_spin_Symm_4_0_5 = -0.228217732293819*Cons.nu*(989419*Vars.S_ell/(232848*Cons.M**2) + 361055*Vars.Sigma_ell*Cons.delta/(155232*Cons.M**2)) + 0.197237323832325*Vars.S_ell/Cons.M**2 + 0.151042105850186*Vars.Sigma_ell*Cons.delta/Cons.M**2 + 0.0*I
+    Vars.hHat_spin_Symm_4_0_6 = -0.228217732293819*Cons.delta*(25*Vars.Sigma_ell*pi/(4032*Cons.M**2) + 1303525*Vars.S_ell*Vars.Sigma_ell/(620928*Cons.M**4)) - 0.228217732293819*Cons.nu*(-26435*Vars.S_ell*Vars.Sigma_ell*Cons.delta/(11088*Cons.M**4) - (23685760*Vars.S_ell**2 + 32586265*Vars.Sigma_ell**2)/(9934848*Cons.M**4)) - 0.5440959373365*Vars.Sigma_ell**2*Cons.nu**2/Cons.M**4 - 0.228217732293819*(1380815*Vars.S_ell**2/931392 + 352565*Vars.Sigma_ell**2/516096)/Cons.M**4 + 0.0*I
+    Vars.hHat_spin_Symm_6_0_5 = -0.228217732293819*Cons.nu*(19135*sqrt(13)*Vars.S_ell/(144144*Cons.M**2) + 16655*sqrt(13)*Vars.Sigma_ell*Cons.delta/(192192*Cons.M**2)) + 0.0070371288302107*sqrt(13)*Vars.S_ell/Cons.M**2 + 0.00575536978134986*sqrt(13)*Vars.Sigma_ell*Cons.delta/Cons.M**2 + 0.0*I
+    Vars.hHat_spin_Symm_6_0_6 = -0.228217732293819*Cons.nu*(-215*sqrt(13)*Vars.S_ell*Vars.Sigma_ell*Cons.delta/(6864*Cons.M**4) - sqrt(13)*(577920*Vars.S_ell**2 + 495875*Vars.Sigma_ell**2)/(18450432*Cons.M**4)) - 0.00316850327972726*sqrt(13)*Vars.S_ell*Vars.Sigma_ell*Cons.delta/Cons.M**4 - 0.00714842838624288*sqrt(13)*Vars.Sigma_ell**2*Cons.nu**2/Cons.M**4 - 3.0923087911142e-9*sqrt(13)*(782720*Vars.S_ell**2 + 381315*Vars.Sigma_ell**2)/Cons.M**4 + 0.0*I
     Vars.hHat_spin_Asymm_2_2_2 = (-Vars.Sigma_lambda - I*Vars.Sigma_n)/(2*Cons.M**2)
     Vars.hHat_spin_Asymm_2_2_4 = -(-19*Cons.M**2*Vars.S_lambda*Cons.delta - 182*I*Cons.M**2*Vars.S_n*Cons.delta + Cons.M**2*Vars.Sigma_lambda*(43*Cons.nu - 5) + 14*I*Cons.M**2*Vars.Sigma_n*(20*Cons.nu - 7))/(4*84**Cons.M)
     Vars.hHat_spin_Asymm_2_1_3 = 0.139508928571429*Cons.delta*(-I*Vars.Sigma_lambda + Vars.Sigma_n)/Cons.M**2 + 0.000543375553080522*sqrt(30)*(-61*I*Vars.S_lambda + 61*Vars.S_n)/Cons.M**2 + (4*I*Vars.S_lambda + 25*Vars.S_n + 4*I*Vars.Sigma_lambda*Cons.delta + 13*Vars.Sigma_n*Cons.delta)/(6*Cons.M**2)
@@ -1000,7 +1018,7 @@ def Recalculate_3p0(Cons,Vars,y):
 @njit(cache=True)
 def Modes_3p0(modes,Cons,Vars):
     # (ell, m) = (2, +/- 0)
-    Symm = Vars.rhOverM_coeff*(Cons.hHat_2_0_0 + Vars.v**2*(Cons.hHat_2_0_2 + Vars.v*(Vars.hHat_spin_Symm_2_0_3 + Vars.v*(Cons.hHat_2_0_4 + Vars.hHat_spin_Symm_2_0_4 + Vars.v*(Cons.hHat_2_0_5 + Cons.hHat_2_0_6*Vars.v)))))
+    Symm = Vars.rhOverM_coeff*(Cons.hHat_2_0_0 + Vars.v**2*(Cons.hHat_2_0_2 + Vars.v*(Vars.hHat_spin_Symm_2_0_3 + Vars.v*(Cons.hHat_2_0_4 + Vars.hHat_spin_Symm_2_0_4 + Vars.v*(Cons.hHat_2_0_5 + Vars.hHat_spin_Symm_2_0_5 + Vars.v*(Cons.hHat_2_0_6 + Vars.hHat_spin_Symm_2_0_6))))))
     Asymm = Vars.rhOverM_coeff*Vars.v**2*(Vars.hHat_spin_Asymm_2_0_2 + Vars.hHat_spin_Asymm_2_0_4*Vars.v**2)
     modes[2] = (Symm + Asymm)[0]
     # (ell, m) = (2, +/- 1)
@@ -1033,7 +1051,7 @@ def Modes_3p0(modes,Cons,Vars):
     modes[11] = (Symm + Asymm)[0]
     modes[5] = (-np.conjugate(Symm - Asymm))[0]
     # (ell, m) = (4, +/- 0)
-    Symm = Vars.rhOverM_coeff*(Cons.hHat_4_0_0 + Vars.v**2*(Cons.hHat_4_0_2 + Vars.v*(Vars.hHat_spin_Symm_4_0_3 + Vars.v*(Cons.hHat_4_0_4 + Vars.hHat_spin_Symm_4_0_4 + Vars.v*(Cons.hHat_4_0_5 + Cons.hHat_4_0_6*Vars.v)))))
+    Symm = Vars.rhOverM_coeff*(Cons.hHat_4_0_0 + Vars.v**2*(Cons.hHat_4_0_2 + Vars.v*(Vars.hHat_spin_Symm_4_0_3 + Vars.v*(Cons.hHat_4_0_4 + Vars.hHat_spin_Symm_4_0_4 + Vars.v*(Cons.hHat_4_0_5 + Vars.hHat_spin_Symm_4_0_5 + Vars.v*(Cons.hHat_4_0_6 + Vars.hHat_spin_Symm_4_0_6))))))
     Asymm = Vars.hHat_spin_Asymm_4_0_4*Vars.rhOverM_coeff*Vars.v**4
     modes[16] = (Symm + Asymm)[0]
     # (ell, m) = (4, +/- 1)
@@ -1082,7 +1100,7 @@ def Modes_3p0(modes,Cons,Vars):
     modes[31] = (Symm + Asymm)[0]
     modes[21] = (-np.conjugate(Symm - Asymm))[0]
     # (ell, m) = (6, +/- 0)
-    Symm = Vars.rhOverM_coeff*(Cons.hHat_6_0_0 + Vars.v**2*(Cons.hHat_6_0_2 + Vars.v**2*(Cons.hHat_6_0_4 + Vars.v*(Cons.hHat_6_0_5 + Cons.hHat_6_0_6*Vars.v))))
+    Symm = Vars.rhOverM_coeff*(Cons.hHat_6_0_0 + Vars.v**2*(Cons.hHat_6_0_2 + Vars.v**2*(Cons.hHat_6_0_4 + Vars.v*(Cons.hHat_6_0_5 + Vars.hHat_spin_Symm_6_0_5 + Vars.v*(Cons.hHat_6_0_6 + Vars.hHat_spin_Symm_6_0_6)))))
     Asymm = 0
     modes[38] = (Symm + Asymm)[0]
     # (ell, m) = (6, +/- 1)
@@ -1181,7 +1199,6 @@ def Recalculate_3p5(Cons,Vars,y):
     Vars.rfrak_chi1 = np.array([y[1],y[2]])
     Vars.rfrak_chi2 = np.array([y[3],y[4]])
     Vars.rfrak_frame = np.array([y[5],y[6],y[7]])
-    Vars.R = exp(Vars.rfrak_frame[0]*Cons.xHat + Vars.rfrak_frame[1]*Cons.yHat + Vars.rfrak_frame[2]*Cons.zHat)
     Vars.R_S1 = exp(Vars.rfrak_chi1[0]*Cons.xHat + Vars.rfrak_chi1[1]*Cons.yHat)
     Vars.R_S2 = exp(Vars.rfrak_chi2[0]*Cons.xHat + Vars.rfrak_chi2[1]*Cons.yHat)
     Vars.chiVec1 = mul(mul(conjugate(exp(y[5]*Cons.xHat+y[6]*Cons.yHat+y[7]*Cons.zHat)),mul(mul(mul(Cons.S_chi1,Vars.R_S1),Cons.zHat),mul(conjugate(Vars.R_S1),conjugate(Cons.S_chi1)))),exp(y[5]*Cons.xHat+y[6]*Cons.yHat+y[7]*Cons.zHat))
@@ -1198,21 +1215,34 @@ def Recalculate_3p5(Cons,Vars,y):
     Vars.Sigma_ell = Cons.M*(-Cons.M1*Vars.chi1_ell + Cons.M2*Vars.chi2_ell)
     Vars.Sigma_n = Cons.M*(-Cons.M1*Vars.chi1_n + Cons.M2*Vars.chi2_n)
     Vars.Sigma_lambda = Cons.M*(-Cons.M1*Vars.chi1_lambda + Cons.M2*Vars.chi2_lambda)
+    Vars.x = Vars.v**2
     Vars.logv = log(Vars.v)
-    Vars.rhOverM_coeff = 8*sqrt(5)*Cons.nu*Vars.v**2*sqrt(pi)/5
+    Vars.rhOverM_coeff = -8*sqrt(5)*Cons.nu*Vars.v**2*sqrt(pi)/5
     Vars.hHat_spin_Symm_2_2_3 = (-6*Vars.S_ell - 2*Vars.Sigma_ell*Cons.delta)/(3*Cons.M**2) + 0.0*I
     Vars.hHat_spin_Symm_2_2_4 = -(-336*Vars.S_ell**2 - 336*Vars.S_ell*Vars.Sigma_ell*Cons.delta - 280*Vars.S_lambda**2 + 840*I*Vars.S_lambda*Vars.S_n + 616*Vars.S_n**2 + 14*Cons.delta*(-6*Vars.Sigma_ell**2*Cons.delta - 5*Vars.Sigma_lambda**2*Cons.delta + 5*I*Vars.Sigma_lambda*(4*I*Vars.S_lambda + 6*Vars.S_n + 3*Vars.Sigma_n*Cons.delta) + Vars.Sigma_n*(30*I*Vars.S_lambda + 44*Vars.S_n + 11*Vars.Sigma_n*Cons.delta)))/(4*84**Cons.M)
     Vars.hHat_spin_Symm_2_1_2 = I*Vars.Sigma_ell/(2*Cons.M**2)
     Vars.hHat_spin_Symm_2_1_4 = -I*(86*Vars.S_ell*Cons.delta + Vars.Sigma_ell*(79 - 139*Cons.nu))/(42*Cons.M**2)
     Vars.hHat_spin_Symm_2_0_3 = -0.347760353971534*sqrt(5)*Vars.S_ell/Cons.M**2 - 0.170755767555554*sqrt(5)*Vars.Sigma_ell*Cons.delta/Cons.M**2 + 0.0*I
     Vars.hHat_spin_Symm_2_0_4 = 0.0869400884928835*sqrt(5)*Cons.delta*(3*Vars.S_ell*Vars.Sigma_ell + Vars.S_lambda*Vars.Sigma_lambda + Vars.S_n*Vars.Sigma_n)/Cons.M**4 - 0.0869400884928835*sqrt(5)*Cons.nu*(3*Vars.Sigma_ell**2 + Vars.Sigma_lambda**2 + Vars.Sigma_n**2)/Cons.M**4 + sqrt(6)*(-42*Vars.S_lambda + 42*Vars.S_n - 21*Cons.delta*(Vars.Sigma_lambda - Vars.Sigma_n))*(2*Vars.S_lambda + 2*Vars.S_n + Cons.delta*(Vars.Sigma_lambda + Vars.Sigma_n))/(126*Cons.M**4) + 0.000679219441350652*sqrt(5)*(384*Vars.S_ell**2 + 128*Vars.S_lambda**2 + 128*Vars.S_n**2 + 99*Vars.Sigma_ell**2 + 24*Vars.Sigma_lambda**2 + 24*Vars.Sigma_n**2)/Cons.M**4 + 0.0*I
+    Vars.hHat_spin_Symm_2_0_5 = -0.228217732293819*Cons.nu*(319*sqrt(5)*Vars.S_ell/(882*Cons.M**2) + 1775*sqrt(5)*Vars.Sigma_ell*Cons.delta/(9408*Cons.M**2)) - 0.554061322885717*sqrt(5)*Vars.S_ell/Cons.M**2 - 0.083495186827972*sqrt(5)*Vars.Sigma_ell*Cons.delta/Cons.M**2 + 0.0*I
+    Vars.hHat_spin_Symm_2_0_6 = -0.228217732293819*Cons.delta*(23*sqrt(5)*Vars.Sigma_ell*pi/(1344*Cons.M**2) + 173191*sqrt(5)*Vars.S_ell*Vars.Sigma_ell/(56448*Cons.M**4)) - 0.228217732293819*Cons.nu*(-31*sqrt(5)*Vars.S_ell*Vars.Sigma_ell*Cons.delta/(42*Cons.M**4) - sqrt(5)*(20832*Vars.S_ell**2 + 142529*Vars.Sigma_ell**2)/(28224*Cons.M**4)) - 0.168446421454962*sqrt(5)*Vars.Sigma_ell**2*Cons.nu**2/Cons.M**4 - 3.03222964888684e-6*sqrt(5)*(63808*Vars.S_ell**2 + 99197*Vars.Sigma_ell**2)/Cons.M**4 + 0.0*I
+    Vars.hHat_spin_Symm_2_0_7 = -0.228217732293819*Cons.delta*(14713254113*sqrt(5)*Vars.Sigma_ell/(11266117632*Cons.M**2) - 256*sqrt(5)*Vars.S_ell*Vars.Sigma_ell*pi/(21*Cons.M**4) + sqrt(5)*(1605952*Vars.S_ell**2*Vars.Sigma_ell + 106463*Vars.Sigma_ell**3)/(48384*Cons.M**6)) - 0.228217732293819*Cons.nu**2*(-34739*sqrt(5)*Vars.S_ell/(49896*Cons.M**2) - 66403*sqrt(5)*Vars.Sigma_ell*Cons.delta/(177408*Cons.M**2)) - 0.228217732293819*Cons.nu*(Cons.delta*(-66021037*sqrt(5)*Vars.Sigma_ell/(5588352*Cons.M**2) - 733*sqrt(5)*Vars.Sigma_ell**3/(84*Cons.M**6)) - 53090267*sqrt(5)*Vars.S_ell/(2095632*Cons.M**2) + 256*sqrt(5)*Vars.Sigma_ell**2*pi/(21*Cons.M**4) - 1603*sqrt(5)*Vars.S_ell*Vars.Sigma_ell**2/(27*Cons.M**6)) - 2.10130423266165*sqrt(5)*Vars.S_ell/Cons.M**2 + 0.00090562592180087*sqrt(5)*pi*(3072*Vars.S_ell**2 + 779*Vars.Sigma_ell**2)/Cons.M**4 - 0.000150937653633478*sqrt(5)*(36992*Vars.S_ell**3 + 22539*Vars.S_ell*Vars.Sigma_ell**2)/Cons.M**6 + 0.0*I
     Vars.hHat_spin_Symm_3_3_4 = 3*sqrt(210)*I*(7*Vars.S_ell*Cons.delta - 3*Vars.Sigma_ell*(3*Cons.nu - 1))/(112*Cons.M**2)
     Vars.hHat_spin_Symm_3_2_3 = 2*sqrt(35)*(Vars.S_ell + Vars.Sigma_ell*Cons.delta)/(21*Cons.M**2) + 0.0*I
     Vars.hHat_spin_Symm_3_1_4 = sqrt(14)*I*(Vars.S_ell*Cons.delta - 5*Vars.Sigma_ell*(3*Cons.nu - 1))/(336*Cons.M**2)
+    Vars.hHat_spin_Symm_3_3_7 = 0.0173880176985767*sqrt(35)*Vars.Sigma_ell*Cons.nu*Vars.x**3.5/Cons.M**2 + 0.0*I
+    Vars.hHat_spin_Symm_3_1_7 = 0.239045721866879*Vars.Sigma_ell*Cons.nu*Vars.x**3.5/Cons.M**2 + 0.0*I
     Vars.hHat_spin_Symm_4_3_4 = 9*sqrt(70)*I*(-Vars.S_ell*Cons.delta + 3*Vars.Sigma_ell*Cons.nu - Vars.Sigma_ell)/(112*Cons.M**2)
     Vars.hHat_spin_Symm_4_1_4 = sqrt(10)*I*(Vars.S_ell*Cons.delta - 3*Vars.Sigma_ell*Cons.nu + Vars.Sigma_ell)/(336*Cons.M**2)
     Vars.hHat_spin_Symm_4_0_3 = -sqrt(2)*(5*Vars.S_ell/(21*Cons.M**2) + 19*Vars.Sigma_ell*Cons.delta/(112*Cons.M**2))/24 + 0.0*I
     Vars.hHat_spin_Symm_4_0_4 = -sqrt(2)*(-2*Cons.delta*(3*Vars.S_ell*Vars.Sigma_ell + Vars.S_lambda*Vars.Sigma_lambda + Vars.S_n*Vars.Sigma_n)/(63*Cons.M**4) + Cons.nu*(6*Vars.Sigma_ell**2 + 2*Vars.Sigma_lambda**2 + 2*Vars.Sigma_n**2)/(63*Cons.M**4) + (-192*Vars.S_ell**2 - 64*Vars.S_lambda**2 - 64*Vars.S_n**2 - 53*Vars.Sigma_ell**2 - 12*Vars.Sigma_lambda**2 - 12*Vars.Sigma_n**2)/(2016*Cons.M**4))/24 + 0.0*I
+    Vars.hHat_spin_Symm_4_0_5 = -0.228217732293819*Cons.nu*(989419*Vars.S_ell/(232848*Cons.M**2) + 361055*Vars.Sigma_ell*Cons.delta/(155232*Cons.M**2)) + 0.197237323832325*Vars.S_ell/Cons.M**2 + 0.151042105850186*Vars.Sigma_ell*Cons.delta/Cons.M**2 + 0.0*I
+    Vars.hHat_spin_Symm_4_0_6 = -0.228217732293819*Cons.delta*(25*Vars.Sigma_ell*pi/(4032*Cons.M**2) + 1303525*Vars.S_ell*Vars.Sigma_ell/(620928*Cons.M**4)) - 0.228217732293819*Cons.nu*(-26435*Vars.S_ell*Vars.Sigma_ell*Cons.delta/(11088*Cons.M**4) - (23685760*Vars.S_ell**2 + 32586265*Vars.Sigma_ell**2)/(9934848*Cons.M**4)) - 0.5440959373365*Vars.Sigma_ell**2*Cons.nu**2/Cons.M**4 - 0.228217732293819*(1380815*Vars.S_ell**2/931392 + 352565*Vars.Sigma_ell**2/516096)/Cons.M**4 + 0.0*I
+    Vars.hHat_spin_Symm_4_0_7 = -0.228217732293819*Cons.delta*(25969272883*Vars.Sigma_ell/(39943507968*Cons.M**2) - 64*Vars.S_ell*Vars.Sigma_ell*pi/(63*Cons.M**4) + (2971*Vars.S_ell**2*Vars.Sigma_ell/2268 - 55*Vars.Sigma_ell**3/6912)/Cons.M**6) - 0.228217732293819*Cons.nu**2*(4773259*Vars.S_ell/(5189184*Cons.M**2) + 5099915*Vars.Sigma_ell*Cons.delta/(6918912*Cons.M**2)) - 0.228217732293819*Cons.nu*(Cons.delta*(-160373197*Vars.Sigma_ell/(32288256*Cons.M**2) - Vars.Sigma_ell**3/(84*Cons.M**6)) - 712823899*Vars.S_ell/(163459296*Cons.M**2) + 64*Vars.Sigma_ell**2*pi/(63*Cons.M**4) - 109*Vars.S_ell*Vars.Sigma_ell**2/(81*Cons.M**6)) - 0.241332286766118*Vars.S_ell/Cons.M**2 - 0.000301875307266957*pi*(-768*Vars.S_ell**2 - 193*Vars.Sigma_ell**2)/Cons.M**4 - 2.51562756055797e-5*(11776*Vars.S_ell**3 + 2887*Vars.S_ell*Vars.Sigma_ell**2)/Cons.M**6 + 0.0*I
+    Vars.hHat_spin_Symm_6_0_5 = -0.228217732293819*Cons.nu*(19135*sqrt(13)*Vars.S_ell/(144144*Cons.M**2) + 16655*sqrt(13)*Vars.Sigma_ell*Cons.delta/(192192*Cons.M**2)) + 0.0070371288302107*sqrt(13)*Vars.S_ell/Cons.M**2 + 0.00575536978134986*sqrt(13)*Vars.Sigma_ell*Cons.delta/Cons.M**2 + 0.0*I
+    Vars.hHat_spin_Symm_6_0_6 = -0.228217732293819*Cons.nu*(-215*sqrt(13)*Vars.S_ell*Vars.Sigma_ell*Cons.delta/(6864*Cons.M**4) - sqrt(13)*(577920*Vars.S_ell**2 + 495875*Vars.Sigma_ell**2)/(18450432*Cons.M**4)) - 0.00316850327972726*sqrt(13)*Vars.S_ell*Vars.Sigma_ell*Cons.delta/Cons.M**4 - 0.00714842838624288*sqrt(13)*Vars.Sigma_ell**2*Cons.nu**2/Cons.M**4 - 3.0923087911142e-9*sqrt(13)*(782720*Vars.S_ell**2 + 381315*Vars.Sigma_ell**2)/Cons.M**4 + 0.0*I
+    Vars.hHat_spin_Symm_6_0_7 = -0.228217732293819*Cons.nu**2*(198335*sqrt(13)*Vars.S_ell/(247104*Cons.M**2) + 10165*sqrt(13)*Vars.Sigma_ell*Cons.delta/(20592*Cons.M**2)) - 0.228217732293819*Cons.nu*(-10654115*sqrt(13)*Vars.S_ell/(15567552*Cons.M**2) - 7026595*sqrt(13)*Vars.Sigma_ell*Cons.delta/(13837824*Cons.M**2)) - 0.0288965073752077*sqrt(13)*Vars.S_ell/Cons.M**2 - 0.0256726130097283*sqrt(13)*Vars.Sigma_ell*Cons.delta/Cons.M**2 + 0.0*I
+    Vars.hHat_spin_Symm_8_0_7 = -0.228217732293819*Cons.nu**2*(349685*sqrt(17)*Vars.S_ell/(3150576*Cons.M**2) + 99085*sqrt(17)*Vars.Sigma_ell*Cons.delta/(1400256*Cons.M**2)) - 0.228217732293819*Cons.nu*(-2586845*sqrt(17)*Vars.S_ell/(37806912*Cons.M**2) - 2640475*sqrt(17)*Vars.Sigma_ell*Cons.delta/(50409216*Cons.M**2)) - 0.00261138219653817*sqrt(17)*Vars.S_ell/Cons.M**2 - 0.00230079009672073*sqrt(17)*Vars.Sigma_ell*Cons.delta/Cons.M**2 + 0.0*I
     Vars.hHat_spin_Asymm_2_2_2 = (-Vars.Sigma_lambda - I*Vars.Sigma_n)/(2*Cons.M**2)
     Vars.hHat_spin_Asymm_2_2_4 = -(-19*Cons.M**2*Vars.S_lambda*Cons.delta - 182*I*Cons.M**2*Vars.S_n*Cons.delta + Cons.M**2*Vars.Sigma_lambda*(43*Cons.nu - 5) + 14*I*Cons.M**2*Vars.Sigma_n*(20*Cons.nu - 7))/(4*84**Cons.M)
     Vars.hHat_spin_Asymm_2_1_3 = 0.139508928571429*Cons.delta*(-I*Vars.Sigma_lambda + Vars.Sigma_n)/Cons.M**2 + 0.000543375553080522*sqrt(30)*(-61*I*Vars.S_lambda + 61*Vars.S_n)/Cons.M**2 + (4*I*Vars.S_lambda + 25*Vars.S_n + 4*I*Vars.Sigma_lambda*Cons.delta + 13*Vars.Sigma_n*Cons.delta)/(6*Cons.M**2)
@@ -1232,7 +1262,7 @@ def Recalculate_3p5(Cons,Vars,y):
 @njit(cache=True)
 def Modes_3p5(modes,Cons,Vars):
     # (ell, m) = (2, +/- 0)
-    Symm = Vars.rhOverM_coeff*(Cons.hHat_2_0_0 + Vars.v**2*(Cons.hHat_2_0_2 + Vars.v*(Vars.hHat_spin_Symm_2_0_3 + Vars.v*(Cons.hHat_2_0_4 + Vars.hHat_spin_Symm_2_0_4 + Vars.v*(Cons.hHat_2_0_5 + Cons.hHat_2_0_6*Vars.v)))))
+    Symm = Vars.rhOverM_coeff*(Cons.hHat_2_0_0 + Vars.v**2*(Cons.hHat_2_0_2 + Vars.v*(Vars.hHat_spin_Symm_2_0_3 + Vars.v*(Cons.hHat_2_0_4 + Vars.hHat_spin_Symm_2_0_4 + Vars.v*(Cons.hHat_2_0_5 + Vars.hHat_spin_Symm_2_0_5 + Vars.v*(Cons.hHat_2_0_6 + Vars.hHat_spin_Symm_2_0_6 + Vars.hHat_spin_Symm_2_0_7*Vars.v))))))
     Asymm = Vars.rhOverM_coeff*Vars.v**2*(Vars.hHat_spin_Asymm_2_0_2 + Vars.hHat_spin_Asymm_2_0_4*Vars.v**2)
     modes[2] = (Symm + Asymm)[0]
     # (ell, m) = (2, +/- 1)
@@ -1250,7 +1280,7 @@ def Modes_3p5(modes,Cons,Vars):
     Asymm = Vars.hHat_spin_Asymm_3_0_4*Vars.rhOverM_coeff*Vars.v**4
     modes[8] = (Symm + Asymm)[0]
     # (ell, m) = (3, +/- 1)
-    Symm = Vars.rhOverM_coeff*Vars.v*(Cons.hHat_3_1_1 + Vars.v**2*(Cons.hHat_3_1_3 + Vars.v*(Cons.hHat_3_1_4 + Vars.hHat_spin_Symm_3_1_4 + Vars.v*(Cons.hHat_3_1_5 + Vars.v*(Cons.hHat_3_1_6 + Vars.v*(Cons.hHat_3_1_7 + Cons.hHat_3_1_lnv_7*Vars.logv))))))
+    Symm = Vars.rhOverM_coeff*Vars.v*(Cons.hHat_3_1_1 + Vars.v**2*(Cons.hHat_3_1_3 + Vars.v*(Cons.hHat_3_1_4 + Vars.hHat_spin_Symm_3_1_4 + Vars.v*(Cons.hHat_3_1_5 + Vars.v*(Cons.hHat_3_1_6 + Vars.v*(Cons.hHat_3_1_7 + Cons.hHat_3_1_lnv_7*Vars.logv + Vars.hHat_spin_Symm_3_1_7))))))
     Asymm = Vars.hHat_spin_Asymm_3_1_3*Vars.rhOverM_coeff*Vars.v**3
     modes[9] = (Symm + Asymm)[0]
     modes[7] = (-np.conjugate(Symm - Asymm))[0]
@@ -1260,12 +1290,12 @@ def Modes_3p5(modes,Cons,Vars):
     modes[10] = (Symm + Asymm)[0]
     modes[6] = (-np.conjugate(Symm - Asymm))[0]
     # (ell, m) = (3, +/- 3)
-    Symm = Vars.rhOverM_coeff*Vars.v*(Cons.hHat_3_3_1 + Vars.v**2*(Cons.hHat_3_3_3 + Vars.v*(Cons.hHat_3_3_4 + Vars.hHat_spin_Symm_3_3_4 + Vars.v*(Cons.hHat_3_3_5 + Vars.v*(Cons.hHat_3_3_6 + Vars.v*(Cons.hHat_3_3_7 + Cons.hHat_3_3_lnv_7*Vars.logv))))))
+    Symm = Vars.rhOverM_coeff*Vars.v*(Cons.hHat_3_3_1 + Vars.v**2*(Cons.hHat_3_3_3 + Vars.v*(Cons.hHat_3_3_4 + Vars.hHat_spin_Symm_3_3_4 + Vars.v*(Cons.hHat_3_3_5 + Vars.v*(Cons.hHat_3_3_6 + Vars.v*(Cons.hHat_3_3_7 + Cons.hHat_3_3_lnv_7*Vars.logv + Vars.hHat_spin_Symm_3_3_7))))))
     Asymm = Vars.hHat_spin_Asymm_3_3_3*Vars.rhOverM_coeff*Vars.v**3
     modes[11] = (Symm + Asymm)[0]
     modes[5] = (-np.conjugate(Symm - Asymm))[0]
     # (ell, m) = (4, +/- 0)
-    Symm = Vars.rhOverM_coeff*(Cons.hHat_4_0_0 + Vars.v**2*(Cons.hHat_4_0_2 + Vars.v*(Vars.hHat_spin_Symm_4_0_3 + Vars.v*(Cons.hHat_4_0_4 + Vars.hHat_spin_Symm_4_0_4 + Vars.v*(Cons.hHat_4_0_5 + Cons.hHat_4_0_6*Vars.v)))))
+    Symm = Vars.rhOverM_coeff*(Cons.hHat_4_0_0 + Vars.v**2*(Cons.hHat_4_0_2 + Vars.v*(Vars.hHat_spin_Symm_4_0_3 + Vars.v*(Cons.hHat_4_0_4 + Vars.hHat_spin_Symm_4_0_4 + Vars.v*(Cons.hHat_4_0_5 + Vars.hHat_spin_Symm_4_0_5 + Vars.v*(Cons.hHat_4_0_6 + Vars.hHat_spin_Symm_4_0_6 + Vars.hHat_spin_Symm_4_0_7*Vars.v))))))
     Asymm = Vars.hHat_spin_Asymm_4_0_4*Vars.rhOverM_coeff*Vars.v**4
     modes[16] = (Symm + Asymm)[0]
     # (ell, m) = (4, +/- 1)
@@ -1314,7 +1344,7 @@ def Modes_3p5(modes,Cons,Vars):
     modes[31] = (Symm + Asymm)[0]
     modes[21] = (-np.conjugate(Symm - Asymm))[0]
     # (ell, m) = (6, +/- 0)
-    Symm = Vars.rhOverM_coeff*(Cons.hHat_6_0_0 + Vars.v**2*(Cons.hHat_6_0_2 + Vars.v**2*(Cons.hHat_6_0_4 + Vars.v*(Cons.hHat_6_0_5 + Cons.hHat_6_0_6*Vars.v))))
+    Symm = Vars.rhOverM_coeff*(Cons.hHat_6_0_0 + Vars.v**2*(Cons.hHat_6_0_2 + Vars.v**2*(Cons.hHat_6_0_4 + Vars.v*(Cons.hHat_6_0_5 + Vars.hHat_spin_Symm_6_0_5 + Vars.v*(Cons.hHat_6_0_6 + Vars.hHat_spin_Symm_6_0_6 + Vars.hHat_spin_Symm_6_0_7*Vars.v)))))
     Asymm = 0
     modes[38] = (Symm + Asymm)[0]
     # (ell, m) = (6, +/- 1)
@@ -1383,7 +1413,7 @@ def Modes_3p5(modes,Cons,Vars):
     modes[59] = (Symm + Asymm)[0]
     modes[45] = (-np.conjugate(Symm - Asymm))[0]
     # (ell, m) = (8, +/- 0)
-    Symm = Vars.rhOverM_coeff*(Cons.hHat_8_0_0 + Vars.v**2*(Cons.hHat_8_0_2 + Vars.v**2*(Cons.hHat_8_0_4 + Cons.hHat_8_0_6*Vars.v**2)))
+    Symm = Vars.rhOverM_coeff*(Cons.hHat_8_0_0 + Vars.v**2*(Cons.hHat_8_0_2 + Vars.v**2*(Cons.hHat_8_0_4 + Vars.v**2*(Cons.hHat_8_0_6 + Vars.hHat_spin_Symm_8_0_7*Vars.v))))
     Asymm = 0
     modes[68] = (Symm + Asymm)[0]
     # (ell, m) = (8, +/- 2)
@@ -1413,7 +1443,6 @@ def Recalculate_4p0(Cons,Vars,y):
     Vars.rfrak_chi1 = np.array([y[1],y[2]])
     Vars.rfrak_chi2 = np.array([y[3],y[4]])
     Vars.rfrak_frame = np.array([y[5],y[6],y[7]])
-    Vars.R = exp(Vars.rfrak_frame[0]*Cons.xHat + Vars.rfrak_frame[1]*Cons.yHat + Vars.rfrak_frame[2]*Cons.zHat)
     Vars.R_S1 = exp(Vars.rfrak_chi1[0]*Cons.xHat + Vars.rfrak_chi1[1]*Cons.yHat)
     Vars.R_S2 = exp(Vars.rfrak_chi2[0]*Cons.xHat + Vars.rfrak_chi2[1]*Cons.yHat)
     Vars.chiVec1 = mul(mul(conjugate(exp(y[5]*Cons.xHat+y[6]*Cons.yHat+y[7]*Cons.zHat)),mul(mul(mul(Cons.S_chi1,Vars.R_S1),Cons.zHat),mul(conjugate(Vars.R_S1),conjugate(Cons.S_chi1)))),exp(y[5]*Cons.xHat+y[6]*Cons.yHat+y[7]*Cons.zHat))
@@ -1430,21 +1459,34 @@ def Recalculate_4p0(Cons,Vars,y):
     Vars.Sigma_ell = Cons.M*(-Cons.M1*Vars.chi1_ell + Cons.M2*Vars.chi2_ell)
     Vars.Sigma_n = Cons.M*(-Cons.M1*Vars.chi1_n + Cons.M2*Vars.chi2_n)
     Vars.Sigma_lambda = Cons.M*(-Cons.M1*Vars.chi1_lambda + Cons.M2*Vars.chi2_lambda)
+    Vars.x = Vars.v**2
     Vars.logv = log(Vars.v)
-    Vars.rhOverM_coeff = 8*sqrt(5)*Cons.nu*Vars.v**2*sqrt(pi)/5
+    Vars.rhOverM_coeff = -8*sqrt(5)*Cons.nu*Vars.v**2*sqrt(pi)/5
     Vars.hHat_spin_Symm_2_2_3 = (-6*Vars.S_ell - 2*Vars.Sigma_ell*Cons.delta)/(3*Cons.M**2) + 0.0*I
     Vars.hHat_spin_Symm_2_2_4 = -(-336*Vars.S_ell**2 - 336*Vars.S_ell*Vars.Sigma_ell*Cons.delta - 280*Vars.S_lambda**2 + 840*I*Vars.S_lambda*Vars.S_n + 616*Vars.S_n**2 + 14*Cons.delta*(-6*Vars.Sigma_ell**2*Cons.delta - 5*Vars.Sigma_lambda**2*Cons.delta + 5*I*Vars.Sigma_lambda*(4*I*Vars.S_lambda + 6*Vars.S_n + 3*Vars.Sigma_n*Cons.delta) + Vars.Sigma_n*(30*I*Vars.S_lambda + 44*Vars.S_n + 11*Vars.Sigma_n*Cons.delta)))/(4*84**Cons.M)
     Vars.hHat_spin_Symm_2_1_2 = I*Vars.Sigma_ell/(2*Cons.M**2)
     Vars.hHat_spin_Symm_2_1_4 = -I*(86*Vars.S_ell*Cons.delta + Vars.Sigma_ell*(79 - 139*Cons.nu))/(42*Cons.M**2)
     Vars.hHat_spin_Symm_2_0_3 = -0.347760353971534*sqrt(5)*Vars.S_ell/Cons.M**2 - 0.170755767555554*sqrt(5)*Vars.Sigma_ell*Cons.delta/Cons.M**2 + 0.0*I
     Vars.hHat_spin_Symm_2_0_4 = 0.0869400884928835*sqrt(5)*Cons.delta*(3*Vars.S_ell*Vars.Sigma_ell + Vars.S_lambda*Vars.Sigma_lambda + Vars.S_n*Vars.Sigma_n)/Cons.M**4 - 0.0869400884928835*sqrt(5)*Cons.nu*(3*Vars.Sigma_ell**2 + Vars.Sigma_lambda**2 + Vars.Sigma_n**2)/Cons.M**4 + sqrt(6)*(-42*Vars.S_lambda + 42*Vars.S_n - 21*Cons.delta*(Vars.Sigma_lambda - Vars.Sigma_n))*(2*Vars.S_lambda + 2*Vars.S_n + Cons.delta*(Vars.Sigma_lambda + Vars.Sigma_n))/(126*Cons.M**4) + 0.000679219441350652*sqrt(5)*(384*Vars.S_ell**2 + 128*Vars.S_lambda**2 + 128*Vars.S_n**2 + 99*Vars.Sigma_ell**2 + 24*Vars.Sigma_lambda**2 + 24*Vars.Sigma_n**2)/Cons.M**4 + 0.0*I
+    Vars.hHat_spin_Symm_2_0_5 = -0.228217732293819*Cons.nu*(319*sqrt(5)*Vars.S_ell/(882*Cons.M**2) + 1775*sqrt(5)*Vars.Sigma_ell*Cons.delta/(9408*Cons.M**2)) - 0.554061322885717*sqrt(5)*Vars.S_ell/Cons.M**2 - 0.083495186827972*sqrt(5)*Vars.Sigma_ell*Cons.delta/Cons.M**2 + 0.0*I
+    Vars.hHat_spin_Symm_2_0_6 = -0.228217732293819*Cons.delta*(23*sqrt(5)*Vars.Sigma_ell*pi/(1344*Cons.M**2) + 173191*sqrt(5)*Vars.S_ell*Vars.Sigma_ell/(56448*Cons.M**4)) - 0.228217732293819*Cons.nu*(-31*sqrt(5)*Vars.S_ell*Vars.Sigma_ell*Cons.delta/(42*Cons.M**4) - sqrt(5)*(20832*Vars.S_ell**2 + 142529*Vars.Sigma_ell**2)/(28224*Cons.M**4)) - 0.168446421454962*sqrt(5)*Vars.Sigma_ell**2*Cons.nu**2/Cons.M**4 - 3.03222964888684e-6*sqrt(5)*(63808*Vars.S_ell**2 + 99197*Vars.Sigma_ell**2)/Cons.M**4 + 0.0*I
+    Vars.hHat_spin_Symm_2_0_7 = -0.228217732293819*Cons.delta*(14713254113*sqrt(5)*Vars.Sigma_ell/(11266117632*Cons.M**2) - 256*sqrt(5)*Vars.S_ell*Vars.Sigma_ell*pi/(21*Cons.M**4) + sqrt(5)*(1605952*Vars.S_ell**2*Vars.Sigma_ell + 106463*Vars.Sigma_ell**3)/(48384*Cons.M**6)) - 0.228217732293819*Cons.nu**2*(-34739*sqrt(5)*Vars.S_ell/(49896*Cons.M**2) - 66403*sqrt(5)*Vars.Sigma_ell*Cons.delta/(177408*Cons.M**2)) - 0.228217732293819*Cons.nu*(Cons.delta*(-66021037*sqrt(5)*Vars.Sigma_ell/(5588352*Cons.M**2) - 733*sqrt(5)*Vars.Sigma_ell**3/(84*Cons.M**6)) - 53090267*sqrt(5)*Vars.S_ell/(2095632*Cons.M**2) + 256*sqrt(5)*Vars.Sigma_ell**2*pi/(21*Cons.M**4) - 1603*sqrt(5)*Vars.S_ell*Vars.Sigma_ell**2/(27*Cons.M**6)) - 2.10130423266165*sqrt(5)*Vars.S_ell/Cons.M**2 + 0.00090562592180087*sqrt(5)*pi*(3072*Vars.S_ell**2 + 779*Vars.Sigma_ell**2)/Cons.M**4 - 0.000150937653633478*sqrt(5)*(36992*Vars.S_ell**3 + 22539*Vars.S_ell*Vars.Sigma_ell**2)/Cons.M**6 + 0.0*I
     Vars.hHat_spin_Symm_3_3_4 = 3*sqrt(210)*I*(7*Vars.S_ell*Cons.delta - 3*Vars.Sigma_ell*(3*Cons.nu - 1))/(112*Cons.M**2)
     Vars.hHat_spin_Symm_3_2_3 = 2*sqrt(35)*(Vars.S_ell + Vars.Sigma_ell*Cons.delta)/(21*Cons.M**2) + 0.0*I
     Vars.hHat_spin_Symm_3_1_4 = sqrt(14)*I*(Vars.S_ell*Cons.delta - 5*Vars.Sigma_ell*(3*Cons.nu - 1))/(336*Cons.M**2)
+    Vars.hHat_spin_Symm_3_3_7 = 0.0173880176985767*sqrt(35)*Vars.Sigma_ell*Cons.nu*Vars.x**3.5/Cons.M**2 + 0.0*I
+    Vars.hHat_spin_Symm_3_1_7 = 0.239045721866879*Vars.Sigma_ell*Cons.nu*Vars.x**3.5/Cons.M**2 + 0.0*I
     Vars.hHat_spin_Symm_4_3_4 = 9*sqrt(70)*I*(-Vars.S_ell*Cons.delta + 3*Vars.Sigma_ell*Cons.nu - Vars.Sigma_ell)/(112*Cons.M**2)
     Vars.hHat_spin_Symm_4_1_4 = sqrt(10)*I*(Vars.S_ell*Cons.delta - 3*Vars.Sigma_ell*Cons.nu + Vars.Sigma_ell)/(336*Cons.M**2)
     Vars.hHat_spin_Symm_4_0_3 = -sqrt(2)*(5*Vars.S_ell/(21*Cons.M**2) + 19*Vars.Sigma_ell*Cons.delta/(112*Cons.M**2))/24 + 0.0*I
     Vars.hHat_spin_Symm_4_0_4 = -sqrt(2)*(-2*Cons.delta*(3*Vars.S_ell*Vars.Sigma_ell + Vars.S_lambda*Vars.Sigma_lambda + Vars.S_n*Vars.Sigma_n)/(63*Cons.M**4) + Cons.nu*(6*Vars.Sigma_ell**2 + 2*Vars.Sigma_lambda**2 + 2*Vars.Sigma_n**2)/(63*Cons.M**4) + (-192*Vars.S_ell**2 - 64*Vars.S_lambda**2 - 64*Vars.S_n**2 - 53*Vars.Sigma_ell**2 - 12*Vars.Sigma_lambda**2 - 12*Vars.Sigma_n**2)/(2016*Cons.M**4))/24 + 0.0*I
+    Vars.hHat_spin_Symm_4_0_5 = -0.228217732293819*Cons.nu*(989419*Vars.S_ell/(232848*Cons.M**2) + 361055*Vars.Sigma_ell*Cons.delta/(155232*Cons.M**2)) + 0.197237323832325*Vars.S_ell/Cons.M**2 + 0.151042105850186*Vars.Sigma_ell*Cons.delta/Cons.M**2 + 0.0*I
+    Vars.hHat_spin_Symm_4_0_6 = -0.228217732293819*Cons.delta*(25*Vars.Sigma_ell*pi/(4032*Cons.M**2) + 1303525*Vars.S_ell*Vars.Sigma_ell/(620928*Cons.M**4)) - 0.228217732293819*Cons.nu*(-26435*Vars.S_ell*Vars.Sigma_ell*Cons.delta/(11088*Cons.M**4) - (23685760*Vars.S_ell**2 + 32586265*Vars.Sigma_ell**2)/(9934848*Cons.M**4)) - 0.5440959373365*Vars.Sigma_ell**2*Cons.nu**2/Cons.M**4 - 0.228217732293819*(1380815*Vars.S_ell**2/931392 + 352565*Vars.Sigma_ell**2/516096)/Cons.M**4 + 0.0*I
+    Vars.hHat_spin_Symm_4_0_7 = -0.228217732293819*Cons.delta*(25969272883*Vars.Sigma_ell/(39943507968*Cons.M**2) - 64*Vars.S_ell*Vars.Sigma_ell*pi/(63*Cons.M**4) + (2971*Vars.S_ell**2*Vars.Sigma_ell/2268 - 55*Vars.Sigma_ell**3/6912)/Cons.M**6) - 0.228217732293819*Cons.nu**2*(4773259*Vars.S_ell/(5189184*Cons.M**2) + 5099915*Vars.Sigma_ell*Cons.delta/(6918912*Cons.M**2)) - 0.228217732293819*Cons.nu*(Cons.delta*(-160373197*Vars.Sigma_ell/(32288256*Cons.M**2) - Vars.Sigma_ell**3/(84*Cons.M**6)) - 712823899*Vars.S_ell/(163459296*Cons.M**2) + 64*Vars.Sigma_ell**2*pi/(63*Cons.M**4) - 109*Vars.S_ell*Vars.Sigma_ell**2/(81*Cons.M**6)) - 0.241332286766118*Vars.S_ell/Cons.M**2 - 0.000301875307266957*pi*(-768*Vars.S_ell**2 - 193*Vars.Sigma_ell**2)/Cons.M**4 - 2.51562756055797e-5*(11776*Vars.S_ell**3 + 2887*Vars.S_ell*Vars.Sigma_ell**2)/Cons.M**6 + 0.0*I
+    Vars.hHat_spin_Symm_6_0_5 = -0.228217732293819*Cons.nu*(19135*sqrt(13)*Vars.S_ell/(144144*Cons.M**2) + 16655*sqrt(13)*Vars.Sigma_ell*Cons.delta/(192192*Cons.M**2)) + 0.0070371288302107*sqrt(13)*Vars.S_ell/Cons.M**2 + 0.00575536978134986*sqrt(13)*Vars.Sigma_ell*Cons.delta/Cons.M**2 + 0.0*I
+    Vars.hHat_spin_Symm_6_0_6 = -0.228217732293819*Cons.nu*(-215*sqrt(13)*Vars.S_ell*Vars.Sigma_ell*Cons.delta/(6864*Cons.M**4) - sqrt(13)*(577920*Vars.S_ell**2 + 495875*Vars.Sigma_ell**2)/(18450432*Cons.M**4)) - 0.00316850327972726*sqrt(13)*Vars.S_ell*Vars.Sigma_ell*Cons.delta/Cons.M**4 - 0.00714842838624288*sqrt(13)*Vars.Sigma_ell**2*Cons.nu**2/Cons.M**4 - 3.0923087911142e-9*sqrt(13)*(782720*Vars.S_ell**2 + 381315*Vars.Sigma_ell**2)/Cons.M**4 + 0.0*I
+    Vars.hHat_spin_Symm_6_0_7 = -0.228217732293819*Cons.nu**2*(198335*sqrt(13)*Vars.S_ell/(247104*Cons.M**2) + 10165*sqrt(13)*Vars.Sigma_ell*Cons.delta/(20592*Cons.M**2)) - 0.228217732293819*Cons.nu*(-10654115*sqrt(13)*Vars.S_ell/(15567552*Cons.M**2) - 7026595*sqrt(13)*Vars.Sigma_ell*Cons.delta/(13837824*Cons.M**2)) - 0.0288965073752077*sqrt(13)*Vars.S_ell/Cons.M**2 - 0.0256726130097283*sqrt(13)*Vars.Sigma_ell*Cons.delta/Cons.M**2 + 0.0*I
+    Vars.hHat_spin_Symm_8_0_7 = -0.228217732293819*Cons.nu**2*(349685*sqrt(17)*Vars.S_ell/(3150576*Cons.M**2) + 99085*sqrt(17)*Vars.Sigma_ell*Cons.delta/(1400256*Cons.M**2)) - 0.228217732293819*Cons.nu*(-2586845*sqrt(17)*Vars.S_ell/(37806912*Cons.M**2) - 2640475*sqrt(17)*Vars.Sigma_ell*Cons.delta/(50409216*Cons.M**2)) - 0.00261138219653817*sqrt(17)*Vars.S_ell/Cons.M**2 - 0.00230079009672073*sqrt(17)*Vars.Sigma_ell*Cons.delta/Cons.M**2 + 0.0*I
     Vars.hHat_spin_Asymm_2_2_2 = (-Vars.Sigma_lambda - I*Vars.Sigma_n)/(2*Cons.M**2)
     Vars.hHat_spin_Asymm_2_2_4 = -(-19*Cons.M**2*Vars.S_lambda*Cons.delta - 182*I*Cons.M**2*Vars.S_n*Cons.delta + Cons.M**2*Vars.Sigma_lambda*(43*Cons.nu - 5) + 14*I*Cons.M**2*Vars.Sigma_n*(20*Cons.nu - 7))/(4*84**Cons.M)
     Vars.hHat_spin_Asymm_2_1_3 = 0.139508928571429*Cons.delta*(-I*Vars.Sigma_lambda + Vars.Sigma_n)/Cons.M**2 + 0.000543375553080522*sqrt(30)*(-61*I*Vars.S_lambda + 61*Vars.S_n)/Cons.M**2 + (4*I*Vars.S_lambda + 25*Vars.S_n + 4*I*Vars.Sigma_lambda*Cons.delta + 13*Vars.Sigma_n*Cons.delta)/(6*Cons.M**2)
@@ -1464,7 +1506,7 @@ def Recalculate_4p0(Cons,Vars,y):
 @njit(cache=True)
 def Modes_4p0(modes,Cons,Vars):
     # (ell, m) = (2, +/- 0)
-    Symm = Vars.rhOverM_coeff*(Cons.hHat_2_0_0 + Vars.v**2*(Cons.hHat_2_0_2 + Vars.v*(Vars.hHat_spin_Symm_2_0_3 + Vars.v*(Cons.hHat_2_0_4 + Vars.hHat_spin_Symm_2_0_4 + Vars.v*(Cons.hHat_2_0_5 + Cons.hHat_2_0_6*Vars.v)))))
+    Symm = Vars.rhOverM_coeff*(Cons.hHat_2_0_0 + Vars.v**2*(Cons.hHat_2_0_2 + Vars.v*(Vars.hHat_spin_Symm_2_0_3 + Vars.v*(Cons.hHat_2_0_4 + Vars.hHat_spin_Symm_2_0_4 + Vars.v*(Cons.hHat_2_0_5 + Vars.hHat_spin_Symm_2_0_5 + Vars.v*(Cons.hHat_2_0_6 + Vars.hHat_spin_Symm_2_0_6 + Vars.hHat_spin_Symm_2_0_7*Vars.v))))))
     Asymm = Vars.rhOverM_coeff*Vars.v**2*(Vars.hHat_spin_Asymm_2_0_2 + Vars.hHat_spin_Asymm_2_0_4*Vars.v**2)
     modes[2] = (Symm + Asymm)[0]
     # (ell, m) = (2, +/- 1)
@@ -1482,7 +1524,7 @@ def Modes_4p0(modes,Cons,Vars):
     Asymm = Vars.hHat_spin_Asymm_3_0_4*Vars.rhOverM_coeff*Vars.v**4
     modes[8] = (Symm + Asymm)[0]
     # (ell, m) = (3, +/- 1)
-    Symm = Vars.rhOverM_coeff*Vars.v*(Cons.hHat_3_1_1 + Vars.v**2*(Cons.hHat_3_1_3 + Vars.v*(Cons.hHat_3_1_4 + Vars.hHat_spin_Symm_3_1_4 + Vars.v*(Cons.hHat_3_1_5 + Vars.v*(Cons.hHat_3_1_6 + Vars.v*(Cons.hHat_3_1_7 + Cons.hHat_3_1_lnv_7*Vars.logv))))))
+    Symm = Vars.rhOverM_coeff*Vars.v*(Cons.hHat_3_1_1 + Vars.v**2*(Cons.hHat_3_1_3 + Vars.v*(Cons.hHat_3_1_4 + Vars.hHat_spin_Symm_3_1_4 + Vars.v*(Cons.hHat_3_1_5 + Vars.v*(Cons.hHat_3_1_6 + Vars.v*(Cons.hHat_3_1_7 + Cons.hHat_3_1_lnv_7*Vars.logv + Vars.hHat_spin_Symm_3_1_7))))))
     Asymm = Vars.hHat_spin_Asymm_3_1_3*Vars.rhOverM_coeff*Vars.v**3
     modes[9] = (Symm + Asymm)[0]
     modes[7] = (-np.conjugate(Symm - Asymm))[0]
@@ -1492,12 +1534,12 @@ def Modes_4p0(modes,Cons,Vars):
     modes[10] = (Symm + Asymm)[0]
     modes[6] = (-np.conjugate(Symm - Asymm))[0]
     # (ell, m) = (3, +/- 3)
-    Symm = Vars.rhOverM_coeff*Vars.v*(Cons.hHat_3_3_1 + Vars.v**2*(Cons.hHat_3_3_3 + Vars.v*(Cons.hHat_3_3_4 + Vars.hHat_spin_Symm_3_3_4 + Vars.v*(Cons.hHat_3_3_5 + Vars.v*(Cons.hHat_3_3_6 + Vars.v*(Cons.hHat_3_3_7 + Cons.hHat_3_3_lnv_7*Vars.logv))))))
+    Symm = Vars.rhOverM_coeff*Vars.v*(Cons.hHat_3_3_1 + Vars.v**2*(Cons.hHat_3_3_3 + Vars.v*(Cons.hHat_3_3_4 + Vars.hHat_spin_Symm_3_3_4 + Vars.v*(Cons.hHat_3_3_5 + Vars.v*(Cons.hHat_3_3_6 + Vars.v*(Cons.hHat_3_3_7 + Cons.hHat_3_3_lnv_7*Vars.logv + Vars.hHat_spin_Symm_3_3_7))))))
     Asymm = Vars.hHat_spin_Asymm_3_3_3*Vars.rhOverM_coeff*Vars.v**3
     modes[11] = (Symm + Asymm)[0]
     modes[5] = (-np.conjugate(Symm - Asymm))[0]
     # (ell, m) = (4, +/- 0)
-    Symm = Vars.rhOverM_coeff*(Cons.hHat_4_0_0 + Vars.v**2*(Cons.hHat_4_0_2 + Vars.v*(Vars.hHat_spin_Symm_4_0_3 + Vars.v*(Cons.hHat_4_0_4 + Vars.hHat_spin_Symm_4_0_4 + Vars.v*(Cons.hHat_4_0_5 + Cons.hHat_4_0_6*Vars.v)))))
+    Symm = Vars.rhOverM_coeff*(Cons.hHat_4_0_0 + Vars.v**2*(Cons.hHat_4_0_2 + Vars.v*(Vars.hHat_spin_Symm_4_0_3 + Vars.v*(Cons.hHat_4_0_4 + Vars.hHat_spin_Symm_4_0_4 + Vars.v*(Cons.hHat_4_0_5 + Vars.hHat_spin_Symm_4_0_5 + Vars.v*(Cons.hHat_4_0_6 + Vars.hHat_spin_Symm_4_0_6 + Vars.hHat_spin_Symm_4_0_7*Vars.v))))))
     Asymm = Vars.hHat_spin_Asymm_4_0_4*Vars.rhOverM_coeff*Vars.v**4
     modes[16] = (Symm + Asymm)[0]
     # (ell, m) = (4, +/- 1)
@@ -1546,7 +1588,7 @@ def Modes_4p0(modes,Cons,Vars):
     modes[31] = (Symm + Asymm)[0]
     modes[21] = (-np.conjugate(Symm - Asymm))[0]
     # (ell, m) = (6, +/- 0)
-    Symm = Vars.rhOverM_coeff*(Cons.hHat_6_0_0 + Vars.v**2*(Cons.hHat_6_0_2 + Vars.v**2*(Cons.hHat_6_0_4 + Vars.v*(Cons.hHat_6_0_5 + Cons.hHat_6_0_6*Vars.v))))
+    Symm = Vars.rhOverM_coeff*(Cons.hHat_6_0_0 + Vars.v**2*(Cons.hHat_6_0_2 + Vars.v**2*(Cons.hHat_6_0_4 + Vars.v*(Cons.hHat_6_0_5 + Vars.hHat_spin_Symm_6_0_5 + Vars.v*(Cons.hHat_6_0_6 + Vars.hHat_spin_Symm_6_0_6 + Vars.hHat_spin_Symm_6_0_7*Vars.v)))))
     Asymm = 0
     modes[38] = (Symm + Asymm)[0]
     # (ell, m) = (6, +/- 1)
@@ -1615,7 +1657,7 @@ def Modes_4p0(modes,Cons,Vars):
     modes[59] = (Symm + Asymm)[0]
     modes[45] = (-np.conjugate(Symm - Asymm))[0]
     # (ell, m) = (8, +/- 0)
-    Symm = Vars.rhOverM_coeff*(Cons.hHat_8_0_0 + Vars.v**2*(Cons.hHat_8_0_2 + Vars.v**2*(Cons.hHat_8_0_4 + Cons.hHat_8_0_6*Vars.v**2)))
+    Symm = Vars.rhOverM_coeff*(Cons.hHat_8_0_0 + Vars.v**2*(Cons.hHat_8_0_2 + Vars.v**2*(Cons.hHat_8_0_4 + Vars.v**2*(Cons.hHat_8_0_6 + Vars.hHat_spin_Symm_8_0_7*Vars.v))))
     Asymm = 0
     modes[68] = (Symm + Asymm)[0]
     # (ell, m) = (8, +/- 2)
@@ -1662,7 +1704,7 @@ def Modes(xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_fra
     zz=np.array([0.0])
     z=np.array([0.0*1j])
     Cons=Constants(zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z)
-    Vars=Variables(zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z)
+    Vars=Variables(zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z)
     Initialization(Cons, xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, rfrak_frame)
     for i in range(len(y[0])):
         Recalculate.get(2*PNWaveformModeOrder)(Cons,Vars,y[:,i])

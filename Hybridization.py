@@ -255,7 +255,7 @@ def Optimize11D(x):
 def Optimize1D(x):
     return Optimize11D(PNParas+x*direction)
 
-def Hybridize(t_start, data_dir, cce_dir, out_dir, length, debug=0, OptimizePNParas=0):
+def Hybridize(t_start, data_dir, cce_dir, out_dir, length, nOrbits, debug=0, OptimizePNParas=0, truncate=None):
     """
     Align and hybridize given NR waveform with PN waveform.
     """
@@ -264,13 +264,22 @@ def Hybridize(t_start, data_dir, cce_dir, out_dir, length, debug=0, OptimizePNPa
         omega_NR, omega_PN_spline, omega_PN_mag, omega_PN_mag_spline, PNData_spline, matchingt,\
         omega_NR_mag_matching, omega_mean, iter_num, W_NR_matching_in, R_delta, omega_NR_hat,\
         Normalization, xHat, yHat, zHat, t_PNStart, t_PNEnd, lowbound, upbound, scale, frame_0,\
-        spin1,spin2,chiA,chiB,NormalizationChi,chi1_i,chi2_i,q_0,NormalizationOmega,omega_NR_matching,t_delta,Mc_0,cc,coeff2,coeff3,coeff4,coeff5,WaveformNorm_NR_matching,PNParas,direction,PNIter,omega_00,PhyParas
+        spin1,spin2,chiA,chiB,NormalizationChi,chi1_i,chi2_i,q_0,NormalizationOmega,omega_NR_matching,t_delta,Mc_0,cc,coeff2,coeff3,coeff4,coeff5,WaveformNorm_NR_matching,PNParas,direction,PNIter,omega_00,PhyParas,length_global
     print('Iteration #',PNIter,'between BMS and PN parameters fixing.')
-
+    length=length_global
 # Get NR waveform
     abd=scri.SpEC.create_abd_from_h5("CCE",h=cce_dir+'/Strain.h5',Psi4=cce_dir+'/Psi4.h5',Psi3=cce_dir+'/Psi3.h5',Psi2=cce_dir+'/Psi2.h5',Psi1=cce_dir+'/Psi1.h5',Psi0=cce_dir+'/Psi0.h5')
     t0=-abd.t[np.argmax(np.linalg.norm(abd.sigma.bar,axis=1))]
     abd.t=abd.t+t0
+    if truncate!=None:
+        abd1 = scri.asymptotic_bondi_data.AsymptoticBondiData(time = abd.t[(abd.t>=truncate[0])&(abd.t<truncate[1])],ell_max = 8,multiplication_truncator = max)
+        abd1.sigma=abd.sigma[(abd.t>=truncate[0])&(abd.t<truncate[1])]
+        abd1.psi0=abd.psi0[(abd.t>=truncate[0])&(abd.t<truncate[1])]
+        abd1.psi1=abd.psi1[(abd.t>=truncate[0])&(abd.t<truncate[1])]
+        abd1.psi2=abd.psi2[(abd.t>=truncate[0])&(abd.t<truncate[1])]
+        abd1.psi3=abd.psi3[(abd.t>=truncate[0])&(abd.t<truncate[1])]
+        abd1.psi4=abd.psi4[(abd.t>=truncate[0])&(abd.t<truncate[1])]
+        abd=abd1
     W_NR=scri.WaveformModes()
     if PNIter==0:
         abd1,trans=abd.map_to_superrest_frame(t_0=t_start+length/2)
@@ -308,6 +317,8 @@ def Hybridize(t_start, data_dir, cce_dir, out_dir, length, debug=0, OptimizePNPa
     omega_0=np.mean(omega_0)
     if PNIter==0:
         omega_00=omega_0
+        if nOrbits!=None:
+            length_global=nOrbits*2*np.pi/omega_00
     if W_NR.t[0]>=t_start-10*np.pi/omega_0 or W_NR.t[-1]<=t_start+10*np.pi/omega_0:
         message=("t_start {0} should be at least {1} larger than the start time of NR waveform {2}"
             +" and smaller than the ending time of NR waveform {3}.")
@@ -558,16 +569,19 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--t',type=float, default=-7000.0,help='Start time of matching window')
 parser.add_argument('--SimDir', default='/panfs/ds09/sxs/dzsun/SimAnnex/Public/HybTest/015/Lev3',help='Path in which to find the extropolated waveform data')
 parser.add_argument('--CCEDir', default='/home/dzsun/CCEAnnex/Public/HybTest/015_CCE/Lev3/CCE',help='Path in which to find the CCE waveform data')
-args = vars(parser.parse_args())
 parser.add_argument('--OutDir', default='/home/dzsun',help='Path in which to output results')
 parser.add_argument('--length',type=float, default=5000.0,help='Length of matching window')
+parser.add_argument('--nOrbits',type=float, default=None,help='Length of matching window in orbits, will disable "length" option if not None')
+parser.add_argument('--truncate',nargs=2,type=float, default=None,help='--truncate t1 t2. If specified, it will truncate the abd object and keep only data between t1 and t2')
 args = vars(parser.parse_args())
 
-global mismatch, W_NR1, PNIter, omega_00,PhyParas
+global mismatch, W_NR1, PNIter, omega_00,PhyParas,length_global
 PNIter=0
+length_global=args['length']
+truncate=args['truncate']
 while PNIter<=3:
     print("PNIter=: ",PNIter)
-    Hybridize(args['t'],args['SimDir'],args['CCEDir'],args['OutDir'], args['length'], debug=0, OptimizePNParas=1)
+    Hybridize(args['t'],args['SimDir'],args['CCEDir'],args['OutDir'], args['length'], args['nOrbits'], debug=0, OptimizePNParas=1, truncate=truncate)
     PNIter=PNIter+1
 
 """
