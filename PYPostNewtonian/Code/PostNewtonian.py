@@ -17,6 +17,7 @@ def PNWaveform(q,M,omega_0,chi1_0,chi2_0,frame_0,t_0=0.0, t_PNStart=False, t_PNE
     t_0: the corresponding time of the above given initial values, float number,
     t_PNStart: the start time of PN relative to t_0: t_PNStart=t_real_start-t_0, float number. If false, default is t_0-t_real_start=3(t_merger-t_0),
     t_PNEnd: the end time of PN relative to t_0: t_PNEnd=t_real_end-t_0, float number. If false, default is merger time,
+    datatype: "h" for strain and "Psi_M" for Moreschi supermomentum,
     return_chi: whether to return chi as quaternion array of time, bool number,
     PNEvolutionOrder: float number in [0,0.5,1,1.5,2,2.5,3,3.5,4], default is 3.5,
     PNWaveformModeOrder: float number in [0,0.5,1,1.5,2,2.5,3,3.5,4], default is 3.5,
@@ -37,6 +38,7 @@ def PNWaveform(q,M,omega_0,chi1_0,chi2_0,frame_0,t_0=0.0, t_PNStart=False, t_PNE
         message=("TaylorTn must be an int number in [1].")
         raise ValueError(message)          
 
+    wHat=quaternionic.one
     xHat=quaternionic.x
     yHat=quaternionic.y
     zHat=quaternionic.z
@@ -55,20 +57,20 @@ def PNWaveform(q,M,omega_0,chi1_0,chi2_0,frame_0,t_0=0.0, t_PNStart=False, t_PNE
     if chi2Mag>1e-12:
         S_chi2_0=np.sqrt(chi2Mag)*np.sqrt(
             -quaternionic.array([0,chi2_0[0],chi2_0[1],chi2_0[2]]).normalized*zHat).normalized
-        
-    rfrak_frame_0=np.log(frame_0).vec # logarithm of frame quaternion
   
-    PN=PNEvolution.PNEv.Evolution(xHat, yHat, zHat, m1, m2, v_0,S_chi1_0, S_chi2_0, rfrak_frame_0, t_PNStart, t_PNEnd,
+    PN=PNEvolution.PNEv.Evolution(wHat, xHat, yHat, zHat, m1, m2, v_0,S_chi1_0, S_chi2_0, quaternion.as_float_array(frame_0), t_PNStart, t_PNEnd,
         PNEvolutionOrder, TaylorTn, StepsPerOrbit, ForwardInTime, tol, MinStep)# Evolve PN parameters, PN.t is PN time, PN.y=[v, chi1_x, chi1_y
-        # chi2_x, chi2_y, rfrak_frame_x, rfrak_frame_y, rfrak_frame_z]
+                                                        # chi2_x, chi2_y, frame_w, frame_x, frame_y, frame_z]
     W_PN_corot=scri.WaveformModes()
     W_PN_corot.t=PN.t+t_0
-    W_PN_corot.frame=np.exp(quaternion.from_float_array(np.column_stack((0.0*PN.t,PN.y[5],PN.y[6],PN.y[7]))))
+    W_PN_corot.frame=quaternion.from_float_array(np.column_stack((PN.y[5],PN.y[6],PN.y[7],PN.y[8])))
+    for i in range(len(W_PN_corot.frame)):
+        W_PN_corot.frame[i]=W_PN_corot.frame[i].normalized()
     if datatype=="h":
-        W_PN_corot.data, W_PN_corot.ells = PNWaveformModes.Modes(xHat, yHat, zHat, m1, m2, v_0,S_chi1_0, S_chi2_0, rfrak_frame_0, PN.y, PNWaveformModeOrder)
+        W_PN_corot.data, W_PN_corot.ells = PNWaveformModes.Modes(wHat, xHat, yHat, zHat, m1, m2, v_0,S_chi1_0, S_chi2_0, quaternion.as_float_array(frame_0), PN.y, PNWaveformModeOrder)
         W_PN_corot.dataType=scri.h
     elif datatype=="Psi_M":
-        W_PN_corot.data, W_PN_corot.ells = PNPsiMModes.Modes(xHat, yHat, zHat, m1, m2, v_0,S_chi1_0, S_chi2_0, rfrak_frame_0, PN.y, PNWaveformModeOrder)
+        W_PN_corot.data, W_PN_corot.ells = PNPsiMModes.Modes(wHat, xHat, yHat, zHat, m1, m2, v_0,S_chi1_0, S_chi2_0, quaternion.as_float_array(frame_0), PN.y, PNWaveformModeOrder)
         W_PN_corot.dataType=scri.psi2
         W_PN_corot.data[:,0]=W_PN_corot.data[:,0]-1.0
 
