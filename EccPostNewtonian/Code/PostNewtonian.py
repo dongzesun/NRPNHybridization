@@ -11,7 +11,7 @@ def PNWaveform(q,M,omega_0,chi1_0,chi2_0,e_0=0.0,xi_0=0.0,frame_0=quaternion.qua
     """
     q = m1/m2, float number,
     M = m1+m2, float number,
-    omega_0: magnititude of angular velocity at t_0, float number,
+    omega_0: orbital frequency at t_0, float number,
     chi1_0 and chi2_0: spin vectors at t_0, 3-d vectors,
     frame_0: the frame quaternion at t_0, quaternionic_array object,
     t_0: the corresponding time of the above given initial values, float number,
@@ -44,7 +44,7 @@ def PNWaveform(q,M,omega_0,chi1_0,chi2_0,e_0=0.0,xi_0=0.0,frame_0=quaternion.qua
     zHat=quaternionic.z
     m1=q/(1+q)*M
     m2=1/(1+q)*M
-    v_0=omega_0**(1/3)
+    v_0=(omega_0*M)**(1/3)
     chi1Mag=quaternionic.array([0,chi1_0[0],chi1_0[1],chi1_0[2]]).abs
     chi2Mag=quaternionic.array([0,chi2_0[0],chi2_0[1],chi2_0[2]]).abs
 
