@@ -7,10 +7,9 @@ import quaternionic
 import quaternion
 import sxs
 
-def PNWaveform(q,M,omega_0,chi1_0,chi2_0,frame_0,t_0=0.0, t_PNStart=False, t_PNEnd=False, datatype="h", return_chi=False, PNEvolutionOrder=4.0, PNWaveformModeOrder=3.5, TaylorTn=1, StepsPerOrbit=32, ForwardInTime=True, tol=1e-10, MinStep=1e-7):
+def PNWaveform(q,omega_0,chi1_0,chi2_0,frame_0=quaternion.quaternion(1,0,0,0),t_0=0.0, t_PNStart=False, t_PNEnd=False, datatype="h", return_chi=False, PNEvolutionOrder=4.0, PNWaveformModeOrder=3.5, TaylorTn=1, StepsPerOrbit=32, ForwardInTime=True, tol=1e-10, MinStep=1e-7):
     """
     q = m1/m2, float number,
-    M = m1+m2, float number,
     omega_0: orbital frequency at t_0, float number,
     chi1_0 and chi2_0: spin vectors at t_0, 3-d vectors,
     frame_0: the frame quaternion at t_0, quaternionic_array object,
@@ -38,6 +37,7 @@ def PNWaveform(q,M,omega_0,chi1_0,chi2_0,frame_0,t_0=0.0, t_PNStart=False, t_PNE
         message=("TaylorTn must be an int number in [1].")
         raise ValueError(message)          
 
+    M=1.0
     wHat=quaternionic.one
     xHat=quaternionic.x
     yHat=quaternionic.y
