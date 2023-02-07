@@ -168,11 +168,12 @@ def OptimizeEcc(x):
     global PNData_spline, PNParas, PNIter, W_PN, Normalization, omega_mean, W_NR_matching_in, matchingt
     PNParas[8:10]=x
     Phys=Parameterize_to_Physical(np.copy(PNParas))
-    W_PN_corot=PostNewtonian.PNWaveform(Phys[0],Phys[1], omega_00, Phys[2:5], Phys[5:8], Phys[8], Phys[9], frame_0, t_start, t_PNStart, t_PNEnd)
+    W_PN_corot=PostNewtonian.PNWaveform(Phys[0], omega_00.copy()*Phys[1], Phys[2:5], Phys[5:8], Phys[8], Phys[9], frame_0, t_start.copy()/Phys[1], t_PNStart, t_PNEnd)
     if PNIter==0:
         ZeroModes=[2,8,16,26,38,52,68] # Memory modes
         W_PN_corot.data[:,ZeroModes]=0.0*W_PN_corot.data[:,ZeroModes] # Not cosider memory effect since NR dosen't have corrrect memory.
     W_PN=scri.to_inertial_frame(W_PN_corot.copy())
+    W_PN.t=W_PN.t*Phys[1]
     # Set up the matching region data for PN, and get the corresponding angular velocity and frame
     PNData_spline=SplineArray(W_PN.t, W_PN.data)
     
