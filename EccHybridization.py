@@ -242,11 +242,12 @@ def Align(x):
     Phys=Parameterize_to_Physical(np.copy(x))
     print(("Call # {4}, generating PN with parameters q={0}, M={7}, omega_0={1}, chi1_0={2}, chi2_0={3},e={8},"
         +"t_PNstart={5}, t_PNend={6}.").format(Phys[0], omega_00,Phys[2:5], Phys[5:8],iter_num, t_PNStart, t_PNEnd, Phys[1], Phys[8]))
-    W_PN_corot=PostNewtonian.PNWaveform(Phys[0],Phys[1], omega_00, Phys[2:5], Phys[5:8], Phys[8], Phys[9], frame_0, t_start, t_PNStart, t_PNEnd)
+    W_PN_corot=PostNewtonian.PNWaveform(Phys[0],omega_00.copy()*Phys[1], Phys[2:5], Phys[5:8], Phys[8], Phys[9], frame_0, t_start.copy()/Phys[1], t_PNStart, t_PNEnd)
     if PNIter==0:
         ZeroModes=[2,8,16,26,38,52,68] # Memory modes
         W_PN_corot.data[:,ZeroModes]=0.0*W_PN_corot.data[:,ZeroModes] # Not cosider memory effect since NR dosen't have corrrect memory.
     W_PN=scri.to_inertial_frame(W_PN_corot.copy())
+    W_PN.t=W_PN.t*Phys[1]
     # Set up the matching region data for PN, and get the corresponding angular velocity and frame
     omega_PN=W_PN.angular_velocity()
     omega_PN_spline=SplineArray(W_PN.t, omega_PN)
@@ -316,11 +317,12 @@ def Optimize11D(x):
     iter_num+=1
     
     Phys=Parameterize_to_Physical(np.copy(x))
-    W_PN_corot=PostNewtonian.PNWaveform(Phys[0],Phys[1], omega_00, Phys[2:5], Phys[5:8], Phys[8], Phys[9], frame_0, t_start, t_PNStart, t_PNEnd)
+    W_PN_corot=PostNewtonian.PNWaveform(Phys[0],omega_00.copy()*Phys[1], Phys[2:5], Phys[5:8], Phys[8], Phys[9], frame_0, t_start.copy()/Phys[1], t_PNStart, t_PNEnd)
     if PNIter==0:
         ZeroModes=[2,8,16,26,38,52,68] # Memory modes
         W_PN_corot.data[:,ZeroModes]=0.0*W_PN_corot.data[:,ZeroModes] # Not cosider memory effect since NR dosen't have corrrect memory.
     W_PN=scri.to_inertial_frame(W_PN_corot.copy())
+    W_PN.t=W_PN.t*Phys[1]
 
     # Set up the matching region data for PN, and get the corresponding angular velocity and frame
     omega_PN=W_PN.angular_velocity()
@@ -376,14 +378,7 @@ def Hybridize(t_end00, data_dir, cce_dir, out_dir, length, nOrbits, debug=0, Opt
         length_global=nOrbits_to_length(nOrbits,t_end0,omega_NR_mag,abd.t)
         length=length_global
         t_start=t_end0-length
-        """
-        W_NR=W_temp
-        np.savetxt(out_dir+"/hybridCheckModesCt"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', W_NR.t, delimiter=',')
-        np.savetxt(out_dir+"/hybridCheckModesC22"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', np.abs(W_NR.data[:,4]), delimiter=',')
-        np.savetxt(out_dir+"/hybridCheckModesC21"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', np.abs(W_NR.data[:,3]), delimiter=',')
-        np.savetxt(out_dir+"/hybridCheckModesC2m1"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', np.abs(W_NR.data[:,1]), delimiter=',')
-        np.savetxt(out_dir+"/hybridCheckModesC2m2"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', np.abs(W_NR.data[:,0]), delimiter=',')
-        """
+        
     W_NR=scri.WaveformModes()
     if PNIter==0:
         abd1,trans=abd.map_to_superrest_frame(t_0=t_start+length/2)
@@ -396,18 +391,26 @@ def Hybridize(t_end00, data_dir, cce_dir, out_dir, length, nOrbits, debug=0, Opt
         W_NR_corot.data[:,ZeroModes]=0.0*W_NR_corot.data[:,ZeroModes]
         W_NR=scri.to_inertial_frame(W_NR_corot.copy())
         W_NR_corot=scri.to_corotating_frame(W_NR.copy())
-        
+        """
         omega_NR=W_NR.angular_velocity()
         omega_NR_mag = np.linalg.norm(omega_NR, axis=1)
-        
+        np.savetxt(out_dir+"/hybridCheckModest"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', W_NR.t, delimiter=',')
+        np.savetxt(out_dir+"/hybridCheckModes22"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', np.abs(W_NR.data[:,4]), delimiter=',')
+        np.savetxt(out_dir+"/hybridCheckModes21"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', np.abs(W_NR.data[:,3]), delimiter=',')
+        np.savetxt(out_dir+"/hybridCheckModes2m1"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', np.abs(W_NR.data[:,1]), delimiter=',')
+        np.savetxt(out_dir+"/hybridCheckModes2m2"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', np.abs(W_NR.data[:,0]), delimiter=',')
+        print(haha)
+        """
     else:
-        W_PN_corot=PostNewtonian.PNWaveform(PhyParas[0],PhyParas[1], omega_00, PhyParas[2:5], PhyParas[5:8], PhyParas[8], PhyParas[9], frame_0, t_start)
+        W_PN_corot=PostNewtonian.PNWaveform(PhyParas[0], omega_00.copy()*PhyParas[1], PhyParas[2:5], PhyParas[5:8], PhyParas[8], PhyParas[9], frame_0, t_start.copy()/PhyParas[1])
         W_PN=scri.to_inertial_frame(W_PN_corot.copy())
+        W_PN.t=W_PN.t*PhyParas[1]
         W_PN.data=np.append(0.0*W_PN.data[:,0:4],np.copy(W_PN.data),axis=1)
         W_PN.ells=0,8
         W_PN.dataType=scri.h
-        W_PN_PsiM_corot=PostNewtonian.PNWaveform(PhyParas[0],PhyParas[1], omega_00, PhyParas[2:5], PhyParas[5:8], PhyParas[8], PhyParas[9], frame_0, t_start, datatype="Psi_M")
+        W_PN_PsiM_corot=PostNewtonian.PNWaveform(PhyParas[0], omega_00.copy()*PhyParas[1], PhyParas[2:5], PhyParas[5:8], PhyParas[8], PhyParas[9], frame_0, t_start.copy()/PhyParas[1], datatype="Psi_M")
         W_PN_PsiM=scri.to_inertial_frame(W_PN_PsiM_corot.copy())
+        W_PN_PsiM.t=W_PN_PsiM.t*PhyParas[1]
         tp1, W_NR, tp2, idx=PNBMS.PN_BMS_w_time_phase(abd,W_PN,W_PN_PsiM,t_start,t_start+length,None)
         W_NR_corot=scri.to_corotating_frame(W_NR.copy())
     print("Map to superrest frame used ",time.time()-clock0)
