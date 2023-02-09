@@ -156,11 +156,16 @@ def InitialR(theta):
     return cost
 
 def Optimize4D(x):
+    global PNIter
     phase=quaternion.quaternion(0.0, omega_mean[0]*x[0]/2, omega_mean[1]*x[0]/2, omega_mean[2]*x[0]/2)
     R_delta=np.exp(quaternion.quaternion(0.0,x[1],x[2],x[3])+phase)
     W_temp=scri.rotate_physical_system(W_NR_matching_in.copy(), R_delta)
     temp=PNData_spline(matchingt+x[0])
-    h1h2=np.sum(simpson(abs(temp-W_temp.data)**2.0, matchingt, axis=0))
+    if PNIter==0:
+        ZeroModes=[2,8,16,26,38,52,68]
+        h1h2=np.sum(simpson(abs(np.delete(temp-W_temp.data,ZeroModes,axis=1))**2.0, matchingt, axis=0))
+    else:
+        h1h2=np.sum(simpson(abs(temp-W_temp.data)**2.0, matchingt, axis=0))
     cost=0.5*h1h2/Normalization
     return 10.0+np.log10(cost)
 
@@ -341,7 +346,7 @@ def Optimize1D(x):
     return Optimize11D(PNParas+x*direction)
 
 #@profile
-def Hybridize(t_end00, data_dir, cce_dir, out_dir, length, nOrbits, debug=0, OptimizePNParas=0, truncate=None):
+def Hybridize(WaveformType,t_end00, data_dir, cce_dir, out_dir, length, nOrbits, debug=0, OptimizePNParas=0, truncate=None):
     """
     Align and hybridize given NR waveform with PN waveform.
     """
@@ -355,66 +360,83 @@ def Hybridize(t_end00, data_dir, cce_dir, out_dir, length, nOrbits, debug=0, Opt
     t_end0=t_end00
     length=length_global
     t_start=t_end0-length
+    
 # Get NR waveform
-    abd=scri.SpEC.create_abd_from_h5("CCE",h=cce_dir+'/Strain.h5',Psi4=cce_dir+'/Psi4.h5',Psi3=cce_dir+'/Psi3.h5',Psi2=cce_dir+'/Psi2.h5',Psi1=cce_dir+'/Psi1.h5',Psi0=cce_dir+'/Psi0.h5')
-    t0=-abd.t[np.argmax(np.linalg.norm(abd.sigma.bar,axis=1))]
-    abd.t=abd.t+t0
-    if truncate!=None:
-        abd1 = scri.asymptotic_bondi_data.AsymptoticBondiData(time = abd.t[(abd.t>=truncate[0])&(abd.t<truncate[1])],ell_max = 8,multiplication_truncator = max)
-        abd1.sigma=abd.sigma[(abd.t>=truncate[0])&(abd.t<truncate[1])]
-        abd1.psi0=abd.psi0[(abd.t>=truncate[0])&(abd.t<truncate[1])]
-        abd1.psi1=abd.psi1[(abd.t>=truncate[0])&(abd.t<truncate[1])]
-        abd1.psi2=abd.psi2[(abd.t>=truncate[0])&(abd.t<truncate[1])]
-        abd1.psi3=abd.psi3[(abd.t>=truncate[0])&(abd.t<truncate[1])]
-        abd1.psi4=abd.psi4[(abd.t>=truncate[0])&(abd.t<truncate[1])]
-        abd=abd1
-    if nOrbits!=None:   
-        W_temp=scri.WaveformModes()
-        W_temp.t=abd.t
-        W_temp.data=2*abd.sigma.bar
-        W_temp.data=np.copy(W_temp.data[:,4:])
-        W_temp.ells=2,8
-        omega_NR=W_temp.angular_velocity()
-        omega_NR_mag = np.linalg.norm(omega_NR, axis=1)
-        length_global=nOrbits_to_length(nOrbits,t_end0,omega_NR_mag,abd.t)
-        length=length_global
-        t_start=t_end0-length
-        
-    W_NR=scri.WaveformModes()
-    if PNIter==0:
-        abd1,trans=abd.map_to_superrest_frame(t_0=t_start+length/2)
-        W_NR.t=abd1.t
-        W_NR.data=2*abd1.sigma.bar
-        W_NR.data=np.copy(W_NR.data[:,4:])
-        W_NR.ells=2,8
+    if WaveformType=='cce':
+        abd=scri.SpEC.create_abd_from_h5("CCE",h=cce_dir+'/Strain.h5',Psi4=cce_dir+'/Psi4.h5',Psi3=cce_dir+'/Psi3.h5',Psi2=cce_dir+'/Psi2.h5',Psi1=cce_dir+'/Psi1.h5',Psi0=cce_dir+'/Psi0.h5')
+        t0=-abd.t[np.argmax(np.linalg.norm(abd.sigma.bar,axis=1))]
+        abd.t=abd.t+t0
+        if truncate!=None:
+            abd1 = scri.asymptotic_bondi_data.AsymptoticBondiData(time = abd.t[(abd.t>=truncate[0])&(abd.t<truncate[1])],ell_max = 8,multiplication_truncator = max)
+            abd1.sigma=abd.sigma[(abd.t>=truncate[0])&(abd.t<truncate[1])]
+            abd1.psi0=abd.psi0[(abd.t>=truncate[0])&(abd.t<truncate[1])]
+            abd1.psi1=abd.psi1[(abd.t>=truncate[0])&(abd.t<truncate[1])]
+            abd1.psi2=abd.psi2[(abd.t>=truncate[0])&(abd.t<truncate[1])]
+            abd1.psi3=abd.psi3[(abd.t>=truncate[0])&(abd.t<truncate[1])]
+            abd1.psi4=abd.psi4[(abd.t>=truncate[0])&(abd.t<truncate[1])]
+            abd=abd1
+        if nOrbits!=None:   
+            W_temp=scri.WaveformModes()
+            W_temp.t=abd.t
+            W_temp.data=2*abd.sigma.bar
+            W_temp.data=np.copy(W_temp.data[:,4:])
+            W_temp.ells=2,8
+            omega_NR=W_temp.angular_velocity()
+            omega_NR_mag = np.linalg.norm(omega_NR, axis=1)
+            length_global=nOrbits_to_length(nOrbits,t_end0,omega_NR_mag,abd.t)
+            length=length_global
+            t_start=t_end0-length
+
+        W_NR=scri.WaveformModes()
+        if PNIter==0:
+            abd1,trans=abd.map_to_superrest_frame(t_0=t_start+length/2)
+            W_NR.t=abd1.t
+            W_NR.data=2*abd1.sigma.bar
+            W_NR.data=np.copy(W_NR.data[:,4:])
+            W_NR.ells=2,8
+            W_NR_corot=scri.to_corotating_frame(W_NR.copy())
+            ZeroModes=[2,8,16,26,38,52,68]
+            W_NR_corot.data[:,ZeroModes]=0.0*W_NR_corot.data[:,ZeroModes]
+            W_NR=scri.to_inertial_frame(W_NR_corot.copy())
+            W_NR_corot=scri.to_corotating_frame(W_NR.copy())
+            """
+            omega_NR=W_NR.angular_velocity()
+            omega_NR_mag = np.linalg.norm(omega_NR, axis=1)
+            np.savetxt(out_dir+"/hybridCheckModest"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', W_NR.t, delimiter=',')
+            np.savetxt(out_dir+"/hybridCheckModes22"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', np.abs(W_NR.data[:,4]), delimiter=',')
+            np.savetxt(out_dir+"/hybridCheckModes21"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', np.abs(W_NR.data[:,3]), delimiter=',')
+            np.savetxt(out_dir+"/hybridCheckModes2m1"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', np.abs(W_NR.data[:,1]), delimiter=',')
+            np.savetxt(out_dir+"/hybridCheckModes2m2"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', np.abs(W_NR.data[:,0]), delimiter=',')
+            print(haha)
+            """
+        else:
+            W_PN_corot=PostNewtonian.PNWaveform(PhyParas[0], omega_00.copy()*PhyParas[1], PhyParas[2:5], PhyParas[5:8], PhyParas[8], PhyParas[9], frame_0, t_start.copy()/PhyParas[1])
+            W_PN=scri.to_inertial_frame(W_PN_corot.copy())
+            W_PN.t=W_PN.t*PhyParas[1]
+            W_PN.data=np.append(0.0*W_PN.data[:,0:4],np.copy(W_PN.data),axis=1)
+            W_PN.ells=0,8
+            W_PN.dataType=scri.h
+            W_PN_PsiM_corot=PostNewtonian.PNWaveform(PhyParas[0], omega_00.copy()*PhyParas[1], PhyParas[2:5], PhyParas[5:8], PhyParas[8], PhyParas[9], frame_0, t_start.copy()/PhyParas[1], datatype="Psi_M")
+            W_PN_PsiM=scri.to_inertial_frame(W_PN_PsiM_corot.copy())
+            W_PN_PsiM.t=W_PN_PsiM.t*PhyParas[1]
+            tp1, W_NR, tp2, idx=PNBMS.PN_BMS_w_time_phase(abd,W_PN,W_PN_PsiM,t_start,t_start+length,None)
+            W_NR_corot=scri.to_corotating_frame(W_NR.copy())
+        print("Map to superrest frame used ",time.time()-clock0)
+    else:
+        NRFileName=data_dir+'/rhOverM_Asymptotic_GeometricUnits_CoM.h5/Extrapolated_N4.dir'
+        W_NR=scri.SpEC.read_from_h5(NRFileName)
+        t0=-W_NR.max_norm_time()
+        W_NR.t=W_NR.t+t0
         W_NR_corot=scri.to_corotating_frame(W_NR.copy())
         ZeroModes=[2,8,16,26,38,52,68]
         W_NR_corot.data[:,ZeroModes]=0.0*W_NR_corot.data[:,ZeroModes]
         W_NR=scri.to_inertial_frame(W_NR_corot.copy())
-        W_NR_corot=scri.to_corotating_frame(W_NR.copy())
-        """
-        omega_NR=W_NR.angular_velocity()
-        omega_NR_mag = np.linalg.norm(omega_NR, axis=1)
-        np.savetxt(out_dir+"/hybridCheckModest"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', W_NR.t, delimiter=',')
-        np.savetxt(out_dir+"/hybridCheckModes22"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', np.abs(W_NR.data[:,4]), delimiter=',')
-        np.savetxt(out_dir+"/hybridCheckModes21"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', np.abs(W_NR.data[:,3]), delimiter=',')
-        np.savetxt(out_dir+"/hybridCheckModes2m1"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', np.abs(W_NR.data[:,1]), delimiter=',')
-        np.savetxt(out_dir+"/hybridCheckModes2m2"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', np.abs(W_NR.data[:,0]), delimiter=',')
-        print(haha)
-        """
-    else:
-        W_PN_corot=PostNewtonian.PNWaveform(PhyParas[0], omega_00.copy()*PhyParas[1], PhyParas[2:5], PhyParas[5:8], PhyParas[8], PhyParas[9], frame_0, t_start.copy()/PhyParas[1])
-        W_PN=scri.to_inertial_frame(W_PN_corot.copy())
-        W_PN.t=W_PN.t*PhyParas[1]
-        W_PN.data=np.append(0.0*W_PN.data[:,0:4],np.copy(W_PN.data),axis=1)
-        W_PN.ells=0,8
-        W_PN.dataType=scri.h
-        W_PN_PsiM_corot=PostNewtonian.PNWaveform(PhyParas[0], omega_00.copy()*PhyParas[1], PhyParas[2:5], PhyParas[5:8], PhyParas[8], PhyParas[9], frame_0, t_start.copy()/PhyParas[1], datatype="Psi_M")
-        W_PN_PsiM=scri.to_inertial_frame(W_PN_PsiM_corot.copy())
-        W_PN_PsiM.t=W_PN_PsiM.t*PhyParas[1]
-        tp1, W_NR, tp2, idx=PNBMS.PN_BMS_w_time_phase(abd,W_PN,W_PN_PsiM,t_start,t_start+length,None)
-        W_NR_corot=scri.to_corotating_frame(W_NR.copy())
-    print("Map to superrest frame used ",time.time()-clock0)
+        if nOrbits!=None:   
+            omega_NR=W_NR.angular_velocity()
+            omega_NR_mag = np.linalg.norm(omega_NR, axis=1)
+            length_global=nOrbits_to_length(nOrbits,t_end0,omega_NR_mag,W_NR.t)
+            length=length_global
+            t_start=t_end0-length
     
 # Get the initial angular velocity in matching region
     omega_NR=W_NR.angular_velocity()
@@ -491,11 +513,11 @@ def Hybridize(t_end00, data_dir, cce_dir, out_dir, length, nOrbits, debug=0, Opt
     print("chi_p = ",chi_p,np.sqrt(np.dot(chi1_i,chi1_i)))
     chiA_spline=SplineArray(tA, chiA)
     chiB_spline=SplineArray(tA, chiB)
-    chiA=chiA_spline(matchingt)
-    chiB=chiB_spline(matchingt)
-    NormalizationChi=simpson(np.linalg.norm(chiA,axis=1)**2.0, matchingt)+simpson(np.linalg.norm(chiB,axis=1)**2.0, matchingt)
-    chiA=quaternion.from_float_array(np.column_stack((0.0*matchingt,chiA)))
-    chiB=quaternion.from_float_array(np.column_stack((0.0*matchingt,chiB)))
+    #chiA=chiA_spline(matchingt)
+    #chiB=chiB_spline(matchingt)
+    #NormalizationChi=simpson(np.linalg.norm(chiA,axis=1)**2.0, matchingt)+simpson(np.linalg.norm(chiB,axis=1)**2.0, matchingt)
+    chiA=quaternion.from_float_array(np.column_stack((0.0*tA,chiA)))
+    chiB=quaternion.from_float_array(np.column_stack((0.0*tA,chiB)))
 
 # Align Waveforms
     t_starts=t_start
@@ -732,6 +754,7 @@ def Hybridize(t_end00, data_dir, cce_dir, out_dir, length, nOrbits, debug=0, Opt
 import os
 import argparse
 parser = argparse.ArgumentParser()
+parser.add_argument('--WaveformType', default='cce',help='cce for CCE waveform, and extrapolated for extrapolated waveform')
 parser.add_argument('--t',type=float, default=-7000.0,help='Start time of matching window')
 parser.add_argument('--SimDir', default='/panfs/ds09/sxs/dzsun/SimAnnex/Public/HybTest/015/Lev3',help='Path in which to find the extropolated waveform data')
 parser.add_argument('--CCEDir', default='/home/dzsun/CCEAnnex/Public/HybTest/015_CCE/Lev3/CCE',help='Path in which to find the CCE waveform data')
@@ -747,9 +770,11 @@ length_global=np.array(args['length'])
 truncate=args['truncate']
 OptArg=1
 maxiter=3
+if args['WaveformType']=='extrapolated':
+    maxiter=0
 while PNIter<=maxiter:
     print("PNIter=: ",PNIter)
-    Hybridize(args['t'],args['SimDir'],args['CCEDir'],args['OutDir'], args['length'], args['nOrbits'], debug=0, OptimizePNParas=OptArg, truncate=truncate)
+    Hybridize(args['WaveformType'],args['t'],args['SimDir'],args['CCEDir'],args['OutDir'], args['length'], args['nOrbits'], debug=0, OptimizePNParas=OptArg, truncate=truncate)
     PNIter=PNIter+1
     print("t_start = ",args['t']-length_global)
     print(Output)
