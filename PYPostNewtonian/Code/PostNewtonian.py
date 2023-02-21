@@ -1,21 +1,23 @@
 import scri
-from PYPostNewtonian.Code import PNEvolution
-from PYPostNewtonian.Code import PNWaveformModes
-from PYPostNewtonian.Code import PNPsiMModes
+from EccPostNewtonian.Code import PNEvolution
+from EccPostNewtonian.Code import PNWaveformModes
+from EccPostNewtonian.Code import PNPsiMModes
 import numpy as np
 import quaternionic
 import quaternion
 import sxs
 
-def PNWaveform(q,omega_0,chi1_0,chi2_0, frame_0=quaternion.quaternion(1,0,0,0),t_0=0.0, omega_start=None, omega_end=None,t_PNStart=False, t_PNEnd=False, datatype="h", return_chi=False, PNEvolutionOrder=4.0, PNWaveformModeOrder=3.5, TaylorTn=1, StepsPerOrbit=32, ForwardInTime=True, tol=1e-10, MinStep=1e-7):
+def PNWaveform(q,omega_0,chi1_0,chi2_0,e_0=0.001,xi_0=0.0,frame_0=quaternion.quaternion(1.0,0.0,0.0,0.0),t_0=0.0, omega_start=None, omega_end=None,t_PNStart=False, t_PNEnd=False, datatype="h", return_chi=False, PNEvolutionOrder=4.0, PNWaveformModeOrder=3.5, TaylorTn=1, StepsPerOrbit=32, ForwardInTime=True, tol=1e-10, MinStep=1e-7):
     """
     q = m1/m2, float number,
     omega_0: orbital frequency at t_0, float number,
     chi1_0 and chi2_0: spin vectors at t_0, 3-d vectors,
     frame_0: the frame quaternion at t_0, quaternionic_array object,
+    omega_start: the start orbital frequency of PN, float number, shouldn't be used together with t_PNStart,
+    omega_end: the end orbital frequency of PN, float number, shouldn't be used together with t_PNEnd,
     t_0: the corresponding time of the above given initial values, float number,
-    t_PNStart: the start time of PN relative to t_0: t_PNStart=t_real_start-t_0, float number. If false, default is t_0-t_real_start=3(t_merger-t_0),
-    t_PNEnd: the end time of PN relative to t_0: t_PNEnd=t_real_end-t_0, float number. If false, default is merger time,
+    t_PNStart: the start time of PN relative to t_0: t_PNStart=t_real_start-t_0, float number, shouldn't be used together with omega_start. If false, default is t_0-t_real_start=3(t_merger-t_0),
+    t_PNEnd: the end time of PN relative to t_0: t_PNEnd=t_real_end-t_0, float number, should't be used together with omega_end. If false, default is merger time,
     datatype: "h" for strain and "Psi_M" for Moreschi supermomentum,
     return_chi: whether to return chi as quaternion array of time, bool number,
     PNEvolutionOrder: float number in [0,0.5,1,1.5,2,2.5,3,3.5,4], default is 3.5,
@@ -27,6 +29,14 @@ def PNWaveform(q,omega_0,chi1_0,chi2_0, frame_0=quaternion.quaternion(1,0,0,0),t
     MinStep: minimal time interval for the PN waveform, float number.
     """
 
+    if (omega_start!=None) and (not t_PNStart):
+        raise Exception('Cannot specify both omega_start and t_PNStart.')
+    if (omega_end!=None) and (not t_PNEnd):
+        raise Exception('Cannot specify both omega_end and t_PNEnd.')
+    if omega_start != None omega_start > omega_0 or t_PNStart > 0:
+        raise Exception('omega_start cannot be larger than omega_0, and t_PNStart should be smaller than 0.')
+    if omega_end != None and omega_end < omega_0:
+        raise Exception('omega_end cannot be smaller than omega_0.')
     if not PNEvolutionOrder in [0,0.5,1,1.5,2,2.5,3,3.5,4]:
         message=("PNEvolutionOrder must be a float number in [0,0.5,1,1.5,2,2.5,3,3.5,4].")
         raise ValueError(message)
@@ -58,7 +68,7 @@ def PNWaveform(q,omega_0,chi1_0,chi2_0, frame_0=quaternion.quaternion(1,0,0,0),t
         S_chi2_0=np.sqrt(chi2Mag)*np.sqrt(
             -quaternionic.array([0,chi2_0[0],chi2_0[1],chi2_0[2]]).normalized*zHat).normalized
   
-    PN=PNEvolution.PNEv.Evolution(wHat, xHat, yHat, zHat, m1, m2, v_0,S_chi1_0, S_chi2_0, quaternion.as_float_array(frame_0), omega_start, omega_end, t_PNStart, t_PNEnd,
+    PN=PNEvolution.PNEv.Evolution(wHat, xHat, yHat, zHat, m1, m2, e_0, xi_0, v_0, S_chi1_0, S_chi2_0, quaternion.as_float_array(frame_0), omega_start, omega_end,t_PNStart, t_PNEnd,
         PNEvolutionOrder, TaylorTn, StepsPerOrbit, ForwardInTime, tol, MinStep)# Evolve PN parameters, PN.t is PN time, PN.y=[v, chi1_x, chi1_y
                                                         # chi2_x, chi2_y, frame_w, frame_x, frame_y, frame_z]
     W_PN_corot=scri.WaveformModes()
@@ -67,7 +77,7 @@ def PNWaveform(q,omega_0,chi1_0,chi2_0, frame_0=quaternion.quaternion(1,0,0,0),t
     for i in range(len(W_PN_corot.frame)):
         W_PN_corot.frame[i]=W_PN_corot.frame[i].normalized()
     if datatype=="h":
-        W_PN_corot.data, W_PN_corot.ells = PNWaveformModes.Modes(wHat, xHat, yHat, zHat, m1, m2, v_0,S_chi1_0, S_chi2_0, quaternion.as_float_array(frame_0), PN.y, PNWaveformModeOrder)
+        W_PN_corot.data, W_PN_corot.ells = PNWaveformModes.Modes(wHat, xHat, yHat, zHat, m1, m2, e_0, xi_0, v_0,S_chi1_0, S_chi2_0, quaternion.as_float_array(frame_0), PN.y, PNWaveformModeOrder)
         W_PN_corot.dataType=scri.h
     elif datatype=="Psi_M":
         W_PN_corot.data, W_PN_corot.ells = PNPsiMModes.Modes(wHat, xHat, yHat, zHat, m1, m2, v_0,S_chi1_0, S_chi2_0, quaternion.as_float_array(frame_0), PN.y, PNWaveformModeOrder)
