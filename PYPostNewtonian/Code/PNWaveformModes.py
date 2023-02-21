@@ -491,7 +491,6 @@ def Recalculate_1p5(Cons,Vars,y):
     Vars.v = np.array([y[0]])
     Vars.rfrak_chi1 = np.array([y[1],y[2]])
     Vars.rfrak_chi2 = np.array([y[3],y[4]])
-    Vars.R = y[5]*Cons.wHat + y[6]*Cons.xHat + y[7]*Cons.yHat + y[8]*Cons.zHat
     Vars.R_S1 = exp(Vars.rfrak_chi1[0]*Cons.xHat + Vars.rfrak_chi1[1]*Cons.yHat)
     Vars.R_S2 = exp(Vars.rfrak_chi2[0]*Cons.xHat + Vars.rfrak_chi2[1]*Cons.yHat)
     Vars.chiVec1 = mul(mul(conjugate(normalized(y[5]*Cons.wHat + y[6]*Cons.xHat + y[7]*Cons.yHat + y[8]*Cons.zHat)),mul(mul(mul(Cons.S_chi1,Vars.R_S1),Cons.zHat),mul(conjugate(Vars.R_S1),conjugate(Cons.S_chi1)))),normalized(y[5]*Cons.wHat + y[6]*Cons.xHat + y[7]*Cons.yHat + y[8]*Cons.zHat))
@@ -963,7 +962,6 @@ def Recalculate_3p0(Cons,Vars,y):
     Vars.v = np.array([y[0]])
     Vars.rfrak_chi1 = np.array([y[1],y[2]])
     Vars.rfrak_chi2 = np.array([y[3],y[4]])
-    Vars.R = y[5]*Cons.wHat + y[6]*Cons.xHat + y[7]*Cons.yHat + y[8]*Cons.zHat
     Vars.R_S1 = exp(Vars.rfrak_chi1[0]*Cons.xHat + Vars.rfrak_chi1[1]*Cons.yHat)
     Vars.R_S2 = exp(Vars.rfrak_chi2[0]*Cons.xHat + Vars.rfrak_chi2[1]*Cons.yHat)
     Vars.chiVec1 = mul(mul(conjugate(normalized(y[5]*Cons.wHat + y[6]*Cons.xHat + y[7]*Cons.yHat + y[8]*Cons.zHat)),mul(mul(mul(Cons.S_chi1,Vars.R_S1),Cons.zHat),mul(conjugate(Vars.R_S1),conjugate(Cons.S_chi1)))),normalized(y[5]*Cons.wHat + y[6]*Cons.xHat + y[7]*Cons.yHat + y[8]*Cons.zHat))
@@ -1683,7 +1681,7 @@ def Modes_4p0(modes,Cons,Vars):
     modes[76] = (Symm + Asymm)[0]
     modes[60] = (np.conjugate(Symm - Asymm))[0]
 
-def Modes(wHat_i, xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, frame, y, PNWaveformModeOrder=3.5) :
+def Modes(wHat, xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, frame, y, PNWaveformModeOrder=3.5) :
     Recalculate={        0:Recalculate_0,
         1:Recalculate_0p50,
         2:Recalculate_1p0,
@@ -1707,7 +1705,7 @@ def Modes(wHat_i, xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, f
     z=np.array([0.0*1j])
     Cons=Constants(zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z)
     Vars=Variables(zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z)
-    Initialization(Cons, wHat_i, xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i)
+    Initialization(Cons, wHat, xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i)
     for i in range(len(y[0])):
         Recalculate.get(2*PNWaveformModeOrder)(Cons,Vars,y[:,i])
         WaveformModes.get(2*PNWaveformModeOrder)(ModeData[i,:],Cons,Vars)

@@ -218,8 +218,8 @@ def OmegaVec_chiVec_2_0(Cons,Vars):
 
 @njit
 def OmegaVec_0(Cons,Vars):
-    gamma_PN_0 = 1.00000000000000
     a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_0 = 1.00000000000000
     return Vars.ellHat*Vars.v**3/Cons.M + a_ell_0*gamma_PN_0*Vars.nHat*Vars.v**6/Cons.M**3
 
 
@@ -311,8 +311,8 @@ def OmegaVec_chiVec_2_0p50(Cons,Vars):
 
 @njit
 def OmegaVec_0p50(Cons,Vars):
-    gamma_PN_0 = 1.00000000000000
     a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_0 = 1.00000000000000
     return Vars.ellHat*Vars.v**3/Cons.M + a_ell_0*gamma_PN_0*Vars.nHat*Vars.v**6/Cons.M**3
 
 
@@ -404,10 +404,10 @@ def OmegaVec_chiVec_2_1p0(Cons,Vars):
 
 @njit
 def OmegaVec_1p0(Cons,Vars):
-    gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
+    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
     gamma_PN_0 = 1.00000000000000
     a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
-    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
     return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + a_ell_2*Vars.v**2)*(gamma_PN_0 + gamma_PN_2*Vars.v**2)/Cons.M**3
 
 
@@ -506,11 +506,11 @@ def OmegaVec_chiVec_2_1p5(Cons,Vars):
 
 @njit
 def OmegaVec_1p5(Cons,Vars):
-    gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
-    gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
-    gamma_PN_0 = 1.00000000000000
-    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
     a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_0 = 1.00000000000000
+    gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
+    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
+    gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
     return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + a_ell_2*Vars.v**2)*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + gamma_PN_3*Vars.v))/Cons.M**3
 
 
@@ -612,12 +612,12 @@ def OmegaVec_chiVec_2_2p0(Cons,Vars):
 @njit
 def OmegaVec_2p0(Cons,Vars):
     a_ell_4 = Vars.S_n*(5.77777777777778*Cons.nu**2 + 14.75*Cons.nu + 1.5) + Vars.Sigma_n*Cons.delta*(2.83333333333333*Cons.nu**2 + 9.125*Cons.nu + 1.5)
-    gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
-    gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
-    gamma_PN_0 = 1.00000000000000
-    gamma_PN_4 = 1.0 - 5.41666666666667*Cons.nu
-    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
     a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_0 = 1.00000000000000
+    gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
+    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
+    gamma_PN_4 = 1.0 - 5.41666666666667*Cons.nu
+    gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
     return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v**2*(a_ell_2 + a_ell_4*Vars.v**2))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + Vars.v*(gamma_PN_3 + gamma_PN_4*Vars.v)))/Cons.M**3
 
 
@@ -721,13 +721,13 @@ def OmegaVec_chiVec_2_2p5(Cons,Vars):
 @njit
 def OmegaVec_2p5(Cons,Vars):
     a_ell_4 = Vars.S_n*(5.77777777777778*Cons.nu**2 + 14.75*Cons.nu + 1.5) + Vars.Sigma_n*Cons.delta*(2.83333333333333*Cons.nu**2 + 9.125*Cons.nu + 1.5)
-    gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
-    gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
-    gamma_PN_0 = 1.00000000000000
-    gamma_PN_4 = 1.0 - 5.41666666666667*Cons.nu
-    gamma_PN_5 = (Vars.S_ell*(0.888888888888889*Cons.nu + 3.33333333333333) + 2.0*Vars.Sigma_ell*Cons.delta)/Cons.M**2
-    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
     a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_0 = 1.00000000000000
+    gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
+    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
+    gamma_PN_5 = (Vars.S_ell*(0.888888888888889*Cons.nu + 3.33333333333333) + 2.0*Vars.Sigma_ell*Cons.delta)/Cons.M**2
+    gamma_PN_4 = 1.0 - 5.41666666666667*Cons.nu
+    gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
     return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v**2*(a_ell_2 + a_ell_4*Vars.v**2))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + Vars.v*(gamma_PN_3 + Vars.v*(gamma_PN_4 + gamma_PN_5*Vars.v))))/Cons.M**3
 
 
@@ -833,14 +833,14 @@ def OmegaVec_chiVec_2_3p0(Cons,Vars):
 @njit
 def OmegaVec_3p0(Cons,Vars):
     a_ell_4 = Vars.S_n*(5.77777777777778*Cons.nu**2 + 14.75*Cons.nu + 1.5) + Vars.Sigma_n*Cons.delta*(2.83333333333333*Cons.nu**2 + 9.125*Cons.nu + 1.5)
-    gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
-    gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
-    gamma_PN_0 = 1.00000000000000
-    gamma_PN_6 = 0.0123456790123457*Cons.nu**3 + 6.36111111111111*Cons.nu**2 - 2.98177812235564*Cons.nu + 1.0
-    gamma_PN_4 = 1.0 - 5.41666666666667*Cons.nu
-    gamma_PN_5 = (Vars.S_ell*(0.888888888888889*Cons.nu + 3.33333333333333) + 2.0*Vars.Sigma_ell*Cons.delta)/Cons.M**2
-    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
     a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_6 = 0.0123456790123457*Cons.nu**3 + 6.36111111111111*Cons.nu**2 - 2.98177812235564*Cons.nu + 1.0
+    gamma_PN_0 = 1.00000000000000
+    gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
+    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
+    gamma_PN_5 = (Vars.S_ell*(0.888888888888889*Cons.nu + 3.33333333333333) + 2.0*Vars.Sigma_ell*Cons.delta)/Cons.M**2
+    gamma_PN_4 = 1.0 - 5.41666666666667*Cons.nu
+    gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
     return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v**2*(a_ell_2 + a_ell_4*Vars.v**2))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + Vars.v*(gamma_PN_3 + Vars.v*(gamma_PN_4 + Vars.v*(gamma_PN_5 + gamma_PN_6*Vars.v)))))/Cons.M**3
 
 
@@ -948,15 +948,15 @@ def OmegaVec_chiVec_2_3p5(Cons,Vars):
 @njit
 def OmegaVec_3p5(Cons,Vars):
     a_ell_4 = Vars.S_n*(5.77777777777778*Cons.nu**2 + 14.75*Cons.nu + 1.5) + Vars.Sigma_n*Cons.delta*(2.83333333333333*Cons.nu**2 + 9.125*Cons.nu + 1.5)
-    gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
-    gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
-    gamma_PN_0 = 1.00000000000000
+    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_7 = (Vars.S_ell*(-6.0*Cons.nu**2 - 10.5833333333333*Cons.nu + 5.0) - 2.66666666666667*Vars.Sigma_ell*Cons.delta*Cons.nu**2 + Vars.Sigma_ell*Cons.delta*(3.0 - 10.1666666666667*Cons.nu))/Cons.M**2
     gamma_PN_6 = 0.0123456790123457*Cons.nu**3 + 6.36111111111111*Cons.nu**2 - 2.98177812235564*Cons.nu + 1.0
+    gamma_PN_0 = 1.00000000000000
+    gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
+    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
     gamma_PN_5 = (Vars.S_ell*(0.888888888888889*Cons.nu + 3.33333333333333) + 2.0*Vars.Sigma_ell*Cons.delta)/Cons.M**2
     gamma_PN_4 = 1.0 - 5.41666666666667*Cons.nu
-    gamma_PN_7 = (Vars.S_ell*(-6.0*Cons.nu**2 - 10.5833333333333*Cons.nu + 5.0) - 2.66666666666667*Vars.Sigma_ell*Cons.delta*Cons.nu**2 + Vars.Sigma_ell*Cons.delta*(3.0 - 10.1666666666667*Cons.nu))/Cons.M**2
-    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
-    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
     return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v**2*(a_ell_2 + a_ell_4*Vars.v**2))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + Vars.v*(gamma_PN_3 + Vars.v*(gamma_PN_4 + Vars.v*(gamma_PN_5 + Vars.v*(gamma_PN_6 + gamma_PN_7*Vars.v))))))/Cons.M**3
 
 
@@ -1065,15 +1065,15 @@ def OmegaVec_chiVec_2_4p0(Cons,Vars):
 @njit
 def OmegaVec_4p0(Cons,Vars):
     a_ell_4 = Vars.S_n*(5.77777777777778*Cons.nu**2 + 14.75*Cons.nu + 1.5) + Vars.Sigma_n*Cons.delta*(2.83333333333333*Cons.nu**2 + 9.125*Cons.nu + 1.5)
-    gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
-    gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
-    gamma_PN_0 = 1.00000000000000
+    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_7 = (Vars.S_ell*(-6.0*Cons.nu**2 - 10.5833333333333*Cons.nu + 5.0) - 2.66666666666667*Vars.Sigma_ell*Cons.delta*Cons.nu**2 + Vars.Sigma_ell*Cons.delta*(3.0 - 10.1666666666667*Cons.nu))/Cons.M**2
     gamma_PN_6 = 0.0123456790123457*Cons.nu**3 + 6.36111111111111*Cons.nu**2 - 2.98177812235564*Cons.nu + 1.0
+    gamma_PN_0 = 1.00000000000000
+    gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
+    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
     gamma_PN_5 = (Vars.S_ell*(0.888888888888889*Cons.nu + 3.33333333333333) + 2.0*Vars.Sigma_ell*Cons.delta)/Cons.M**2
     gamma_PN_4 = 1.0 - 5.41666666666667*Cons.nu
-    gamma_PN_7 = (Vars.S_ell*(-6.0*Cons.nu**2 - 10.5833333333333*Cons.nu + 5.0) - 2.66666666666667*Vars.Sigma_ell*Cons.delta*Cons.nu**2 + Vars.Sigma_ell*Cons.delta*(3.0 - 10.1666666666667*Cons.nu))/Cons.M**2
-    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
-    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
     return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v**2*(a_ell_2 + a_ell_4*Vars.v**2))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + Vars.v*(gamma_PN_3 + Vars.v*(gamma_PN_4 + Vars.v*(gamma_PN_5 + Vars.v*(gamma_PN_6 + gamma_PN_7*Vars.v))))))/Cons.M**3
 
 
@@ -1136,13 +1136,16 @@ class PNEv:
         if PNEv.Vars.v>=1.0 and PNEv.NotForward:
             print("Beyond domain of PN validity, this is a good way to terminate.")
             PNEv.terminal1=False
+        if y[0]>=PNEv.v_end or y[0]<=PNEv.v_start:
+            print("Integration finished.")
+            PNEv.terminal1=False
         #if dydt[0]<1.0e-12 and PNEv.NotForward:
         #    print("v is decreasing, which is not an uncommon way to stop.")
         #    PNEv.terminal2=False
         return dydt
         
     def Evolution(wHat_i, xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, R_i,
-        t_PNStart=False, t_PNEnd=False, PNEvolutionOrder=3.5, TaylorTn=1, StepsPerOrbit=32, ForwardInTime=True, tol=1e-8, MinStep=1e-7): 
+        omega_start=None, omega_end=None, t_PNStart=False, t_PNEnd=False, PNEvolutionOrder=3.5, TaylorTn=1, StepsPerOrbit=32, ForwardInTime=True, tol=1e-8, MinStep=1e-7): 
         # Initialization of constants
         PNEv.terminal1=True
         PNEv.terminal2=True
@@ -1186,6 +1189,12 @@ class PNEv:
             65:TaylorT5_3p0,
             75:TaylorT5_3p5,
             85:TaylorT5_4p0}
+        if omega_start is None:
+            omega_start=0.0
+        if omega_end is None:
+            omega_end=1.0/(M1_i+M2_i)
+        PNEv.v_start=(omega_start*(M1_i+M2_i))**(1/3)
+        PNEv.v_end=(omega_end*(M1_i+M2_i))**(1/3)
         z=np.array([0.0])
         PNEv.Cons=Cons(z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,True,True)
         PNEv.Vars=Vars(z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z)
@@ -1209,24 +1218,46 @@ class PNEv:
                 0.0,0.0,0.0,R_i[0],R_i[1],R_i[2],R_i[3]], method='DOP853',
                 t_eval=time, dense_output=True, events=terminate, rtol=tol, atol=tol)
         except:
+            PNEv.terminal1=True
+            PNEv.terminal2=True
             yy=solve_ivp(PNEv.Integrand, [time[0],time[-1]], [v_i,0.0,
                 0.0,0.0,0.0,R_i[0],R_i[1],R_i[2],R_i[3]], method='DOP853',
-                dense_output=True, events=terminate, rtol=tol, atol=tol)
+                events=terminate, rtol=tol, atol=tol)
+            PNEv.terminal1=True
+            PNEv.terminal2=True
             time=time[time<yy.t[-1]]
             yy=solve_ivp(PNEv.Integrand, [time[0],time[-1]], [v_i,0.0,
                 0.0,0.0,0.0,R_i[0],R_i[1],R_i[2],R_i[3]], method='DOP853',
                 t_eval=time, dense_output=True, events=terminate, rtol=tol, atol=tol)
         if ForwardInTime:
+            PNEv.terminal1=True
+            PNEv.terminal2=True
             PNEv.NotForward=False
             time=[0.0]
             TStart=-3*TMerger
             if t_PNStart:
                 TStart=t_PNStart
+            if omega_start!=0.0:
+                TStart=TMerger-10.0/(256*PNEv.Cons.nu)*(np.pi/(omega_start*PNEv.Cons.M))**(8/3)
             while time[-1]>TStart:
                 time.append(time[-1]-(2*PNEv.Cons.M*(256*PNEv.Cons.nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit)[0])
-            yyForward=solve_ivp(PNEv.Integrand, [time[0],time[-1]], [v_i,0.0,
-                0.0,0.0,0.0,R_i[0],R_i[1],R_i[2],R_i[3]], method='DOP853',
-                t_eval=time, dense_output=True, rtol=tol, atol=tol)
+            time=np.array(time)
+            try:
+                yyForward=solve_ivp(PNEv.Integrand, [time[0],time[-1]], [v_i,0.0,
+                    0.0,0.0,0.0,R_i[0],R_i[1],R_i[2],R_i[3]], method='DOP853',
+                    t_eval=time, dense_output=True, events=terminate, rtol=tol, atol=tol)
+            except:
+                PNEv.terminal1=True
+                PNEv.terminal2=True
+                yyForward=solve_ivp(PNEv.Integrand, [time[0],time[-1]], [v_i,0.0,
+                    0.0,0.0,0.0,R_i[0],R_i[1],R_i[2],R_i[3]], method='DOP853',
+                    events=terminate, rtol=tol, atol=tol)
+                PNEv.terminal1=True
+                PNEv.terminal2=True
+                time=time[time>yyForward.t[-1]]
+                yyForward=solve_ivp(PNEv.Integrand, [time[0],time[-1]], [v_i,0.0,
+                    0.0,0.0,0.0,R_i[0],R_i[1],R_i[2],R_i[3]], method='DOP853',
+                    t_eval=time, dense_output=True, events=terminate, rtol=tol, atol=tol)
             yy.t=np.append(yyForward.t[1:][::-1],yy.t)
             data=np.empty((9,len(yy.t)))
             for i in range(9):
