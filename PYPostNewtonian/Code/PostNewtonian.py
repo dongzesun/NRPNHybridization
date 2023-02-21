@@ -7,7 +7,7 @@ import quaternionic
 import quaternion
 import sxs
 
-def PNWaveform(q,omega_0,chi1_0,chi2_0, frame_0=quaternion.quaternion(1,0,0,0),t_0=0.0, omega_start=None, omega_end=None,t_PNStart=False, t_PNEnd=False, datatype="h", return_chi=False, PNEvolutionOrder=4.0, PNWaveformModeOrder=3.5, TaylorTn=1, StepsPerOrbit=32, ForwardInTime=True, tol=1e-10, MinStep=1e-7):
+def PNWaveform(q,omega_0,chi1_0,chi2_0, frame_0=quaternion.quaternion(1,0,0,0),t_0=0.0, omega_start=None, omega_end=None,t_PNStart=False, t_PNEnd=False, datatype="h", return_chi=False, PNEvolutionOrder=4.0, PNWaveformModeOrder=3.5, TaylorTn=1, StepsPerOrbit=32, tol=1e-10, MinStep=1e-7):
     """
     q = m1/m2, float number,
     omega_0: orbital frequency at t_0, float number,
@@ -24,7 +24,6 @@ def PNWaveform(q,omega_0,chi1_0,chi2_0, frame_0=quaternion.quaternion(1,0,0,0),t
     PNWaveformModeOrder: float number in [0,0.5,1,1.5,2,2.5,3,3.5,4], default is 3.5,
     TaylorTn: now only TaylorT1 is working, so its int number in [1], default is 1,
     StepsPerOrbit: float number,
-    ForwardInTime: whether to evlove PN forward in time, bool number, default if True,
     tol: tolerance of the integrator, float number,
     MinStep: minimal time interval for the PN waveform, float number.
     """
@@ -69,7 +68,7 @@ def PNWaveform(q,omega_0,chi1_0,chi2_0, frame_0=quaternion.quaternion(1,0,0,0),t
             -quaternionic.array([0,chi2_0[0],chi2_0[1],chi2_0[2]]).normalized*zHat).normalized
   
     PN=PNEvolution.PNEv.Evolution(wHat, xHat, yHat, zHat, m1, m2, v_0,S_chi1_0, S_chi2_0, quaternion.as_float_array(frame_0), omega_start, omega_end, t_PNStart, t_PNEnd,
-        PNEvolutionOrder, TaylorTn, StepsPerOrbit, ForwardInTime, tol, MinStep)# Evolve PN parameters, PN.t is PN time, PN.y=[v, chi1_x, chi1_y
+        PNEvolutionOrder, TaylorTn, StepsPerOrbit, tol, MinStep)# Evolve PN parameters, PN.t is PN time, PN.y=[v, chi1_x, chi1_y
                                                         # chi2_x, chi2_y, frame_w, frame_x, frame_y, frame_z]
     W_PN_corot=scri.WaveformModes()
     W_PN_corot.t=PN.t+t_0
