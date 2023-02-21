@@ -12,10 +12,14 @@ def PNWaveform(q,omega_0,chi1_0,chi2_0,e_0=0.001,xi_0=0.0,frame_0=quaternion.qua
     q = m1/m2, float number,
     omega_0: orbital frequency at t_0, float number,
     chi1_0 and chi2_0: spin vectors at t_0, 3-d vectors,
+    e_0: eccentricity at t_0, float number,
+    xi_0: eccentric anomaly at t_0, float number,
     frame_0: the frame quaternion at t_0, quaternionic_array object,
+    omega_start: the start orbital frequency of PN, float number, shouldn't be used together with t_PNStart,
+    omega_end: the end orbital frequency of PN, float number, shouldn't be used together with t_PNEnd,
     t_0: the corresponding time of the above given initial values, float number,
-    t_PNStart: the start time of PN relative to t_0: t_PNStart=t_real_start-t_0, float number. If false, default is t_0-t_real_start=3(t_merger-t_0),
-    t_PNEnd: the end time of PN relative to t_0: t_PNEnd=t_real_end-t_0, float number. If false, default is merger time,
+    t_PNStart: the start time of PN relative to t_0: t_PNStart=t_real_start-t_0, float number, shouldn't be used together with omega_start. If false, default is t_0-t_real_start=3(t_merger-t_0),
+    t_PNEnd: the end time of PN relative to t_0: t_PNEnd=t_real_end-t_0, float number, should't be used together with omega_end. If false, default is merger time,
     datatype: "h" for strain and "Psi_M" for Moreschi supermomentum,
     return_chi: whether to return chi as quaternion array of time, bool number,
     PNEvolutionOrder: float number in [0,0.5,1,1.5,2,2.5,3,3.5,4], default is 3.5,
@@ -27,6 +31,14 @@ def PNWaveform(q,omega_0,chi1_0,chi2_0,e_0=0.001,xi_0=0.0,frame_0=quaternion.qua
     MinStep: minimal time interval for the PN waveform, float number.
     """
 
+    if (omega_start!=None) and (not t_PNStart):
+        raise Exception('Cannot specify both omega_start and t_PNStart.')
+    if (omega_end!=None) and (not t_PNEnd):
+        raise Exception('Cannot specify both omega_end and t_PNEnd.')
+    if omega_start != None omega_start > omega_0 or t_PNStart > 0:
+        raise Exception('omega_start cannot be larger than omega_0, and t_PNStart should be smaller than 0.')
+    if omega_end != None and omega_end < omega_0:
+        raise Exception('omega_end cannot be smaller than omega_0.')
     if not PNEvolutionOrder in [0,0.5,1,1.5,2,2.5,3,3.5,4]:
         message=("PNEvolutionOrder must be a float number in [0,0.5,1,1.5,2,2.5,3,3.5,4].")
         raise ValueError(message)
