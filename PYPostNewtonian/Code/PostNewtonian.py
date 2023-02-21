@@ -29,11 +29,11 @@ def PNWaveform(q,omega_0,chi1_0,chi2_0, frame_0=quaternion.quaternion(1,0,0,0),t
     MinStep: minimal time interval for the PN waveform, float number.
     """
 
-    if (omega_start!=None) and (not t_PNStart):
+    if (omega_start!=None) and t_PNStart:
         raise Exception('Cannot specify both omega_start and t_PNStart.')
-    if (omega_end!=None) and (not t_PNEnd):
+    if (omega_end!=None) and t_PNEnd:
         raise Exception('Cannot specify both omega_end and t_PNEnd.')
-    if omega_start != None omega_start > omega_0 or t_PNStart > 0:
+    if omega_start != None and omega_start > omega_0 or t_PNStart > 0:
         raise Exception('omega_start cannot be larger than omega_0, and t_PNStart should be smaller than 0.')
     if omega_end != None and omega_end < omega_0:
         raise Exception('omega_end cannot be smaller than omega_0.')
