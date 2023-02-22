@@ -3,4 +3,5 @@ __pycache__
 
 /data_q8_7d
 /data_HybTest
-/test.png
+/test*.png
+/test*.pdf
