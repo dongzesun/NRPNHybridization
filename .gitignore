@@ -1,2 +1,6 @@
 *.swp
 __pycache__
+
+/data_q8_7d
+/data_HybTest
+/test.png
