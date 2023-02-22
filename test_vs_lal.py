@@ -5,6 +5,7 @@ import matplotlib.pyplot as P
 import lal
 import lalsimulation as lalsim
 import quaternion
+import h5py
 
 from PYPostNewtonian.Code import PostNewtonian
 
@@ -42,6 +43,42 @@ def mode_dict_from_list(h_modes):
         raise Exception('Mismatch between length of h_modes and lmax.')
 
     return h_dict
+
+
+#-----------------------------------------------------------------------------
+def load_NR(case, NRDir):
+    """ Loads NR data, and aligns it so that the coorbital frame at
+        t=tStart_nr is aligned with the inertial frame.
+    """
+
+    # Load processed NR data (junk is already removed, based on settings in
+    # process_data.py)
+    NR_processed_dir = f'{NRDir}/processed_data'
+    processed_h5file = h5py.File(f'{NR_processed_dir}/Case_{case}.h5', 'r')
+    t, h = processed_h5file['data/t'][()], processed_h5file['data/h'][()]
+    q = processed_h5file['Params/q'][()]
+    chiA = processed_h5file['Params/chiA'][()]
+    chiB = processed_h5file['Params/chiB'][()]
+
+    metadata = processed_h5file['Metadata']
+    metadata_dict = {}
+    for key in metadata.keys():
+        metadata_dict[key] = metadata[key][()]
+
+    # Load NR dynamics
+    NR_dynamics_dir = f'{NRDir}/dynamics_data'
+    dynamics_h5file = h5py.File(f'{NR_dynamics_dir}/Case_{case}.h5', 'r')
+    omega = dynamics_h5file['data/omega'][()]
+    orbphase = dynamics_h5file['data/orbphase'][()]
+    quat_copr = dynamics_h5file['data/qc'][()]
+    chiA_coorb = dynamics_h5file['data/chiA_coorb'][()]
+    chiB_coorb = dynamics_h5file['data/chiB_coorb'][()]
+
+    # Convert to dict format
+    # Flip sign to match convention of Dongze's code
+    h_dict = mode_dict_from_list(-h)
+
+    return t, h_dict, q, chiA, chiB, omega
 
 
 #-----------------------------------------------------------------------------
@@ -83,6 +120,8 @@ def generate_lal_pn(q, chiA0, chiB0, omega_ref, omega_start, omega_end, t_ref,
         initial spins, returned spins, other vectors like LNhat, etc.
     """
 
+    if omega_end is None:
+        omega_end = 0
     if omega_start > omega_ref:
         raise Exception('omega_start cannot be larger than omega_ref')
     if omega_end != 0 and omega_end < omega_ref:
@@ -208,6 +247,8 @@ def generate_lal_pn_one_way(q, chiA0, chiB0, omega_ref, omega_final, t_ref,
     s2x, s2y, s2z = chiB0
 
     # Final frequency (can go backwards as well)
+    if omega_final is None:
+        omega_final = 0
     fEnd = omega_final/np.pi/MT
 
     # initial value of orbital angular momentum unit vector, i.e at fStart
@@ -279,8 +320,9 @@ def generate_lal_pn_one_way(q, chiA0, chiB0, omega_ref, omega_final, t_ref,
 #-----------------------------------------------------------------------------
 def generate_dongze_pn(q, chiA0, chiB0, omega0, t_ref, omega_start, omega_end):
 
-    if omega_end == 0:
-        omega_end = None
+    #FIXME Should not need to do this
+    if omega_start == omega_ref:
+        omega_start = None
 
     # At this point w is in corotating frame
     w, chiA, chiB = PostNewtonian.PNWaveform(q, omega0,
@@ -301,15 +343,25 @@ def generate_dongze_pn(q, chiA0, chiB0, omega0, t_ref, omega_start, omega_end):
     return t, h_dict, chiA, chiB
 
 
-# Params corresponding to q8_7d_0701
-q = 2.8270343151377024
-chiA0 = [-0.31006488,  0.0156336,  -0.51537769]
-chiB0 = [0.15821173, -0.15421887, -0.25157237]
-omega_ref = 0.013182673547263367
-omega_start = omega_ref/1.2    # something smaller
-omega_end = 0       # Go forward until PN dies
-t_ref = 0
 
+
+base_dir = 'data_HybTest'
+case = '0011'
+Res = 'HiRes'
+NRDir =  f'{base_dir}/{Res}/NR'
+
+# Load NR data (extrapolated), where at the initial index the inertial frame
+# is the same as the coorbital frame.
+t_nr, h_nr, q_nr, chiA_nr, chiB_nr, omega_nr = load_NR(case, NRDir)
+
+
+q = q_nr
+chiA0 = chiA_nr[0]
+chiB0 = chiB_nr[0]
+omega_ref = omega_nr[0]
+omega_start = omega_ref
+omega_end = None       # Go forward until PN dies
+t_ref = t_nr[0]
 
 omega_pn, orbphase_pn, chiA_pn, chiB_pn, LNhat_pn, t_pn, h_pn \
         = generate_lal_pn(q, chiA0, chiB0, omega_ref, omega_start, omega_end,
@@ -334,34 +386,57 @@ for idx in range(3):
 
 title_tag = f"$q={q:.2f}$ {chiA_tag} {chiB_tag} at t={t_ref:.2f}"
 
-P.figure(figsize=(12, 12))
-P.subplots_adjust(hspace=0)
 
 # Plot the waveform
-mode_keys_list = ['h_l2m2', 'h_l2m1']
+mode_keys_list = ['h_l2m2', 'h_l2m1', 'h_l2m0']
+P.figure(figsize=(12, len(mode_keys_list)*3+6))
+P.subplots_adjust(hspace=0)
+# Truncate to some time range. This way python figures out ylims for you.
+tmin = -21000
+tmax = -16000
+keep_nr = np.logical_and(t_nr >= tmin, t_nr <= tmax)
+keep_pn = np.logical_and(t_pn >= tmin, t_pn <= tmax)
+keep_pn_d = np.logical_and(t_pn_d >= tmin, t_pn_d <= tmax)
+plot_abs = True
 for idx, mode_key in enumerate(mode_keys_list):
-    ax = P.subplot(4,1,idx+1, aspect='auto')
-
-    ax.plot(t_pn, np.real(h_pn[mode_key]), label='lal_pn')
-    ax.plot(t_pn_d, np.real(h_pn_d[mode_key]), label='dongze_pn', ls='--')
-
-    ax.set_ylabel(mode_key)
+    ax = P.subplot(len(mode_keys_list)+2,1,idx+1, aspect='auto')
+    def abs_or_real(data):
+        if plot_abs:
+            return np.abs(data)
+        else:
+            return np.real(data)
+    ax.plot(t_nr[keep_nr], abs_or_real(h_nr[mode_key][keep_nr]), label='nr')
+    ax.plot(t_pn[keep_pn], abs_or_real(h_pn[mode_key][keep_pn]),
+            label='lal_pn', ls='--')
+    ax.plot(t_pn_d[keep_pn_d], abs_or_real(h_pn_d[mode_key][keep_pn_d]),
+            label='dongze_pn', ls='--')
+    ax.set_xlim(tmin, tmax)
+    if plot_abs:
+        ax.set_ylabel(f'|{mode_key}|')
+    else:
+        ax.set_ylabel(mode_key)
     ax.set_xlabel('t')
     if idx == 0:
         ax.legend(loc='best')
 
 # Plot spins
-ax = P.subplot(4,1,3, aspect='auto')
+ax = P.subplot(len(mode_keys_list)+2,1,len(mode_keys_list)+1, aspect='auto')
 spin_idx = 0
-ax.plot(t_pn, chiA_pn.T[spin_idx], label='lal_pn')
-ax.plot(t_pn_d, chiA_pn_d.T[spin_idx], label='dongze_pn', ls='--')
+ax.plot(t_nr[keep_nr], chiA_nr.T[spin_idx][keep_nr], label='nr')
+ax.plot(t_pn[keep_pn], chiA_pn.T[spin_idx][keep_pn], label='lal_pn', ls='--')
+ax.plot(t_pn_d[keep_pn_d], chiA_pn_d.T[spin_idx][keep_pn_d],
+        label='dongze_pn', ls='--')
 ax.set_ylabel('chiA'+['x','y','z'][spin_idx])
 ax.set_xlabel('t')
-ax = P.subplot(4,1,4, aspect='auto')
-ax.plot(t_pn, chiB_pn.T[spin_idx], label='lal_pn')
-ax.plot(t_pn_d, chiB_pn_d.T[spin_idx], label='dongze_pn', ls='--')
+ax.set_xlim(tmin, tmax)
+ax = P.subplot(len(mode_keys_list)+2,1,len(mode_keys_list)+2, aspect='auto')
+ax.plot(t_nr[keep_nr], chiB_nr.T[spin_idx][keep_nr], label='nr')
+ax.plot(t_pn[keep_pn], chiB_pn.T[spin_idx][keep_pn], label='lal_pn', ls='--')
+ax.plot(t_pn_d[keep_pn_d], chiB_pn_d.T[spin_idx][keep_pn_d],
+        label='dongze_pn', ls='--')
 ax.set_ylabel('chiB'+['x','y','z'][spin_idx])
 ax.set_xlabel('t')
+ax.set_xlim(tmin, tmax)
 
 P.suptitle(title_tag, y=0.93)
 P.savefig('test.png', bbox_inches='tight')
