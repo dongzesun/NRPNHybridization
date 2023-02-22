@@ -78,7 +78,7 @@ def load_NR(case, NRDir):
     # Flip sign to match convention of Dongze's code
     h_dict = mode_dict_from_list(-h)
 
-    return t, h_dict, q, chiA, chiB, omega
+    return t, h_dict, q, chiA, chiB, omega, orbphase
 
 
 #-----------------------------------------------------------------------------
@@ -343,101 +343,106 @@ def generate_dongze_pn(q, chiA0, chiB0, omega0, t_ref, omega_start, omega_end):
     return t, h_dict, chiA, chiB
 
 
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+if __name__ == "__main__":
 
+    base_dir = 'data_HybTest'
+    case = '0011'
+    Res = 'HiRes'
+    NRDir =  f'{base_dir}/{Res}/NR'
 
-base_dir = 'data_HybTest'
-case = '0011'
-Res = 'HiRes'
-NRDir =  f'{base_dir}/{Res}/NR'
+    # Load NR data (extrapolated), where at the initial index the inertial frame
+    # is the same as the coorbital frame.
+    t_nr, h_nr, q_nr, chiA_nr, chiB_nr, omega_nr, orbphase_nr \
+            = load_NR(case, NRDir)
 
-# Load NR data (extrapolated), where at the initial index the inertial frame
-# is the same as the coorbital frame.
-t_nr, h_nr, q_nr, chiA_nr, chiB_nr, omega_nr = load_NR(case, NRDir)
+    q = q_nr
+    chiA0 = chiA_nr[0]
+    chiB0 = chiB_nr[0]
+    omega_ref = omega_nr[0]
+    omega_start = omega_ref
+    omega_end = None       # Go forward until PN dies
+    t_ref = t_nr[0]
 
+    omega_pn, orbphase_pn, chiA_pn, chiB_pn, LNhat_pn, t_pn, h_pn \
+            = generate_lal_pn(q, chiA0, chiB0, omega_ref, omega_start,
+                              omega_end, t_ref, approximant='SpinTaylorT4')
 
-q = q_nr
-chiA0 = chiA_nr[0]
-chiB0 = chiB_nr[0]
-omega_ref = omega_nr[0]
-omega_start = omega_ref
-omega_end = None       # Go forward until PN dies
-t_ref = t_nr[0]
+    t_pn_d, h_pn_d, chiA_pn_d, chiB_pn_d  \
+        = generate_dongze_pn(q, chiA0, chiB0, omega_ref, t_ref,
+                             omega_start, omega_end)
 
-omega_pn, orbphase_pn, chiA_pn, chiB_pn, LNhat_pn, t_pn, h_pn \
-        = generate_lal_pn(q, chiA0, chiB0, omega_ref, omega_start, omega_end,
-                t_ref, approximant='SpinTaylorT4')
-
-t_pn_d, h_pn_d, chiA_pn_d, chiB_pn_d  \
-    = generate_dongze_pn(q, chiA0, chiB0, omega_ref, t_ref,
-                         omega_start, omega_end)
-
-# Title tag for plots
-chiA_tag = '$\chi_A$=['
-chiB_tag = '$\chi_B$=['
-for idx in range(3):
-    chiA_tag += f"{chiA0[idx]:.2f}"
-    chiB_tag += f"{chiB0[idx]:.2f}"
-    if idx == 2:
-        chiA_tag += ']'
-        chiB_tag += ']'
-    else:
-        chiA_tag += ', '
-        chiB_tag += ', '
-
-title_tag = f"$q={q:.2f}$ {chiA_tag} {chiB_tag} at t={t_ref:.2f}"
-
-
-# Plot the waveform
-mode_keys_list = ['h_l2m2', 'h_l2m1', 'h_l2m0']
-P.figure(figsize=(12, len(mode_keys_list)*3+6))
-P.subplots_adjust(hspace=0)
-# Truncate to some time range. This way python figures out ylims for you.
-tmin = -21000
-tmax = -16000
-keep_nr = np.logical_and(t_nr >= tmin, t_nr <= tmax)
-keep_pn = np.logical_and(t_pn >= tmin, t_pn <= tmax)
-keep_pn_d = np.logical_and(t_pn_d >= tmin, t_pn_d <= tmax)
-plot_abs = True
-for idx, mode_key in enumerate(mode_keys_list):
-    ax = P.subplot(len(mode_keys_list)+2,1,idx+1, aspect='auto')
-    def abs_or_real(data):
-        if plot_abs:
-            return np.abs(data)
+    # Title tag for plots
+    chiA_tag = '$\chi_A$=['
+    chiB_tag = '$\chi_B$=['
+    for idx in range(3):
+        chiA_tag += f"{chiA0[idx]:.2f}"
+        chiB_tag += f"{chiB0[idx]:.2f}"
+        if idx == 2:
+            chiA_tag += ']'
+            chiB_tag += ']'
         else:
-            return np.real(data)
-    ax.plot(t_nr[keep_nr], abs_or_real(h_nr[mode_key][keep_nr]), label='nr')
-    ax.plot(t_pn[keep_pn], abs_or_real(h_pn[mode_key][keep_pn]),
+            chiA_tag += ', '
+            chiB_tag += ', '
+
+    title_tag = f"{base_dir}/{case} $q={q:.2f}$ {chiA_tag} {chiB_tag} at " \
+                f"t={t_ref:.2f}"
+
+
+    # Plot the waveform
+    mode_keys_list = ['h_l2m2', 'h_l2m1', 'h_l2m0']
+    P.figure(figsize=(12, len(mode_keys_list)*3+6))
+    P.subplots_adjust(hspace=0)
+    # Truncate to some time range. This way python figures out ylims for you.
+    tmin = -21000
+    tmax = -16000
+    keep_nr = np.logical_and(t_nr >= tmin, t_nr <= tmax)
+    keep_pn = np.logical_and(t_pn >= tmin, t_pn <= tmax)
+    keep_pn_d = np.logical_and(t_pn_d >= tmin, t_pn_d <= tmax)
+    plot_abs = True
+    for idx, mode_key in enumerate(mode_keys_list):
+        ax = P.subplot(len(mode_keys_list)+2,1,idx+1, aspect='auto')
+        def abs_or_real(data):
+            if plot_abs:
+                return np.abs(data)
+            else:
+                return np.real(data)
+        ax.plot(t_nr[keep_nr], abs_or_real(h_nr[mode_key][keep_nr]), label='nr')
+        ax.plot(t_pn[keep_pn], abs_or_real(h_pn[mode_key][keep_pn]),
+                label='lal_pn', ls='--')
+        ax.plot(t_pn_d[keep_pn_d], abs_or_real(h_pn_d[mode_key][keep_pn_d]),
+                label='dongze_pn', ls='--')
+        ax.set_xlim(tmin, tmax)
+        if plot_abs:
+            ax.set_ylabel(f'|{mode_key}|')
+        else:
+            ax.set_ylabel(mode_key)
+        ax.set_xlabel('t')
+        if idx == 0:
+            ax.legend(loc='best')
+
+    # Plot spins
+    ax = P.subplot(len(mode_keys_list)+2,1,len(mode_keys_list)+1, aspect='auto')
+    spin_idx = 0
+    ax.plot(t_nr[keep_nr], chiA_nr.T[spin_idx][keep_nr], label='nr')
+    ax.plot(t_pn[keep_pn], chiA_pn.T[spin_idx][keep_pn],
             label='lal_pn', ls='--')
-    ax.plot(t_pn_d[keep_pn_d], abs_or_real(h_pn_d[mode_key][keep_pn_d]),
+    ax.plot(t_pn_d[keep_pn_d], chiA_pn_d.T[spin_idx][keep_pn_d],
             label='dongze_pn', ls='--')
-    ax.set_xlim(tmin, tmax)
-    if plot_abs:
-        ax.set_ylabel(f'|{mode_key}|')
-    else:
-        ax.set_ylabel(mode_key)
+    ax.set_ylabel('chiA'+['x','y','z'][spin_idx])
     ax.set_xlabel('t')
-    if idx == 0:
-        ax.legend(loc='best')
+    ax.set_xlim(tmin, tmax)
+    ax = P.subplot(len(mode_keys_list)+2,1,len(mode_keys_list)+2, aspect='auto')
+    ax.plot(t_nr[keep_nr], chiB_nr.T[spin_idx][keep_nr], label='nr')
+    ax.plot(t_pn[keep_pn], chiB_pn.T[spin_idx][keep_pn],
+            label='lal_pn', ls='--')
+    ax.plot(t_pn_d[keep_pn_d], chiB_pn_d.T[spin_idx][keep_pn_d],
+            label='dongze_pn', ls='--')
+    ax.set_ylabel('chiB'+['x','y','z'][spin_idx])
+    ax.set_xlabel('t')
+    ax.set_xlim(tmin, tmax)
 
-# Plot spins
-ax = P.subplot(len(mode_keys_list)+2,1,len(mode_keys_list)+1, aspect='auto')
-spin_idx = 0
-ax.plot(t_nr[keep_nr], chiA_nr.T[spin_idx][keep_nr], label='nr')
-ax.plot(t_pn[keep_pn], chiA_pn.T[spin_idx][keep_pn], label='lal_pn', ls='--')
-ax.plot(t_pn_d[keep_pn_d], chiA_pn_d.T[spin_idx][keep_pn_d],
-        label='dongze_pn', ls='--')
-ax.set_ylabel('chiA'+['x','y','z'][spin_idx])
-ax.set_xlabel('t')
-ax.set_xlim(tmin, tmax)
-ax = P.subplot(len(mode_keys_list)+2,1,len(mode_keys_list)+2, aspect='auto')
-ax.plot(t_nr[keep_nr], chiB_nr.T[spin_idx][keep_nr], label='nr')
-ax.plot(t_pn[keep_pn], chiB_pn.T[spin_idx][keep_pn], label='lal_pn', ls='--')
-ax.plot(t_pn_d[keep_pn_d], chiB_pn_d.T[spin_idx][keep_pn_d],
-        label='dongze_pn', ls='--')
-ax.set_ylabel('chiB'+['x','y','z'][spin_idx])
-ax.set_xlabel('t')
-ax.set_xlim(tmin, tmax)
-
-P.suptitle(title_tag, y=0.93)
-P.savefig('test.png', bbox_inches='tight')
-P.close()
+    P.suptitle(title_tag, y=0.93)
+    P.savefig('test.png', bbox_inches='tight')
+    P.close()
