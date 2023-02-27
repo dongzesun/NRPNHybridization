@@ -7,14 +7,14 @@ import quaternionic
 import quaternion
 import sxs
 
-def PNWaveform(q,omega_0,chi1_0,chi2_0,e_0=0.001,xi_0=0.0,frame_0=quaternion.quaternion(1.0,0.0,0.0,0.0),t_0=0.0, omega_start=None, omega_end=None,t_PNStart=False, t_PNEnd=False, datatype="h", return_chi=False, PNEvolutionOrder=4.0, PNWaveformModeOrder=3.5, TaylorTn=1, StepsPerOrbit=32, dt=None, ell_max = 8, tol=1e-10, MinStep=1e-7):
+def PNWaveform(q,omega_0,chi1_0,chi2_0,e_0=0.001,xi_0=0.0,frame_0=np.array([1.0,0.0,0.0,0.0]),t_0=0.0, omega_start=None, omega_end=None,t_PNStart=False, t_PNEnd=False, datatype="h", return_chi=False, PNEvolutionOrder=4.0, PNWaveformModeOrder=3.5, TaylorTn='TaylorT1', StepsPerOrbit=32, dt=None, ell_max = 8, tol=1e-10, MinStep=1e-7):
     """
     q = m1/m2, float number,
     omega_0: orbital frequency at t_0, float number,
     chi1_0 and chi2_0: spin vectors at t_0, 3-d vectors,
     e_0: eccentricity at t_0, float number,
     xi_0: eccentric anomaly at t_0, float number,
-    frame_0: the frame quaternion at t_0, quaternionic_array object,
+    frame_0: the frame quaternion at t_0, numpy array object,
     omega_start: the start orbital frequency of PN, float number, shouldn't be used together with t_PNStart,
     omega_end: the end orbital frequency of PN, float number, shouldn't be used together with t_PNEnd,
     t_0: the corresponding time of the above given initial values, float number,
@@ -24,7 +24,7 @@ def PNWaveform(q,omega_0,chi1_0,chi2_0,e_0=0.001,xi_0=0.0,frame_0=quaternion.qua
     return_chi: whether to return chi as quaternion array of time, bool number,
     PNEvolutionOrder: float number in [0,0.5,1,1.5,2,2.5,3,3.5,4], default is 3.5,
     PNWaveformModeOrder: float number in [0,0.5,1,1.5,2,2.5,3,3.5,4], default is 3.5,
-    TaylorTn: now only TaylorT1 is working, so its int number in [1], default is 1,
+    TaylorTn: now only TaylorT1 is working, so it's string in ['TaylorT1'], default is 'TaylorT1',
     StepsPerOrbit: output time steps per orbit, float number,
     dt: output time interval, float number or None, shouldn't be specify together with StepsPerOrbit,
     ell_max: the maximun of l, int number, default is 8,
@@ -46,11 +46,16 @@ def PNWaveform(q,omega_0,chi1_0,chi2_0,e_0=0.001,xi_0=0.0,frame_0=quaternion.qua
     if not PNWaveformModeOrder in [0,0.5,1,1.5,2,2.5,3,3.5,4]:
         message=("PNWaveformModeOrder must be a float number in [0,0.5,1,1.5,2,2.5,3,3.5,4].")
         raise ValueError(message)
-    if not TaylorTn in [1]:
-        message=("TaylorTn must be an int number in [1].")
-        raise ValueError(message)    
+    if not TaylorTn in ['TaylorT1']:
+        message=("TaylorTn must be a string in ['TaylorT1'].")
+        raise ValueError(message)  
+    elif TaylorTn == 'TaylorT1':
+        TaylorTn = 1
     if StepsPerOrbit != 32 and dt !=None:
         message=("Please specify either StepsPerOrbit or dt.")
+        raise ValueError(message)
+    if ell_max > 8 or ell_max < 2:
+        message=("ell_max shoule between 2 and 8.")
         raise ValueError(message)
 
     M=1.0
@@ -74,7 +79,7 @@ def PNWaveform(q,omega_0,chi1_0,chi2_0,e_0=0.001,xi_0=0.0,frame_0=quaternion.qua
         S_chi2_0=np.sqrt(chi2Mag)*np.sqrt(
             -quaternionic.array([0,chi2_0[0],chi2_0[1],chi2_0[2]]).normalized*zHat).normalized
   
-    PN=PNEvolution.PNEv.Evolution(wHat, xHat, yHat, zHat, m1, m2, e_0, xi_0, v_0, S_chi1_0, S_chi2_0, quaternion.as_float_array(frame_0), omega_start, omega_end,t_PNStart, t_PNEnd,
+    PN=PNEvolution.PNEv.Evolution(wHat, xHat, yHat, zHat, m1, m2, e_0, xi_0, v_0, S_chi1_0, S_chi2_0, frame_0, omega_start, omega_end,t_PNStart, t_PNEnd,
         PNEvolutionOrder, TaylorTn, StepsPerOrbit, dt, tol, MinStep)# Evolve PN parameters, PN.t is PN time, PN.y=[v, chi1_x, chi1_y
                                                         # chi2_x, chi2_y, frame_w, frame_x, frame_y, frame_z]
     W_PN_corot=scri.WaveformModes()
@@ -83,13 +88,13 @@ def PNWaveform(q,omega_0,chi1_0,chi2_0,e_0=0.001,xi_0=0.0,frame_0=quaternion.qua
     for i in range(len(W_PN_corot.frame)):
         W_PN_corot.frame[i]=W_PN_corot.frame[i].normalized()
     if datatype=="h":
-        data, ells = PNWaveformModes.Modes(wHat, xHat, yHat, zHat, m1, m2, e_0, xi_0, v_0,S_chi1_0, S_chi2_0, quaternion.as_float_array(frame_0), PN.y, PNWaveformModeOrder)
-        W_PN_corot.data = data[:,ell_max**2+2*ell_max-3]
+        data, ells = PNWaveformModes.Modes(wHat, xHat, yHat, zHat, m1, m2, e_0, xi_0, v_0,S_chi1_0, S_chi2_0, frame_0, PN.y, PNWaveformModeOrder)
+        W_PN_corot.data = data[:,:ell_max**2+2*ell_max-3]
         W_PN_corot.ells = 2, ell_max
         W_PN_corot.dataType=scri.h
     elif datatype=="Psi_M":
-        data, ells = PNPsiMModes.Modes(wHat, xHat, yHat, zHat, m1, m2, v_0,S_chi1_0, S_chi2_0, quaternion.as_float_array(frame_0), PN.y, PNWaveformModeOrder)
-        W_PN_corot.data = data[:,ell_max**2+2*ell_max+1]
+        data, ells = PNPsiMModes.Modes(wHat, xHat, yHat, zHat, m1, m2, v_0,S_chi1_0, S_chi2_0, frame_0, PN.y, PNWaveformModeOrder)
+        W_PN_corot.data = data[:,:ell_max**2+2*ell_max+1]
         W_PN_corot.ells = 0, ell_max
         W_PN_corot.dataType=scri.psi2
         W_PN_corot.data[:,0]=W_PN_corot.data[:,0]-1.0
@@ -99,6 +104,6 @@ def PNWaveform(q,omega_0,chi1_0,chi2_0,e_0=0.001,xi_0=0.0,frame_0=quaternion.qua
         R_S2=np.exp(PN.y[3]*xHat + PN.y[4]*yHat)
         chiVec1=quaternion.from_float_array(S_chi1_0*R_S1*zHat*R_S1.conjugate()*S_chi1_0.conjugate())
         chiVec2=quaternion.from_float_array(S_chi2_0*R_S2*zHat*R_S2.conjugate()*S_chi2_0.conjugate())
-        return W_PN_corot, chiVec1, chiVec2
+        return W_PN_corot, quaternion.as_float_array(chiVec1)[:,1:], quaternion.as_float_array(chiVec2)[:,1:]
     else:
         return W_PN_corot

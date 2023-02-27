@@ -506,6 +506,7 @@ def Hybridize(WaveformType,t_end00, data_dir, cce_dir, out_dir, length, nOrbits,
     beta=math.atan2(np.dot((Ra*zHat*Ra.inverse()).vec,lambdaHat[i_1].vec),\
         np.dot((Ra*yHat*Ra.inverse()).vec,lambdaHat[i_1].vec))
     frame_0=Ra*np.exp((beta)/2*xHat)
+    frame_0=quaternion.as_float_array(frame_0)
     print(frame_0)
     chi1_i=chiA[i_1]
     chi2_i=chiB[i_1]

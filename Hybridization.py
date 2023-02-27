@@ -349,6 +349,7 @@ def Hybridize(WaveformType,t_end00, data_dir, cce_dir, out_dir, length, nOrbits,
         W_NR=scri.WaveformModes()
         if PNIter==0:
             abd1,trans=abd.map_to_superrest_frame(t_0=t_start+length/2)
+            print(trans)
             W_NR.t=abd1.t
             W_NR.data=2*abd1.sigma.bar
             W_NR.data=np.copy(W_NR.data[:,4:])
@@ -369,6 +370,7 @@ def Hybridize(WaveformType,t_end00, data_dir, cce_dir, out_dir, length, nOrbits,
             W_PN_PsiM=scri.to_inertial_frame(W_PN_PsiM_corot.copy())
             W_PN_PsiM.t=W_PN_PsiM.t*PhyParas[1]
             tp1, W_NR, tp2, idx=PNBMS.PN_BMS_w_time_phase(abd,W_PN,W_PN_PsiM,t_start,t_start+length,None)
+            print(tp2)
             W_NR_corot=scri.to_corotating_frame(W_NR.copy())
         print("Map to superrest frame used ",time.time()-clock0)
     else:
@@ -420,6 +422,12 @@ def Hybridize(WaveformType,t_end00, data_dir, cce_dir, out_dir, length, nOrbits,
     NormalizationOmega=simpson(np.linalg.norm(omega_NR_matching,axis=1), matchingt)
 
 # Get initial guess of PN Parameters
+    NRFileName=data_dir+'/rhOverM_Asymptotic_GeometricUnits_CoM.h5/Extrapolated_N4.dir'
+    W_NRL=scri.SpEC.read_from_h5(NRFileName)
+    t0=-W_NRL.max_norm_time()
+    W_NRL.t=W_NRL.t+t0
+    omega_NRL=W_NRL.angular_velocity()
+    
     xHat=quaternion.quaternion(0.0,1.0,0.0,0.0)
     yHat=quaternion.quaternion(0.0,0.0,1.0,0.0)
     zHat=quaternion.quaternion(0.0,0.0,0.0,1.0)
@@ -454,6 +462,7 @@ def Hybridize(WaveformType,t_end00, data_dir, cce_dir, out_dir, length, nOrbits,
     beta=math.atan2(np.dot((Ra*zHat*Ra.inverse()).vec,lambdaHat[i_1].vec),\
         np.dot((Ra*yHat*Ra.inverse()).vec,lambdaHat[i_1].vec))
     frame_0=Ra*np.exp((beta)/2*xHat)
+    frame_0=quaternion.as_float_array(frame_0)
     print(frame_0)
     chi1_i=chiA[i_1]
     chi2_i=chiB[i_1]
@@ -464,8 +473,13 @@ def Hybridize(WaveformType,t_end00, data_dir, cce_dir, out_dir, length, nOrbits,
     #chiA=chiA_spline(matchingt)
     #chiB=chiB_spline(matchingt)
     #NormalizationChi=simpson(np.linalg.norm(chiA,axis=1)**2.0, matchingt)+simpson(np.linalg.norm(chiB,axis=1)**2.0, matchingt)
+    i_2=abs(tA-t_end0).argmin()
+    chi1_ii=chiA[i_2]
+    chi2_ii=chiB[i_2]
     chiA=quaternion.from_float_array(np.column_stack((0.0*tA,chiA)))
     chiB=quaternion.from_float_array(np.column_stack((0.0*tA,chiB)))
+    chiAL=np.dot(chi1_ii,(omega_NRL[W_NRL.t>=t_end0])[0])/np.linalg.norm((omega_NRL[W_NRL.t>=t_end0])[0])
+    chiBL=np.dot(chi2_ii,(omega_NRL[W_NRL.t>=t_end0])[0])/np.linalg.norm((omega_NRL[W_NRL.t>=t_end0])[0])
 
 # Align Waveforms
     t_starts=t_start
@@ -507,6 +521,8 @@ def Hybridize(WaveformType,t_end00, data_dir, cce_dir, out_dir, length, nOrbits,
     modes = np.delete(modes,2)
     print("SquaredError over matching window: ",SquaredError(W_NR,W_PN,t_start,t_start+length), " ", SquaredError(W_NR,W_PN,t_start,t_start+length,mode=modes), " ",SquaredErrorNorm(W_NR,W_PN,t_start,t_start+length)," ",SquaredErrorScalar(W_NR.t,W_PN.t,f1,f2,t_start,t_start+length))
     Output=SquaredError(W_NR,W_PN,t_start,t_start+length)
+    Output=np.append(Output,np.copy(PNParas))
+    Output=np.append(Output,0.0)
     """
     t1=t_end0-nOrbits_to_length(nOrbits/2,t_end0,omega_NR_mag,W_NR.t)-nOrbits_to_length(25,t_end0,omega_NR_mag,W_NR.t)
     length=nOrbits_to_length(10,t1,omega_NR_mag,W_NR.t)#################################################################################
@@ -523,6 +539,13 @@ def Hybridize(WaveformType,t_end00, data_dir, cce_dir, out_dir, length, nOrbits,
     length=length_global###################################################################################
     """
     PhyParas=Parameterize_to_Physical(np.copy(PNParas))
+    Output=np.append(Output,np.copy(PhyParas))
+    Output=np.append(Output,np.array([0.0,q_0,np.linalg.norm(chi1_ii),np.linalg.norm(chi2_ii),PhyParas[0],np.linalg.norm((chi1[W_PN.t>=t_end0])[0]),np.linalg.norm((chi2[W_PN.t>=t_end0])[0])]))
+    omega_PNL=W_PN.angular_velocity()
+    chi1L=np.dot((chi1[W_PN.t>=t_end0])[0],(omega_PNL[W_PN.t>=t_end0])[0])/np.linalg.norm((omega_PNL[W_PN.t>=t_end0])[0])
+    chi2L=np.dot((chi2[W_PN.t>=t_end0])[0],(omega_PNL[W_PN.t>=t_end0])[0])/np.linalg.norm((omega_PNL[W_PN.t>=t_end0])[0])
+    Output=np.append(Output,np.array([0.0,chiAL,chiBL,chi1L,chi2L]))
+    Output=np.append(Output,np.array([0.0,q_0-PhyParas[0],np.linalg.norm(chi1_ii)-np.linalg.norm((chi1[W_PN.t>=t_end0])[0]),np.linalg.norm(chi2_ii)-np.linalg.norm((chi2[W_PN.t>=t_end0])[0]),chiAL-chi1L,chiBL-chi2L]))
     logR_delta=np.append(minima.x[0],minima.x[1:]+omega_mean*minima.x[0]/2)
     if len(PhyParas)==12:
         PhyParas[8:]=logR_delta
@@ -641,6 +664,7 @@ def Hybridize(WaveformType,t_end00, data_dir, cce_dir, out_dir, length, nOrbits,
     """
     fig.savefig(out_dir+"/hybridCheckResultsError1"+data_dir[-8:-5]+str(t_start)[:3],dpi=1000)
     fig.clf()
+    
     np.savetxt(out_dir+"/hybridCheckResultsErrort"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', W_PN.t, delimiter=',')
     np.savetxt(out_dir+"/hybridCheckResultsError22"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', np.abs(W_NR.data[:,4]-W_PN.data[:,4]), delimiter=',')
     np.savetxt(out_dir+"/hybridCheckResultsError21"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', np.abs(W_NR.data[:,3]-W_PN.data[:,3]), delimiter=',')
@@ -649,6 +673,7 @@ def Hybridize(WaveformType,t_end00, data_dir, cce_dir, out_dir, length, nOrbits,
     np.savetxt(out_dir+"/hybridCheckResultsNRchiB"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', quaternion.as_float_array(chiB)[:,1:], delimiter=',')
     np.savetxt(out_dir+"/hybridCheckResultsPNchi1"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', quaternion.as_float_array(chi1)[:,1:], delimiter=',')
     np.savetxt(out_dir+"/hybridCheckResultsPNchi2"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', quaternion.as_float_array(chi2)[:,1:], delimiter=',')
+    
 
     # Output results 
     outname=out_dir+'/hybridNR'+str(t_start)[:3]+'.h5'
