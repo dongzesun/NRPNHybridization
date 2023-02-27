@@ -7,7 +7,7 @@ import quaternionic
 import quaternion
 import sxs
 
-def PNWaveform(q,omega_0,chi1_0,chi2_0, frame_0=np.array([1,0,0,0]),t_0=0.0, omega_start=None, omega_end=None,t_PNStart=False, t_PNEnd=False, datatype="h", return_chi=False, PNEvolutionOrder=4.0, PNWaveformModeOrder=3.5, TaylorTn='TaylorT1', StepsPerOrbit=32, dt=None, ell_max = 8, tol=1e-10, MinStep=1e-7):
+def PNWaveform(q,omega_0,chi1_0,chi2_0, frame_0=np.array([1,0,0,0]),t_0=0.0, omega_start=None, omega_end=None,t_PNStart=False, t_PNEnd=False, datatype="h", return_chi=False, PNEvolutionOrder=4.0, PNWaveformModeOrder=3.5, TaylorTn='TaylorT1', StepsPerOrbit=None, dt=None, ell_max = 8, tol=1e-10, MinStep=1e-7):
     """
     q = m1/m2, float number,
     omega_0: orbital frequency at t_0, float number,
@@ -49,9 +49,11 @@ def PNWaveform(q,omega_0,chi1_0,chi2_0, frame_0=np.array([1,0,0,0]),t_0=0.0, ome
         raise ValueError(message)  
     elif TaylorTn == 'TaylorT1':
         TaylorTn = 1   
-    if StepsPerOrbit != 32 and dt !=None:
+    if StepsPerOrbit != None and dt != None:
         message=("Please specify either StepsPerOrbit or dt.")
         raise ValueError(message)
+    elif StepsPerOrbit is None and dt is None:
+        StepsPerOrbit = 32
     if ell_max > 8 or ell_max < 2:
         message=("ell_max shoule between 2 and 8.")
         raise ValueError(message)
