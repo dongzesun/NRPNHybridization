@@ -7,7 +7,7 @@ import quaternionic
 import quaternion
 import sxs
 
-def PNWaveform(q,omega_0,chi1_0,chi2_0,e_0=0.001,xi_0=0.0,frame_0=quaternion.quaternion(1.0,0.0,0.0,0.0),t_0=0.0, omega_start=None, omega_end=None,t_PNStart=False, t_PNEnd=False, datatype="h", return_chi=False, PNEvolutionOrder=4.0, PNWaveformModeOrder=3.5, TaylorTn=1, StepsPerOrbit=32, dt=None, tol=1e-10, MinStep=1e-7):
+def PNWaveform(q,omega_0,chi1_0,chi2_0,e_0=0.001,xi_0=0.0,frame_0=quaternion.quaternion(1.0,0.0,0.0,0.0),t_0=0.0, omega_start=None, omega_end=None,t_PNStart=False, t_PNEnd=False, datatype="h", return_chi=False, PNEvolutionOrder=4.0, PNWaveformModeOrder=3.5, TaylorTn=1, StepsPerOrbit=32, dt=None, ell_max = 8, tol=1e-10, MinStep=1e-7):
     """
     q = m1/m2, float number,
     omega_0: orbital frequency at t_0, float number,
@@ -27,6 +27,7 @@ def PNWaveform(q,omega_0,chi1_0,chi2_0,e_0=0.001,xi_0=0.0,frame_0=quaternion.qua
     TaylorTn: now only TaylorT1 is working, so its int number in [1], default is 1,
     StepsPerOrbit: output time steps per orbit, float number,
     dt: output time interval, float number or None, shouldn't be specify together with StepsPerOrbit,
+    ell_max: the maximun of l, int number, default is 8,
     tol: tolerance of the integrator, float number,
     MinStep: minimal time interval for the PN waveform, float number.
     """
@@ -82,10 +83,14 @@ def PNWaveform(q,omega_0,chi1_0,chi2_0,e_0=0.001,xi_0=0.0,frame_0=quaternion.qua
     for i in range(len(W_PN_corot.frame)):
         W_PN_corot.frame[i]=W_PN_corot.frame[i].normalized()
     if datatype=="h":
-        W_PN_corot.data, W_PN_corot.ells = PNWaveformModes.Modes(wHat, xHat, yHat, zHat, m1, m2, e_0, xi_0, v_0,S_chi1_0, S_chi2_0, quaternion.as_float_array(frame_0), PN.y, PNWaveformModeOrder)
+        data, ells = PNWaveformModes.Modes(wHat, xHat, yHat, zHat, m1, m2, e_0, xi_0, v_0,S_chi1_0, S_chi2_0, quaternion.as_float_array(frame_0), PN.y, PNWaveformModeOrder)
+        W_PN_corot.data = data[:,ell_max**2+2*ell_max-3]
+        W_PN_corot.ells = 2, ell_max
         W_PN_corot.dataType=scri.h
     elif datatype=="Psi_M":
-        W_PN_corot.data, W_PN_corot.ells = PNPsiMModes.Modes(wHat, xHat, yHat, zHat, m1, m2, v_0,S_chi1_0, S_chi2_0, quaternion.as_float_array(frame_0), PN.y, PNWaveformModeOrder)
+        data, ells = PNPsiMModes.Modes(wHat, xHat, yHat, zHat, m1, m2, v_0,S_chi1_0, S_chi2_0, quaternion.as_float_array(frame_0), PN.y, PNWaveformModeOrder)
+        W_PN_corot.data = data[:,ell_max**2+2*ell_max+1]
+        W_PN_corot.ells = 0, ell_max
         W_PN_corot.dataType=scri.psi2
         W_PN_corot.data[:,0]=W_PN_corot.data[:,0]-1.0
 
