@@ -7,7 +7,7 @@ import quaternionic
 import quaternion
 import sxs
 
-def PNWaveform(q,omega_0,chi1_0,chi2_0, frame_0=np.array([1,0,0,0]),t_0=0.0, omega_start=None, omega_end=None,t_PNStart=False, t_PNEnd=False, datatype="h", return_chi=False, PNEvolutionOrder=6.0, PNWaveformModeOrder=6.0, TaylorTn='TaylorT1', StepsPerOrbit=None, dt=None, ell_max = 8, tol=1e-10, MinStep=1e-7):
+def PNWaveform(q,omega_0,chi1_0,chi2_0, frame_0=np.array([1,0,0,0]),t_0=0.0, omega_start=None, omega_end=None,t_PNStart=False, t_PNEnd=False, datatype="h", frametype="inertial", return_chi=False, PNEvolutionOrder=6.0, PNWaveformModeOrder=6.0, TaylorTn='TaylorT1', StepsPerOrbit=None, dt=None, ell_max = 8, tol=1e-10, MinStep=1e-7):
     """
     q = m1/m2, float number,
     omega_0: orbital frequency at t_0, float number,
@@ -19,6 +19,7 @@ def PNWaveform(q,omega_0,chi1_0,chi2_0, frame_0=np.array([1,0,0,0]),t_0=0.0, ome
     t_PNStart: the start time of PN relative to t_0: t_PNStart=t_real_start-t_0, float number, shouldn't be used together with omega_start. If false, default is t_0-t_real_start=3(t_merger-t_0),
     t_PNEnd: the end time of PN relative to t_0: t_PNEnd=t_real_end-t_0, float number, should't be used together with omega_end. If false, default is merger time,
     datatype: "h" for strain and "Psi_M" for Moreschi supermomentum,
+    frametype: "inertial" for inetrial frame, "corotating" for coratating frame, and "coprecessing" for coprecessing frame,
     return_chi: whether to return chi as quaternion array of time, bool number,
     PNEvolutionOrder: float number in [0,0.5,1,1.5,2,2.5,3,3.5,4], default is 3.5,
     PNWaveformModeOrder: float number in [0,0.5,1,1.5,2,2.5,3,3.5,4], default is 3.5,
@@ -87,6 +88,7 @@ def PNWaveform(q,omega_0,chi1_0,chi2_0, frame_0=np.array([1,0,0,0]),t_0=0.0, ome
     W_PN_corot.frame=quaternion.from_float_array(np.column_stack((PN.y[5],PN.y[6],PN.y[7],PN.y[8])))
     for i in range(len(W_PN_corot.frame)):
         W_PN_corot.frame[i]=W_PN_corot.frame[i].normalized()
+        
     if datatype=="h":
         data, ells = PNWaveformModes.Modes(wHat, xHat, yHat, zHat, m1, m2, v_0,S_chi1_0, S_chi2_0, frame_0, PN.y, PNWaveformModeOrder)
         W_PN_corot.data = data[:,:ell_max**2+2*ell_max-3]
@@ -98,6 +100,11 @@ def PNWaveform(q,omega_0,chi1_0,chi2_0, frame_0=np.array([1,0,0,0]),t_0=0.0, ome
         W_PN_corot.ells = 0, ell_max
         W_PN_corot.dataType=scri.psi2
         W_PN_corot.data[:,0]=W_PN_corot.data[:,0]-1.0
+        
+    if frametype=="inertial":
+        W_PN_corot=scri.to_inertial_frame(W_PN_corot.copy())
+    elif frametype=="coprecessing":
+        W_PN_corot=scri.to_coprecessing_frame(W_PN_corot.copy())
 
     if return_chi:
         R_S1=np.exp(PN.y[1]*xHat + PN.y[2]*yHat)

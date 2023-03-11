@@ -173,7 +173,7 @@ def OptimizeEcc(x):
     global PNData_spline, PNParas, PNIter, W_PN, Normalization, omega_mean, W_NR_matching_in, matchingt
     PNParas[8:10]=x
     Phys=Parameterize_to_Physical(np.copy(PNParas))
-    W_PN_corot=PostNewtonian.PNWaveform(Phys[0], omega_00.copy()*Phys[1], Phys[2:5], Phys[5:8], Phys[8], Phys[9], frame_0, t_start.copy()/Phys[1], t_PNStart, t_PNEnd)
+    W_PN_corot=PostNewtonian.PNWaveform(Phys[0], omega_00.copy()*Phys[1], Phys[2:5], Phys[5:8], Phys[8], Phys[9], frame_0, t_start.copy()/Phys[1], t_PNStart, t_PNEnd,frametype="corotating")
     if PNIter==0:
         ZeroModes=[2,8,16,26,38,52,68] # Memory modes
         W_PN_corot.data[:,ZeroModes]=0.0*W_PN_corot.data[:,ZeroModes] # Not cosider memory effect since NR dosen't have corrrect memory.
@@ -248,7 +248,7 @@ def Align(x):
     Phys=Parameterize_to_Physical(np.copy(x))
     print(("Call # {4}, generating PN with parameters q={0}, M={7}, omega_0={1}, chi1_0={2}, chi2_0={3},e={8},"
         +"t_PNstart={5}, t_PNend={6}.").format(Phys[0], omega_00,Phys[2:5], Phys[5:8],iter_num, t_PNStart, t_PNEnd, Phys[1], Phys[8]))
-    W_PN_corot,chi1,chi2=PostNewtonian.PNWaveform(Phys[0],omega_00.copy()*Phys[1], Phys[2:5], Phys[5:8], Phys[8], Phys[9], frame_0, t_start.copy()/Phys[1], t_PNStart, t_PNEnd, return_chi=True)
+    W_PN_corot,chi1,chi2=PostNewtonian.PNWaveform(Phys[0],omega_00.copy()*Phys[1], Phys[2:5], Phys[5:8], Phys[8], Phys[9], frame_0, t_start.copy()/Phys[1], t_PNStart=t_PNStart, t_PNEnd=t_PNEnd,frametype="corotating", return_chi=True)
     if PNIter==0:
         ZeroModes=[2,8,16,26,38,52,68] # Memory modes
         W_PN_corot.data[:,ZeroModes]=0.0*W_PN_corot.data[:,ZeroModes] # Not cosider memory effect since NR dosen't have corrrect memory.
@@ -323,7 +323,7 @@ def Optimize11D(x):
     iter_num+=1
     
     Phys=Parameterize_to_Physical(np.copy(x))
-    W_PN_corot=PostNewtonian.PNWaveform(Phys[0],omega_00.copy()*Phys[1], Phys[2:5], Phys[5:8], Phys[8], Phys[9], frame_0, t_start.copy()/Phys[1], t_PNStart, t_PNEnd)
+    W_PN_corot=PostNewtonian.PNWaveform(Phys[0],omega_00.copy()*Phys[1], Phys[2:5], Phys[5:8], Phys[8], Phys[9], frame_0, t_start.copy()/Phys[1], t_PNStart=t_PNStart, t_PNEnd=t_PNEnd,frametype="corotating")
     if PNIter==0:
         ZeroModes=[2,8,16,26,38,52,68] # Memory modes
         W_PN_corot.data[:,ZeroModes]=0.0*W_PN_corot.data[:,ZeroModes] # Not cosider memory effect since NR dosen't have corrrect memory.
@@ -410,13 +410,13 @@ def Hybridize(WaveformType,t_end00, data_dir, cce_dir, out_dir, length, nOrbits,
             print(haha)
             """
         else:
-            W_PN_corot=PostNewtonian.PNWaveform(PhyParas[0], omega_00.copy()*PhyParas[1], PhyParas[2:5], PhyParas[5:8], PhyParas[8], PhyParas[9], frame_0, t_start.copy()/PhyParas[1])
+            W_PN_corot=PostNewtonian.PNWaveform(PhyParas[0], omega_00.copy()*PhyParas[1], PhyParas[2:5], PhyParas[5:8], PhyParas[8], PhyParas[9], frame_0, t_start.copy()/PhyParas[1],t_PNStart=t_PNStart, t_PNEnd=t_PNEnd,frametype="corotating")
             W_PN=scri.to_inertial_frame(W_PN_corot.copy())
             W_PN.t=W_PN.t*PhyParas[1]
             W_PN.data=np.append(0.0*W_PN.data[:,0:4],np.copy(W_PN.data),axis=1)
             W_PN.ells=0,8
             W_PN.dataType=scri.h
-            W_PN_PsiM_corot=PostNewtonian.PNWaveform(PhyParas[0], omega_00.copy()*PhyParas[1], PhyParas[2:5], PhyParas[5:8], PhyParas[8], PhyParas[9], frame_0, t_start.copy()/PhyParas[1], datatype="Psi_M")
+            W_PN_PsiM_corot=PostNewtonian.PNWaveform(PhyParas[0], omega_00.copy()*PhyParas[1], PhyParas[2:5], PhyParas[5:8], PhyParas[8], PhyParas[9], frame_0, t_start.copy()/PhyParas[1], t_PNStart=t_PNStart, t_PNEnd=t_PNEnd,datatype="Psi_M",frametype="corotating")
             W_PN_PsiM=scri.to_inertial_frame(W_PN_PsiM_corot.copy())
             W_PN_PsiM.t=W_PN_PsiM.t*PhyParas[1]
             tp1, W_NR, tp2, idx=PNBMS.PN_BMS_w_time_phase(abd,W_PN,W_PN_PsiM,t_start,t_start+length,None)
@@ -739,8 +739,8 @@ def Hybridize(WaveformType,t_end00, data_dir, cce_dir, out_dir, length, nOrbits,
     np.savetxt(out_dir+"/hybridCheckResultsError20"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', np.abs(W_NR.data[:,2]-W_PN.data[:,2]), delimiter=',')
     np.savetxt(out_dir+"/hybridCheckResultsNRchiA"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', quaternion.as_float_array(chiA)[:,1:], delimiter=',')
     np.savetxt(out_dir+"/hybridCheckResultsNRchiB"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', quaternion.as_float_array(chiB)[:,1:], delimiter=',')
-    np.savetxt(out_dir+"/hybridCheckResultsPNchi1"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', quaternion.as_float_array(chi1)[:,1:], delimiter=',')
-    np.savetxt(out_dir+"/hybridCheckResultsPNchi2"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', quaternion.as_float_array(chi2)[:,1:], delimiter=',')
+    np.savetxt(out_dir+"/hybridCheckResultsPNchi1"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', chi1, delimiter=',')
+    np.savetxt(out_dir+"/hybridCheckResultsPNchi2"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', chi2, delimiter=',')
 
     # Output results 
     outname=out_dir+'/hybridNR'+str(t_start)[:3]+'.h5'
