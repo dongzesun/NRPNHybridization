@@ -7,7 +7,7 @@ import quaternionic
 import quaternion
 import sxs
 
-def PNWaveform(q,omega_0,chi1_0,chi2_0,e_0=0.001,xi_0=0.0,frame_0=np.array([1.0,0.0,0.0,0.0]),t_0=0.0, omega_start=None, omega_end=None,t_PNStart=False, t_PNEnd=False, datatype="h", return_chi=False, PNEvolutionOrder=4.0, PNWaveformModeOrder=3.5, TaylorTn='TaylorT1', StepsPerOrbit=None, dt=None, ell_max = 8, tol=1e-10, MinStep=1e-7):
+def PNWaveform(q,omega_0,chi1_0,chi2_0,e_0=0.001,xi_0=0.0,frame_0=np.array([1.0,0.0,0.0,0.0]),t_0=0.0, omega_start=None, omega_end=None,t_PNStart=False, t_PNEnd=False, datatype="h", return_chi=False, PNEvolutionOrder=6.0, PNWaveformModeOrder=6.0, TaylorTn='TaylorT1', StepsPerOrbit=None, dt=None, ell_max = 8, tol=1e-10, MinStep=1e-7):
     """
     q = m1/m2, float number,
     omega_0: orbital frequency at t_0, float number,
@@ -40,10 +40,10 @@ def PNWaveform(q,omega_0,chi1_0,chi2_0,e_0=0.001,xi_0=0.0,frame_0=np.array([1.0,
         raise Exception('omega_start cannot be larger than omega_0, and t_PNStart should be smaller than 0.')
     if omega_end != None and omega_end < omega_0:
         raise Exception('omega_end cannot be smaller than omega_0.')
-    if not PNEvolutionOrder in [0,0.5,1,1.5,2,2.5,3,3.5,4]:
+    if not PNEvolutionOrder in [0,0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6]:
         message=("PNEvolutionOrder must be a float number in [0,0.5,1,1.5,2,2.5,3,3.5,4].")
         raise ValueError(message)
-    if not PNWaveformModeOrder in [0,0.5,1,1.5,2,2.5,3,3.5,4]:
+    if not PNWaveformModeOrder in [0,0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6]:
         message=("PNWaveformModeOrder must be a float number in [0,0.5,1,1.5,2,2.5,3,3.5,4].")
         raise ValueError(message)
     if not TaylorTn in ['TaylorT1']:

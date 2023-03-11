@@ -55,7 +55,7 @@ class CodeConstructor:
                             pass
         self.Atoms = []
         for sym in self.Variables:
-            if sym in AtomSet or str(sym) in set(['xHat','yHat','zHat','S_chi1','S_chi2','R_S1','R_S2','rfrak_chi1','rfrak_chi2','rfrak_frame']):
+            if sym in AtomSet or str(sym) in set(['wHat','xHat','yHat','zHat','S_chi1','S_chi2','R_S1','R_S2','rfrak_chi1','rfrak_chi2','rfrak_frame']):
                 self.Atoms.append(sym)
 
     @staticmethod
@@ -347,7 +347,7 @@ class CodeConstructor:
                     while j!=-1 and j+len(str(i))<=len(A):
                         j=A.find(str(i),j)
                         if j!=-1:
-                            if j+len(str(i)) ==len(A) or not (A[j+len(str(i))].isalnum() or A[j+len(str(i))]=='_'):
+                            if j+len(str(i)) ==len(A) or not (A[j+len(str(i))].isalnum() or A[j+len(str(i))]=='_' or (j!=0 and (A[j-1].isalnum() or A[j-1]=='_'))):
                                 B=A[0:j]+'Vars.{0}'.format(i)+A[j+len(str(i)):]
                                 A=B
                                 j=j+5+len(str(i))
@@ -463,7 +463,7 @@ class CodeConstructor:
                         while j!=-1 and j+len(str(i))<=len(A):
                             j=A.find(str(i),j)
                             if j!=-1:
-                                if j+len(str(i)) ==len(A) or not (A[j+len(str(i))].isalnum() or A[j+len(str(i))]=='_'):
+                                if j+len(str(i)) ==len(A) or not (A[j+len(str(i))].isalnum() or A[j+len(str(i))]=='_' or (j!=0 and (A[j-1].isalnum() or A[j-1]=='_'))):
                                     if j==0:
                                         B=A[0:j]+'Vars.{0}'.format(i)+A[j+len(str(i)):]
                                         A=B
@@ -548,7 +548,7 @@ class CodeConstructor:
                         while j!=-1 and j+len(str(i))<=len(A):
                             j=A.find(str(i),j)
                             if j!=-1:
-                                if j+len(str(i)) ==len(A) or not (A[j+len(str(i))].isalnum() or A[j+len(str(i))]=='_'):
+                                if j+len(str(i)) ==len(A) or not (A[j+len(str(i))].isalnum() or A[j+len(str(i))]=='_' or (j!=0 and (A[j-1].isalnum() or A[j-1]=='_'))):
                                     if j==0:
                                         B=A[0:j]+'Vars.{0}'.format(i)+A[j+len(str(i)):]
                                         A=B
@@ -607,7 +607,7 @@ class CodeConstructor:
                         while j!=-1 and j+len(str(i))<=len(A):
                             j=A.find(str(i),j)
                             if j!=-1:
-                                if j+len(str(i)) ==len(A) or not (A[j+len(str(i))].isalnum() or A[j+len(str(i))]=='_'):
+                                if j+len(str(i)) ==len(A) or not (A[j+len(str(i))].isalnum() or A[j+len(str(i))]=='_'or (j!=0 and (A[j-1].isalnum() or A[j-1]=='_'))):
                                     B=A[0:j]+'Vars.{0}'.format(i)+A[j+len(str(i)):]
                                     A=B
                                     j=j+5+len(str(i))
@@ -647,4 +647,4 @@ class CodeConstructor:
                     + MiniConstructor.CppEvaluateExpressions(Indent+2) + '\n    return '
                     + Express(Expression.pycode()) + '\n'
             )
-        return '\n'.join(Evaluations)
+        return '\n'.join(Evaluations).replace('math','np')

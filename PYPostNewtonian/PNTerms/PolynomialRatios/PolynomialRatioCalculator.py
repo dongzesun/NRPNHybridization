@@ -5,7 +5,7 @@ import pickle
 import sympy
 
 ip = get_ipython()
-for order in [int(o) for o in range(10)]:
+for order in [int(o) for o in range(14)]:
     print("Calculating with polynomials to order {0}".format(order))
     Num = sympy.var('Num:{0}'.format(order), real=True)
     Den = sympy.var('Den:{0}'.format(order), real=True)
