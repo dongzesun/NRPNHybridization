@@ -328,9 +328,9 @@ def PN_BMS_w_time_phase(abd, h_PN, PsiM_PN, t1, t2, include_modes, N=2, write_di
 
     idx = np.argmin(abs(np.array(errors)))
 
-    write_abd_to_file(abd_primes[idx], write_dir)
+    #write_abd_to_file(abd_primes[idx], write_dir)
 
     if N == 1:
         return errors[idx], h_primes[idx], trans_and_convs[idx], idx
     else:
-        return errors[idx], h_primes[idx], None, idx
+        return errors[idx], h_primes[idx], trans_and_convs[idx], idx

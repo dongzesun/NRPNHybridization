@@ -34,7 +34,7 @@ class SplineArray:
         return yprime
 
 def nOrbits_to_length(nOrbits, t_end, Omega_array, time_array):
-    tol=1e-3
+    tol=1e-2
     number=0
     a=time_array[0]
     b=t_end
@@ -52,7 +52,7 @@ def nOrbits_to_length(nOrbits, t_end, Omega_array, time_array):
         number+=1
     if number>100:
         message=("The waveform before endtime only has {0} orbits, which is smaller than required {1}.")
-        raise ValueError(message.format(orbits, norbits))
+        raise ValueError(message.format(orbits, nOrbits))
     return t_end-t0
 
 def Physical_to_Parameterize(x):
@@ -66,10 +66,17 @@ def Physical_to_Parameterize(x):
         raise ValueError(message.format(x))
     x_2=np.linalg.norm(x[2:5])/np.linalg.norm(chi1_i)
     x_3=np.linalg.norm(x[5:8])/np.linalg.norm(chi2_i)
-    rotation=quaternion.optimal_alignment_in_Euclidean_metric(x[2:5],x_2*chi1_i)
+    if len(x)==12:
+        R_frame = np.exp(quaternion.quaternion(0.0,x[9],x[10],x[11]))
+        rotation=quaternion.optimal_alignment_in_Euclidean_metric(x[2:5],(x_2*R_frame*quaternion.quaternion(0,chi1_i[0],chi1_i[1],chi1_i[2])*R_frame.conjugate()).vec)
+    else:
+        rotation=quaternion.optimal_alignment_in_Euclidean_metric(x[2:5],x_2*chi1_i)
     axis=quaternion.from_float_array(np.append(0,x[2:5])).normalized()
     chi1_hat=x[2:5]/np.linalg.norm(x[2:5])
-    chi2_i_proj=x_3*(rotation*quaternion.quaternion(0,chi2_i[0],chi2_i[1],chi2_i[2])*rotation.conjugate()).vec
+    if len(x)==12:
+        chi2_i_proj=x_3*(rotation*R_frame*quaternion.quaternion(0,chi2_i[0],chi2_i[1],chi2_i[2])*R_frame.conjugate()*rotation.conjugate()).vec
+    else:
+        chi2_i_proj=x_3*(rotation*quaternion.quaternion(0,chi2_i[0],chi2_i[1],chi2_i[2])*rotation.conjugate()).vec
     chi2_i_proj=chi2_i_proj-np.dot(chi2_i_proj,chi1_hat)*chi1_hat
     chi2_0_proj=x[5:8]-np.dot(x[5:8],chi1_hat)*chi1_hat
     angle=np.arccos(np.dot(chi2_i_proj,chi2_0_proj)/(np.linalg.norm(chi2_i_proj)*np.linalg.norm(chi2_0_proj)))
@@ -80,11 +87,14 @@ def Physical_to_Parameterize(x):
     sign=np.sign(np.dot(chi1_hat,np.cross(chi2_i_proj,chi2_0_proj)))
     rotation=np.exp(sign*axis*angle/2)*rotation
     if len(x)==12:
-        x_47=(quaternion.as_float_array(np.log(rotation))-np.append(0.0, omega_mean*x[8]/2))[1:]
+        x_47=(quaternion.as_float_array(np.log(rotation)))[1:]#-np.append(0.0, omega_mean*x[8]/2))[1:]
     else:
         x_47=(quaternion.as_float_array(np.log(rotation)))[1:]
     x_47[x_47>np.pi]=x_47[x_47>np.pi]-np.pi
-    chi2_0=x_3*(rotation*quaternion.quaternion(0,chi2_i[0],chi2_i[1],chi2_i[2])*rotation.conjugate()).vec
+    if len(x) == 12:
+        chi2_0=x_3*(rotation*R_frame*quaternion.quaternion(0,chi2_i[0],chi2_i[1],chi2_i[2])*R_frame.conjugate()*rotation.conjugate()).vec
+    else:
+        chi2_0=x_3*(rotation*quaternion.quaternion(0,chi2_i[0],chi2_i[1],chi2_i[2])*rotation.conjugate()).vec
     sign=np.sign(np.dot(np.cross(chi2_0,chi1_hat),np.cross(chi2_0,x[5:8])))
     x_7=sign*np.arccos(np.dot(chi2_0,x[5:8])/(np.linalg.norm(x[5:8])*np.linalg.norm(chi2_0)))
     if np.dot(chi2_0,x[5:8])/(np.linalg.norm(x[5:8])*np.linalg.norm(chi2_0))>1:
@@ -109,13 +119,18 @@ def Parameterize_to_Physical(x):
         raise ValueError(message.format(x))
     x[0]=x[0]*q_0
     x[1]=x[1]*Mc_0
+    chi1_0 = quaternion.quaternion(0,chi1_i[0],chi1_i[1],chi1_i[2])
+    chi2_0 = quaternion.quaternion(0,chi2_i[0],chi2_i[1],chi2_i[2])
     if len(x)==12:
         phase=quaternion.quaternion(0.0, omega_mean[0]*x[8]/2, omega_mean[1]*x[8]/2, omega_mean[2]*x[8]/2)
-        rotation=np.exp(xHat*x[4]+yHat*x[5]+zHat*x[6]+phase)
+        rotation=np.exp(xHat*x[4]+yHat*x[5]+zHat*x[6])#+phase)
+        R_frame=np.exp(quaternion.quaternion(0.0,x[9],x[10],x[11])+phase)
+        chi1_0 = R_frame*chi1_0*R_frame.conjugate()
+        chi2_0 = R_frame*chi2_0*R_frame.conjugate()
     else:
         rotation=np.exp(xHat*x[4]+yHat*x[5]+zHat*x[6])
-    chi1_0=x[2]*(rotation*quaternion.quaternion(0,chi1_i[0],chi1_i[1],chi1_i[2])*rotation.conjugate()).vec
-    chi2_0=x[3]*rotation*quaternion.quaternion(0,chi2_i[0],chi2_i[1],chi2_i[2])*rotation.conjugate()
+    chi1_0=x[2]*(rotation*chi1_0*rotation.conjugate()).vec
+    chi2_0=x[3]*rotation*chi2_0*rotation.conjugate()
     axis=quaternion.from_float_array(np.append(0,np.cross(chi2_0.vec,chi1_0))).normalized()
     angle=np.exp(axis*x[7]/2)
     chi2_0=(angle*chi2_0*angle.conjugate()).vec
@@ -136,18 +151,21 @@ def InitialR(theta):
     return cost
 
 def Optimize4D(x):
-    global PNIter
+    global PNIter, OptMethod
     phase=quaternion.quaternion(0.0, omega_mean[0]*x[0]/2, omega_mean[1]*x[0]/2, omega_mean[2]*x[0]/2)
     R_delta=np.exp(quaternion.quaternion(0.0,x[1],x[2],x[3])+phase)
     W_temp=scri.rotate_physical_system(W_NR_matching_in.copy(), R_delta)
     temp=PNData_spline(matchingt+x[0])
-    if PNIter==0:
-        ZeroModes=[2,8,16,26,38,52,68]
-        h1h2=np.sum(simpson(abs(np.delete(temp-W_temp.data,ZeroModes,axis=1))**2.0, matchingt, axis=0))
+    if OptMethod == "LSQ":
+        return abs(temp-W_temp.data).flatten('F')/np.sqrt(Normalization)
     else:
-        h1h2=np.sum(simpson(abs(temp-W_temp.data)**2.0, matchingt, axis=0))
-    cost=0.5*h1h2/Normalization
-    return 10.0+np.log10(cost)
+        if PNIter==0:
+            ZeroModes=[2,8,16,26,38,52,68]
+            h1h2=np.sum(simpson(abs(np.delete(temp-W_temp.data,ZeroModes,axis=1))**2.0, matchingt, axis=0))
+        else:
+            h1h2=np.sum(simpson(abs(temp-W_temp.data)**2.0, matchingt, axis=0))
+        cost=0.5*h1h2/Normalization
+        return 10.0+np.log10(cost)
 
 def Mismatch(W1,W2,t1,t2):
     """
@@ -200,7 +218,7 @@ def Align(x):
     global mint, minima, R_delta, W_PN, W_PN_corot, t_end0, t_pre, t_end, omega_0, omega_PN,\
         omega_PN_spline, omega_PN_mag, omega_PN_mag_spline, PNData_spline, matchingt,\
         omega_NR_mag_matching, omega_mean, iter_num, W_NR_matching_in, omega_NR_hat,\
-        Normalization, lowbound, upbound, scale, spin1, spin2,t_start, chiA, chiB, chi1, chi2,q,PNNorm_spline,cost1,cost2,cost3,cost4,cost5
+        Normalization, lowbound, upbound, scale, spin1, spin2,t_start, chiA, chiB, chi1, chi2,q,PNNorm_spline,cost1,cost2,cost3,cost4,cost5,OptMethod
     t_start=t_starts
     iter_num+=1
     
@@ -210,7 +228,7 @@ def Align(x):
     W_PN_corot,chi1,chi2=PostNewtonian.PNWaveform(Phys[0], omega_00.copy()*Phys[1], Phys[2:5], Phys[5:8], frame_0, t_start.copy()/Phys[1], t_PNStart=t_PNStart, t_PNEnd=t_PNEnd,frametype="corotating", return_chi=True)
     if PNIter==0:
         ZeroModes=[2,8,16,26,38,52,68] # Memory modes
-        W_PN_corot.data[:,ZeroModes]=0.0*W_PN_corot.data[:,ZeroModes] # Not cosider memory effect since NR dosen't have corrrect memory.
+        W_PN_corot.data[:,ZeroModes]=0.0*W_PN_corot.data[:,ZeroModes] # Not consider memory effect since NR dosen't have corrrect memory.
     W_PN=scri.to_inertial_frame(W_PN_corot.copy())
     W_PN.t=W_PN.t*Phys[1]
     # Set up the matching region data for PN, and get the corresponding angular velocity and frame
@@ -255,6 +273,7 @@ def Align(x):
     upbound1=Initial1+scale
     lowbound2=Initial2-scale
     upbound2=Initial2+scale
+    OptMethod = "LSQWrong"
     minima=least_squares(Optimize4D, Initial1,bounds=(lowbound1,upbound1),ftol=1e-16, xtol=1e-16, gtol=1e-14,x_scale='jac',max_nfev=2000)
     minima2=least_squares(Optimize4D, Initial2,bounds=(lowbound2,upbound2),ftol=1e-16, xtol=1e-16, gtol=1e-14,x_scale='jac',max_nfev=2000)
     cost1=minima.fun
@@ -277,7 +296,7 @@ def Optimize11D(x):
     global mint, minima, R_delta, W_PN, W_PN_corot, t_end0, t_pre, t_end, omega_0, omega_PN,\
         omega_PN_spline, omega_PN_mag, omega_PN_mag_spline, PNData_spline, matchingt,\
         omega_NR_mag_matching, omega_mean, iter_num, W_NR_matching_in, omega_NR_hat,\
-        Normalization, lowbound, upbound, scale, spin1, spin2,t_start, chiA, chiB, chi1_PN_spline, chi2_PN_spline,cost1,cost2,cost3,cost4,cost5,PNNorm_spline
+        Normalization, lowbound, upbound, scale, spin1, spin2,t_start, chiA, chiB, chi1_PN_spline, chi2_PN_spline,cost1,cost2,cost3,cost4,cost5,PNNorm_spline,OptMethod
     t_start=t_starts
     iter_num+=1
     
@@ -369,8 +388,7 @@ def Hybridize(WaveformType,t_end00, data_dir, cce_dir, out_dir, length, nOrbits,
             W_PN_PsiM_corot=PostNewtonian.PNWaveform(PhyParas[0], omega_00.copy()*PhyParas[1], PhyParas[2:5], PhyParas[5:8], frame_0, t_start.copy()/PhyParas[1], t_PNStart=t_PNStart, t_PNEnd=t_PNEnd,datatype="Psi_M",frametype="corotating")
             W_PN_PsiM=scri.to_inertial_frame(W_PN_PsiM_corot.copy())
             W_PN_PsiM.t=W_PN_PsiM.t*PhyParas[1]
-            tp1, W_NR, tp2, idx=PNBMS.PN_BMS_w_time_phase(abd,W_PN,W_PN_PsiM,t_start,t_start+length,None)
-            print(tp2)
+            tp1, W_NR, trans, idx=PNBMS.PN_BMS_w_time_phase(abd,W_PN,W_PN_PsiM,t_start,t_start+length,None)
             W_NR_corot=scri.to_corotating_frame(W_NR.copy())
         print("Map to superrest frame used ",time.time()-clock0)
     else:
@@ -462,6 +480,8 @@ def Hybridize(WaveformType,t_end00, data_dir, cce_dir, out_dir, length, nOrbits,
     beta=math.atan2(np.dot((Ra*zHat*Ra.inverse()).vec,lambdaHat[i_1].vec),\
         np.dot((Ra*yHat*Ra.inverse()).vec,lambdaHat[i_1].vec))
     frame_0=Ra*np.exp((beta)/2*xHat)
+    if WaveformType=='cce':
+        frame_0 = frame_0*quaternion.from_float_array(trans["transformations"]["frame_rotation"])
     frame_0=quaternion.as_float_array(frame_0)
     print(frame_0)
     chi1_i=chiA[i_1]
@@ -480,6 +500,10 @@ def Hybridize(WaveformType,t_end00, data_dir, cce_dir, out_dir, length, nOrbits,
     chiB=quaternion.from_float_array(np.column_stack((0.0*tA,chiB)))
     chiAL=np.dot(chi1_ii,(omega_NRL[W_NRL.t>=t_end0])[0])/np.linalg.norm((omega_NRL[W_NRL.t>=t_end0])[0])
     chiBL=np.dot(chi2_ii,(omega_NRL[W_NRL.t>=t_end0])[0])/np.linalg.norm((omega_NRL[W_NRL.t>=t_end0])[0])
+    chiA=quaternion.from_float_array(trans["transformations"]["frame_rotation"])*chiA*quaternion.from_float_array(trans["transformations"]["frame_rotation"]).inverse()
+    chiB=quaternion.from_float_array(trans["transformations"]["frame_rotation"])*chiB*quaternion.from_float_array(trans["transformations"]["frame_rotation"]).inverse()
+    chi1_i = chiA[i_1].vec
+    chi2_i = chiB[i_1].vec
 
 # Align Waveforms
     t_starts=t_start
@@ -497,14 +521,19 @@ def Hybridize(WaveformType,t_end00, data_dir, cce_dir, out_dir, length, nOrbits,
         else:
             PhyParas=np.append(PhyParas,logR_delta)
         PNParas=Physical_to_Parameterize(np.copy(PhyParas))
-        lowbound12D=PNParas-[0.2,0.1,0.2,0.2,np.pi/4,np.pi/4,np.pi/4,np.pi/4,np.pi/omega_0/2.0,np.pi/4,np.pi/4,np.pi/4]
-        upbound12D=PNParas+[0.2,0.1,0.2,0.2,np.pi/4,np.pi/4,np.pi/4,np.pi/4,np.pi/omega_0/2.0,np.pi/4,np.pi/4,np.pi/4]
-        minima12D=minimize(Optimize11D,PNParas,method='Nelder-Mead',bounds=Bounds(lowbound12D,upbound12D),options={'return_all':True,'xatol': 3e-16, 'fatol': 1e-15,'maxfev':2000,'adaptive':True})
-        #minima12D=least_squares(Optimize11D, minima12D.x,bounds=(lowbound12D,upbound12D),ftol=3e-16, xtol=3e-16, gtol=1e-15,x_scale='jac',max_nfev=5000)
-        #print(minima12D)
+        lowbound12D=PNParas-[0.05,0.02,0.1,0.1,np.pi*2,np.pi*2,np.pi,np.pi/4,np.pi/omega_0/2.0,np.pi/4,np.pi/4,np.pi/4]
+        upbound12D=PNParas+[0.05,0.02,0.1,0.1,np.pi*2,np.pi*2,np.pi,np.pi/4,np.pi/omega_0/2.0,np.pi/4,np.pi/4,np.pi/4]
+        OptMethod = "LSQ"
+        minima12D=least_squares(Optimize11D, PNParas,bounds=(lowbound12D,upbound12D),ftol=3e-16, xtol=3e-16, gtol=1e-15,x_scale='jac',max_nfev=100)
+        OptMethod = "NM"
+        minima12D=minimize(Optimize11D,minima12D.x,method='Nelder-Mead',bounds=Bounds(lowbound12D,upbound12D),options={'return_all':True,'xatol': 3e-16, 'fatol': 1e-15,'maxfev':1500,'adaptive':True})
+        OptMethod = "LSQ"
+        minima12D=least_squares(Optimize11D, minima12D.x,bounds=(lowbound12D,upbound12D),ftol=3e-16, xtol=3e-16, gtol=1e-15,x_scale='jac',max_nfev=100)
+        OptMethod = "NM"
+        minima12D=minimize(Optimize11D,minima12D.x,method='Nelder-Mead',bounds=Bounds(lowbound12D,upbound12D),options={'return_all':True,'xatol': 3e-16, 'fatol': 1e-15,'maxfev':1500,'adaptive':True})
         PNParas=minima12D.x
 
-    t_PNStart, t_PNEnd=-80000, -500-t_start
+    t_PNStart, t_PNEnd=-80000, 1000-t_start
     Align(PNParas)
     t_delta=minima.x[0]
     print("Time shift=", t_delta)
@@ -523,10 +552,15 @@ def Hybridize(WaveformType,t_end00, data_dir, cce_dir, out_dir, length, nOrbits,
     Output=SquaredError(W_NR,W_PN,t_start,t_start+length)
     Output=np.append(Output,np.copy(PNParas))
     Output=np.append(Output,0.0)
-    """
-    t1=t_end0-nOrbits_to_length(nOrbits/2,t_end0,omega_NR_mag,W_NR.t)-nOrbits_to_length(25,t_end0,omega_NR_mag,W_NR.t)
+    
+    for i in range(len(W_NR.data[0,:])):
+        print(i,SquaredError(W_NR,W_PN,t_start,t_start+length,mode=i))
+    
+    t1=t_end0-nOrbits_to_length(nOrbits/2,t_end0,omega_NR_mag,W_NR.t)-nOrbits_to_length(35,t_end0,omega_NR_mag,W_NR.t)
     length=nOrbits_to_length(10,t1,omega_NR_mag,W_NR.t)#################################################################################
-    Output=np.append(Output,np.array([SquaredError(W_NR,W_PN,t1-1.0*length,t1),SquaredError(W_NR,W_PN,t1-4.0*length,t1)]))
+    Output=np.append(Output,np.array([SquaredError(W_NR,W_PN,t1-1.0*length,t_end0)]))#t1
+    print("Test window:", Output[-1])
+    """
     print("SquaredError over longer region: ","t=40 ",t1-4.0*length," ",SquaredError(W_NR,W_PN,t1-4.0*length,t1), " ",SquaredError(W_NR,W_PN,t1-4.0*length,t1,mode=modes), " ", SquaredErrorNorm(W_NR,W_PN,t1-4.0*length,t1)," ",SquaredErrorScalar(W_NR.t,W_PN.t,f1,f2,t1-4.0*length,t1))
     print("SquaredError over longer region: ","t=30 ",t1-3.0*length," ",SquaredError(W_NR,W_PN,t1-3.0*length,t1), " ",SquaredError(W_NR,W_PN,t1-3.0*length,t1,mode=modes), " ", SquaredErrorNorm(W_NR,W_PN,t1-3.0*length,t1)," ",SquaredErrorScalar(W_NR.t,W_PN.t,f1,f2,t1-3.0*length,t1))
     print("SquaredError over longer region: ","t=20 ",t1-2.0*length," ",SquaredError(W_NR,W_PN,t1-2.0*length,t1), " ",SquaredError(W_NR,W_PN,t1-2.0*length,t1,mode=modes), " ", SquaredErrorNorm(W_NR,W_PN,t1-2.0*length,t1)," ",SquaredErrorScalar(W_NR.t,W_PN.t,f1,f2,t1-2.0*length,t1))
@@ -536,8 +570,9 @@ def Hybridize(WaveformType,t_end00, data_dir, cce_dir, out_dir, length, nOrbits,
     print("SquaredError (2,0) mode: ",SquaredError(W_NR,W_PN,t_start,t_start+length,mode=2))
     for i in range(len(W_NR.data[0,:])):
         print(i,SquaredError(W_NR,W_PN,t_start,t_start+length,mode=i)," ",SquaredError(W_NR,W_PN,t1-1.0*length,t1,mode=i)," ",SquaredError(W_NR,W_PN,t1-2.0*length,t1,mode=i)," ",SquaredError(W_NR,W_PN,t1-3.0*length,t1,mode=i)," ",SquaredError(W_NR,W_PN,t1-4.0*length,t1,mode=i))
-    length=length_global###################################################################################
     """
+    length=length_global###################################################################################
+    
     PhyParas=Parameterize_to_Physical(np.copy(PNParas))
     Output=np.append(Output,np.copy(PhyParas))
     Output=np.append(Output,np.array([0.0,q_0,np.linalg.norm(chi1_ii),np.linalg.norm(chi2_ii),PhyParas[0],np.linalg.norm((chi1[W_PN.t>=t_end0])[0]),np.linalg.norm((chi2[W_PN.t>=t_end0])[0])]))
@@ -593,6 +628,14 @@ def Hybridize(WaveformType,t_end00, data_dir, cce_dir, out_dir, length, nOrbits,
     W_H.data=dataTemp
     ell_min, ell_max = min(W_NR.LM[:, 0]), max(W_NR.LM[:, 0])
     W_H.ells = ell_min, ell_max
+    
+    # Output results 
+    outname=out_dir+'/hybridNR'+str(t_start)[:3]+'.h5'
+    #scri.SpEC.write_to_h5(W_NR, outname, file_write_mode='w')
+    outname=out_dir+'/hybridPN'+str(t_start)[:3]+'.h5'
+    #scri.SpEC.write_to_h5(W_PN, outname, file_write_mode='w')
+    outname=out_dir+'/hybridHybrid'+str(t_start)[:3]+'.h5'
+    #scri.SpEC.write_to_h5(W_H, outname, file_write_mode='w')
 
     # Plot results   
     t1=-80000
@@ -628,6 +671,7 @@ def Hybridize(WaveformType,t_end00, data_dir, cce_dir, out_dir, length, nOrbits,
     ax3.axvline(t_end0, linestyle='dotted')
     fig.savefig(out_dir+"/hybridCheckResults1"+data_dir[-8:-5]+str(t_start)[:3],dpi=1000)
     fig.clf()
+
     global W_NR1    
     W_NR1=W_NR.copy()
     W_NR=W_NR.interpolate(W_PN.t)
@@ -666,6 +710,7 @@ def Hybridize(WaveformType,t_end00, data_dir, cce_dir, out_dir, length, nOrbits,
     fig.clf()
     
     np.savetxt(out_dir+"/hybridCheckResultsErrort"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', W_PN.t, delimiter=',')
+    np.savetxt(out_dir+"/hybridCheckResultstNR"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', tA, delimiter=',')
     np.savetxt(out_dir+"/hybridCheckResultsError22"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', np.abs(W_NR.data[:,4]-W_PN.data[:,4]), delimiter=',')
     np.savetxt(out_dir+"/hybridCheckResultsError21"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', np.abs(W_NR.data[:,3]-W_PN.data[:,3]), delimiter=',')
     np.savetxt(out_dir+"/hybridCheckResultsError20"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', np.abs(W_NR.data[:,2]-W_PN.data[:,2]), delimiter=',')
@@ -674,14 +719,6 @@ def Hybridize(WaveformType,t_end00, data_dir, cce_dir, out_dir, length, nOrbits,
     np.savetxt(out_dir+"/hybridCheckResultsPNchi1"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', chi1, delimiter=',')
     np.savetxt(out_dir+"/hybridCheckResultsPNchi2"+data_dir[-8:-5]+str(t_start)[:3]+'.txt', chi2, delimiter=',')
     
-
-    # Output results 
-    outname=out_dir+'/hybridNR'+str(t_start)[:3]+'.h5'
-    scri.SpEC.write_to_h5(W_NR, outname, file_write_mode='w')
-    outname=out_dir+'/hybridPN'+str(t_start)[:3]+'.h5'
-    scri.SpEC.write_to_h5(W_PN, outname, file_write_mode='w')
-    outname=out_dir+'/hybridHybrid'+str(t_start)[:3]+'.h5'
-    scri.SpEC.write_to_h5(W_H, outname, file_write_mode='w')
     print("All done, total time:",time.time()-clock0)
 
 # Run the code
