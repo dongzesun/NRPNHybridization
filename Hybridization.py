@@ -500,8 +500,9 @@ def Hybridize(WaveformType,t_end00, data_dir, cce_dir, out_dir, length, nOrbits,
     chiB=quaternion.from_float_array(np.column_stack((0.0*tA,chiB)))
     chiAL=np.dot(chi1_ii,(omega_NRL[W_NRL.t>=t_end0])[0])/np.linalg.norm((omega_NRL[W_NRL.t>=t_end0])[0])
     chiBL=np.dot(chi2_ii,(omega_NRL[W_NRL.t>=t_end0])[0])/np.linalg.norm((omega_NRL[W_NRL.t>=t_end0])[0])
-    chiA=quaternion.from_float_array(trans["transformations"]["frame_rotation"])*chiA*quaternion.from_float_array(trans["transformations"]["frame_rotation"]).inverse()
-    chiB=quaternion.from_float_array(trans["transformations"]["frame_rotation"])*chiB*quaternion.from_float_array(trans["transformations"]["frame_rotation"]).inverse()
+    if WaveformType=='cce':
+        chiA=quaternion.from_float_array(trans["transformations"]["frame_rotation"])*chiA*quaternion.from_float_array(trans["transformations"]["frame_rotation"]).inverse()
+        chiB=quaternion.from_float_array(trans["transformations"]["frame_rotation"])*chiB*quaternion.from_float_array(trans["transformations"]["frame_rotation"]).inverse()
     chi1_i = chiA[i_1].vec
     chi2_i = chiB[i_1].vec
 
