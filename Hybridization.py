@@ -54,7 +54,92 @@ def nOrbits_to_length(nOrbits, t_end, Omega_array, time_array):
         message=("The waveform before endtime only has {0} orbits, which is smaller than required {1}.")
         raise ValueError(message.format(orbits, nOrbits))
     return t_end-t0
-
+"""
+def Physical_to_Parameterize(x):
+    
+    Reparameterize physical parameters x=[q, M, chi1_x, chi1_y, chi1_z, chi2_x, chi2_y, chi2_z, t_delta,
+    logR_delta_x, logR_delta_y, logR_delta_z] for optimization. The last four components of x are optional.
+    
+    if len(x)!=12 and len(x)!=8 and np.linalg.norm(np.cross(chi1_i,chi2_i))<1e-8:
+        message=("Incorrect format for x={0}. x should be [q, M, chi1_x, chi1_y, chi1_z, chi2_x, chi2_y, chi2_z, t_delta,"
+            +"logR_delta_x, logR_delta_y, logR_delta_z], where the last four components are optional.")
+        raise ValueError(message.format(x))
+    x_2=(np.linalg.norm(x[2:5])+np.linalg.norm(x[5:8]))/(np.linalg.norm(chi1_i)+np.linalg.norm(chi2_i))
+    x_3=(np.linalg.norm(x[2:5])-np.linalg.norm(x[5:8]))/(np.linalg.norm(chi1_i)-np.linalg.norm(chi2_i))
+    if len(x)==12:
+        R_frame = np.exp(quaternion.quaternion(0.0,x[9],x[10],x[11]))
+        rotation=quaternion.optimal_alignment_in_Euclidean_metric(x[2:5],(x_2*R_frame*quaternion.quaternion(0,chi1_i[0],chi1_i[1],chi1_i[2])*R_frame.conjugate()).vec)
+    else:
+        rotation=quaternion.optimal_alignment_in_Euclidean_metric(x[2:5],x_2*chi1_i)
+    axis=quaternion.from_float_array(np.append(0,x[2:5])).normalized()
+    chi1_hat=x[2:5]/np.linalg.norm(x[2:5])
+    if len(x)==12:
+        chi2_i_proj=x_3*(rotation*R_frame*quaternion.quaternion(0,chi2_i[0],chi2_i[1],chi2_i[2])*R_frame.conjugate()*rotation.conjugate()).vec
+    else:
+        chi2_i_proj=x_3*(rotation*quaternion.quaternion(0,chi2_i[0],chi2_i[1],chi2_i[2])*rotation.conjugate()).vec
+    chi2_i_proj=chi2_i_proj-np.dot(chi2_i_proj,chi1_hat)*chi1_hat
+    chi2_0_proj=x[5:8]-np.dot(x[5:8],chi1_hat)*chi1_hat
+    angle=np.arccos(np.dot(chi2_i_proj,chi2_0_proj)/(np.linalg.norm(chi2_i_proj)*np.linalg.norm(chi2_0_proj)))
+    if np.dot(chi2_i_proj,chi2_0_proj)/(np.linalg.norm(chi2_i_proj)*np.linalg.norm(chi2_0_proj))>1:
+        angle=0.0
+    elif np.dot(chi2_i_proj,chi2_0_proj)/(np.linalg.norm(chi2_i_proj)*np.linalg.norm(chi2_0_proj))<-1:
+        angle=np.pi
+    sign=np.sign(np.dot(chi1_hat,np.cross(chi2_i_proj,chi2_0_proj)))
+    rotation=np.exp(sign*axis*angle/2)*rotation
+    if len(x)==12:
+        x_47=(quaternion.as_float_array(np.log(rotation)))[1:]#-np.append(0.0, omega_mean*x[8]/2))[1:]
+    else:
+        x_47=(quaternion.as_float_array(np.log(rotation)))[1:]
+    x_47[x_47>np.pi]=x_47[x_47>np.pi]-np.pi
+    if len(x) == 12:
+        chi2_0=x_3*(rotation*R_frame*quaternion.quaternion(0,chi2_i[0],chi2_i[1],chi2_i[2])*R_frame.conjugate()*rotation.conjugate()).vec
+    else:
+        chi2_0=x_3*(rotation*quaternion.quaternion(0,chi2_i[0],chi2_i[1],chi2_i[2])*rotation.conjugate()).vec
+    sign=np.sign(np.dot(np.cross(chi2_0,chi1_hat),np.cross(chi2_0,x[5:8])))
+    x_7=sign*np.arccos(np.dot(chi2_0,x[5:8])/(np.linalg.norm(x[5:8])*np.linalg.norm(chi2_0)))
+    if np.dot(chi2_0,x[5:8])/(np.linalg.norm(x[5:8])*np.linalg.norm(chi2_0))>1:
+        x_7=0.0
+    x[0]=x[0]/q_0
+    x[1]=x[1]/Mc_0
+    x[2]=x_2
+    x[3]=x_3
+    x[4:7]=x_47
+    x[7]=x_7
+    if len(x)==12:
+        x[9:]=x[9:]-omega_mean*x[8]/2
+    return x
+        
+def Parameterize_to_Physical(x):
+    
+    Output optimization parameters as physical quantities x=[q, M, chi1_x, chi1_y, chi1_z, chi2_x, chi2_y, chi2_z, t_delta,
+    logR_delta_x, logR_delta_y, logR_delta_z]. The last four components of x are optional.
+    
+    if len(x)!=12 and len(x)!=8:
+        message=("Incorrect format for x={0}")
+        raise ValueError(message.format(x))
+    x[0]=x[0]*q_0
+    x[1]=x[1]*Mc_0
+    chi1_0 = quaternion.quaternion(0,chi1_i[0],chi1_i[1],chi1_i[2])
+    chi2_0 = quaternion.quaternion(0,chi2_i[0],chi2_i[1],chi2_i[2])
+    if len(x)==12:
+        phase=quaternion.quaternion(0.0, omega_mean[0]*x[8]/2, omega_mean[1]*x[8]/2, omega_mean[2]*x[8]/2)
+        rotation=np.exp(xHat*x[4]+yHat*x[5]+zHat*x[6])#+phase)
+        R_frame=np.exp(quaternion.quaternion(0.0,x[9],x[10],x[11])+phase)
+        chi1_0 = R_frame*chi1_0*R_frame.conjugate()
+        chi2_0 = R_frame*chi2_0*R_frame.conjugate()
+    else:
+        rotation=np.exp(xHat*x[4]+yHat*x[5]+zHat*x[6])
+    chi1_0=0.5*(x[2]*(np.linalg.norm(chi1_i)+np.linalg.norm(chi2_i))+x[3]*(np.linalg.norm(chi1_i)-np.linalg.norm(chi2_i)))*(rotation*chi1_0*rotation.conjugate()).vec
+    chi2_0=0.5*(x[2]*(np.linalg.norm(chi1_i)+np.linalg.norm(chi2_i))-x[3]*(np.linalg.norm(chi1_i)-np.linalg.norm(chi2_i)))*rotation*chi2_0*rotation.conjugate()
+    axis=quaternion.from_float_array(np.append(0,np.cross(chi2_0.vec,chi1_0))).normalized()
+    angle=np.exp(axis*x[7]/2)
+    chi2_0=(angle*chi2_0*angle.conjugate()).vec
+    x[2:5]=chi1_0
+    x[5:8]=chi2_0
+    if len(x)==12:
+        x[9:]=x[9:]+omega_mean*x[8]/2
+    return x
+"""
 def Physical_to_Parameterize(x):
     """
     Reparameterize physical parameters x=[q, M, chi1_x, chi1_y, chi1_z, chi2_x, chi2_y, chi2_z, t_delta,
@@ -534,6 +619,8 @@ def Hybridize(WaveformType,t_end00, data_dir, cce_dir, out_dir, length, nOrbits,
         minima12D=minimize(Optimize11D,minima12D.x,method='Nelder-Mead',bounds=Bounds(lowbound12D,upbound12D),options={'return_all':True,'xatol': 3e-16, 'fatol': 1e-15,'maxfev':1500,'adaptive':True})
         PNParas=minima12D.x
 
+
+    
     t_PNStart, t_PNEnd=-80000, 1000-t_start
     Align(PNParas)
     t_delta=minima.x[0]
@@ -557,21 +644,11 @@ def Hybridize(WaveformType,t_end00, data_dir, cce_dir, out_dir, length, nOrbits,
     for i in range(len(W_NR.data[0,:])):
         print(i,SquaredError(W_NR,W_PN,t_start,t_start+length,mode=i))
     
-    t1=t_end0-nOrbits_to_length(nOrbits/2,t_end0,omega_NR_mag,W_NR.t)-nOrbits_to_length(35,t_end0,omega_NR_mag,W_NR.t)
-    length=nOrbits_to_length(10,t1,omega_NR_mag,W_NR.t)#################################################################################
-    Output=np.append(Output,np.array([SquaredError(W_NR,W_PN,t1-1.0*length,t_end0)]))#t1
+    t1=t_end0-nOrbits_to_length(25+nOrbits/2,t_end0,omega_NR_mag,W_NR.t)
+    #t1=t_end0-5000-nOrbits_to_length(30,t_end0,omega_NR_mag,W_NR.t)
+    length=nOrbits_to_length(10,t1,omega_NR_mag,W_NR.t)
+    Output=np.append(Output,np.array([SquaredError(W_NR,W_PN,t1-1.0*length,t1)]))
     print("Test window:", Output[-1])
-    """
-    print("SquaredError over longer region: ","t=40 ",t1-4.0*length," ",SquaredError(W_NR,W_PN,t1-4.0*length,t1), " ",SquaredError(W_NR,W_PN,t1-4.0*length,t1,mode=modes), " ", SquaredErrorNorm(W_NR,W_PN,t1-4.0*length,t1)," ",SquaredErrorScalar(W_NR.t,W_PN.t,f1,f2,t1-4.0*length,t1))
-    print("SquaredError over longer region: ","t=30 ",t1-3.0*length," ",SquaredError(W_NR,W_PN,t1-3.0*length,t1), " ",SquaredError(W_NR,W_PN,t1-3.0*length,t1,mode=modes), " ", SquaredErrorNorm(W_NR,W_PN,t1-3.0*length,t1)," ",SquaredErrorScalar(W_NR.t,W_PN.t,f1,f2,t1-3.0*length,t1))
-    print("SquaredError over longer region: ","t=20 ",t1-2.0*length," ",SquaredError(W_NR,W_PN,t1-2.0*length,t1), " ",SquaredError(W_NR,W_PN,t1-2.0*length,t1,mode=modes), " ", SquaredErrorNorm(W_NR,W_PN,t1-2.0*length,t1)," ",SquaredErrorScalar(W_NR.t,W_PN.t,f1,f2,t1-2.0*length,t1))
-    print("SquaredError over longer region: ","t=10 ",t1-1.0*length," ",SquaredError(W_NR,W_PN,t1-1.0*length,t1), " ",SquaredError(W_NR,W_PN,t1-1.0*length,t1,mode=modes), " ",SquaredErrorNorm(W_NR,W_PN,t1-1.0*length,t1)," ",SquaredErrorScalar(W_NR.t,W_PN.t,f1,f2,t1-1.0*length,t1))
-    print("SquaredError of (2,2) mode: ",SquaredError(W_NR,W_PN,t_start,t_start+length,mode=4))
-    print("SquaredError (2,1) mode: ",SquaredError(W_NR,W_PN,t_start,t_start+length,mode=3))
-    print("SquaredError (2,0) mode: ",SquaredError(W_NR,W_PN,t_start,t_start+length,mode=2))
-    for i in range(len(W_NR.data[0,:])):
-        print(i,SquaredError(W_NR,W_PN,t_start,t_start+length,mode=i)," ",SquaredError(W_NR,W_PN,t1-1.0*length,t1,mode=i)," ",SquaredError(W_NR,W_PN,t1-2.0*length,t1,mode=i)," ",SquaredError(W_NR,W_PN,t1-3.0*length,t1,mode=i)," ",SquaredError(W_NR,W_PN,t1-4.0*length,t1,mode=i))
-    """
     length=length_global###################################################################################
     
     PhyParas=Parameterize_to_Physical(np.copy(PNParas))
@@ -752,6 +829,124 @@ while PNIter<=maxiter:
     print(Output)
 """
 Some garbage
+
+        PhyParas=Parameterize_to_Physical(np.copy(PNParas))
+        temp = np.copy(PhyParas)
+        xx = np.linspace(PhyParas[2]-0.1,PhyParas[2]+0.1, 100)
+        yy = np.linspace(PhyParas[5]-0.1,PhyParas[5]+0.1, 100)
+        X, Y = np.meshgrid(xx, yy)
+        Z=np.empty((len(xx),len(yy)))
+        for i in range(len(xx)):
+            for j in range(len(yy)):
+                temp[2] = xx[i]
+                temp[5] = yy[j]
+                Z[j,i] = Optimize11D(Physical_to_Parameterize(np.copy(temp)))
+        np.savetxt('s1x2x.txt',Z,delimiter=',')
+        fig=plt.pcolor(X,Y,np.log(Z),cmap='rainbow')
+        plt.xlabel("chi1_x")
+        plt.ylabel("chi2_x")
+        plt.colorbar(fig)
+        plt.savefig("s1x2x.pdf",dpi=1000)
+        plt.clf()
+        
+        temp = np.copy(PhyParas)
+        xx = np.linspace(PhyParas[2]-0.1,PhyParas[2]+0.1, 100)
+        yy = np.linspace(PhyParas[11]-1.5,PhyParas[11]+1.5, 100)
+        X, Y = np.meshgrid(xx, yy)
+        Z=np.empty((len(xx),len(yy)))
+        for i in range(len(xx)):
+            for j in range(len(yy)):
+                temp[2] = xx[i]
+                temp[11] = yy[j]
+                Z[j,i] = Optimize11D(Physical_to_Parameterize(np.copy(temp)))
+        np.savetxt('s1Rz01.txt',Z,delimiter=',')
+        fig=plt.pcolor(X,Y,np.log(Z),cmap='rainbow')
+        plt.xlabel("chi1_x")
+        plt.ylabel("R_z")
+        plt.colorbar(fig)
+        plt.savefig("s1Rz01.pdf",dpi=1000)
+        plt.clf()
+        
+        temp = np.copy(PhyParas)
+        xx = np.linspace(PhyParas[8]-150,PhyParas[8]+150, 180)
+        yy = np.linspace(PhyParas[11]-1.5,PhyParas[11]+1.5, 180)
+        X, Y = np.meshgrid(xx, yy)
+        Z=np.empty((len(xx),len(yy)))
+        for i in range(len(xx)):
+            for j in range(len(yy)):
+                temp[8] = xx[i]
+                temp[11] = yy[j]
+                Z[j,i] = Optimize11D(Physical_to_Parameterize(np.copy(temp)))
+        np.savetxt('tRz01.txt',Z,delimiter=',')
+        fig=plt.pcolor(X,Y,np.log(Z),cmap='rainbow')
+        plt.xlabel("time shift")
+        plt.ylabel("z component of log(R)")
+        plt.colorbar(fig)
+        plt.savefig("tRz01.pdf",dpi=1000)
+        plt.clf()
+        
+        temp = np.copy(PNParas)
+        xx = np.linspace(PNParas[8]-150,PNParas[8]+150, 180)
+        yy = np.linspace(PNParas[11]-1.5,PNParas[11]+1.5, 180)
+        X, Y = np.meshgrid(xx, yy)
+        Z=np.empty((len(xx),len(yy)))
+        for i in range(len(xx)):
+            for j in range(len(yy)):
+                temp[8] = xx[i]
+                temp[11] = yy[j]
+                Z[j,i] = Optimize11D(np.copy(temp))
+        np.savetxt('tRzNew.txt',Z,delimiter=',')
+        fig=plt.pcolor(X,Y,np.log(Z),cmap='rainbow')
+        plt.xlabel("time shift")
+        plt.ylabel("z component of log(R)")
+        plt.colorbar(fig)
+        plt.savefig("tRzNew.pdf",dpi=1000)
+        plt.clf()
+        
+        temp = np.copy(PNParas)
+        xx = np.linspace(PNParas[6]-1.5,PNParas[6]+1.5, 100)
+        yy = np.linspace(PNParas[11]-1.5,PNParas[11]+1.5, 100)
+        X, Y = np.meshgrid(xx, yy)
+        Z=np.empty((len(xx),len(yy)))
+        for i in range(len(xx)):
+            for j in range(len(yy)):
+                temp[6] = xx[i]
+                temp[11] = yy[j]
+                Z[j,i] = Optimize11D(np.copy(temp))
+        np.savetxt('Q1zRzNew.txt',Z,delimiter=',')
+        fig=plt.pcolor(X,Y,np.log(Z),cmap='rainbow')
+        plt.xlabel("z component of log(Q1)")
+        plt.ylabel("z component of log(R)")
+        plt.colorbar(fig)
+        plt.savefig("Q1zRzNew.pdf",dpi=1000)
+        plt.clf()
+        
+        temp = np.copy(PNParas)
+        xx = np.linspace(PNParas[7]-1.5,PNParas[7]+1.5, 180)
+        yy = np.linspace(PNParas[6]-1.5,PNParas[6]+1.5, 180)
+        X, Y = np.meshgrid(xx, yy)
+        Z=np.empty((len(xx),len(yy)))
+        for i in range(len(xx)):
+            for j in range(len(yy)):
+                temp[7] = xx[i]
+                temp[6] = yy[j]
+                Z[j,i] = Optimize11D(np.copy(temp))
+        np.savetxt('x8x7.txt',Z,delimiter=',')
+        fig=plt.pcolor(X,Y,np.log(Z),cmap='rainbow')
+        plt.xlabel("x8")
+        plt.ylabel("x7")
+        plt.colorbar(fig)
+        plt.savefig("x8x7.pdf",dpi=1000)
+        plt.clf()
+        
+        temp = np.copy(PNParas)
+        xx = np.linspace(PNParas[7]-1.5,PNParas[7]+1.5, 201)
+        Z = np.ones(201)
+        for i in range(len(xx)):
+            temp[7] = xx[i]
+            Z[i] = Optimize11D(np.copy(temp))
+        np.savetxt('x8.txt',Z,delimiter=',')
+
 
 chi1temp=quaternion.as_float_array(R_delta*chiA*R_delta.conjugate())[:,1:]
     chi2temp=quaternion.as_float_array(R_delta*chiB*R_delta.conjugate())[:,1:]
