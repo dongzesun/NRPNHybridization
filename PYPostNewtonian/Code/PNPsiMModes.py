@@ -128,7 +128,7 @@ class Variables:
         self.hHat_spin_Asymm_4_1_4=hHat_spin_Asymm_4_1_4
 
 @njit(cache=True)
-def Initialization(Cons, wHat_i, xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i): 
+def Initialization(Cons, wHat_i, xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, lambda_1_i, lambda_2_i, kappa_1_i, kappa_2_i): 
     Cons.wHat=wHat_i
     Cons.xHat=xHat_i
     Cons.yHat=yHat_i
@@ -146,7 +146,7 @@ def Initialization(Cons, wHat_i, xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1
     Cons.hHat_0_0_6=-35*Cons.nu**3/5184 - 155*Cons.nu**2/96 + Cons.nu*(59.8003472222222 - 205*pi**2/96) - 10.546875 + 0.0*I
     Cons.hHat_1_1_6=10.8244118157276*Cons.delta*Cons.nu + 0.0*I
     Cons.hHat_2_0_0=np.array([2*sqrt(5)/7 + 0.0*I])
-    Cons.hHat_2_0_2=335*Cons.nu/168 - 4075*sqrt(5)/14112 + 0.0*I
+    Cons.hHat_2_0_2=67*sqrt(5)*Cons.nu/168 - 4075*sqrt(5)/14112 + 0.0*I
     Cons.hHat_2_0_4=205*sqrt(5)*Cons.nu**2/1232 - 123815*sqrt(5)*Cons.nu/155232 - 151877213*sqrt(5)/234710784 + 0.0*I
     Cons.hHat_2_0_5=0.860544217687075*sqrt(5)*Cons.nu*pi - 253*sqrt(5)*pi/1176 + 0.0*I
     Cons.hHat_2_0_6=1321981*sqrt(5)*Cons.nu**3/20756736 + 69527951*sqrt(5)*Cons.nu**2/581188608 + Cons.nu*(-205*sqrt(5)*pi**2/336 + 700464542023*sqrt(5)/48819843072) - 4397711103307*sqrt(5)/1864030371840 + 0.0*I
@@ -1289,9 +1289,10 @@ def Modes(wHat_i, xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, f
     ModeData=np.zeros((len(y[0]),81), dtype=complex)
     zz=np.array([0.0])
     z=np.array([0.0*1j])
+    kappa = 1.0
     Cons=Constants(zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z)
     Vars=Variables(zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,zz,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z)
-    Initialization(Cons, wHat_i, xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i)
+    Initialization(Cons, wHat_i, xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, kappa, kappa)
     for i in range(len(y[0])):
         Recalculate.get(2*PNWaveformModeOrder)(Cons,Vars,y[:,i])
         WaveformModes.get(2*PNWaveformModeOrder)(ModeData[i,:],Cons,Vars)
