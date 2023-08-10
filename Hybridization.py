@@ -464,7 +464,7 @@ def Hybridize(WaveformType,t_end00, data_dir, cce_dir, out_dir, length, nOrbits,
     q_0=m1/m2
     if m1<m2:
         q_0=1.0/q_0
-    Mc_0=1.0
+    Mc_0=m1+m2
     d=xA-xB
     nHat=np.empty((len(d),4))
     for i in range(len(d)):
@@ -525,6 +525,9 @@ def Hybridize(WaveformType,t_end00, data_dir, cce_dir, out_dir, length, nOrbits,
         PNParas=Physical_to_Parameterize(np.copy(PhyParas))
         lowbound12D=PNParas-[0.05,0.02,0.1,0.1,np.pi*2,np.pi*2,np.pi,np.pi/4,np.pi/omega_0/2.0,np.pi/4,np.pi/4,np.pi/4]
         upbound12D=PNParas+[0.05,0.02,0.1,0.1,np.pi*2,np.pi*2,np.pi,np.pi/4,np.pi/omega_0/2.0,np.pi/4,np.pi/4,np.pi/4]
+        if np.linalg.norm(chi1_i)<1e-4 or np.linalg.norm(chi2_i)<1e-4:
+            lowbound12D[7]=1e-5
+            upbound12D[7]=1e-5
         OptMethod = "LSQ"
         minima12D=least_squares(Optimize11D, PNParas,bounds=(lowbound12D,upbound12D),ftol=3e-16, xtol=3e-16, gtol=1e-15,x_scale='jac',max_nfev=100)
         OptMethod = "NM"
@@ -575,10 +578,16 @@ def Hybridize(WaveformType,t_end00, data_dir, cce_dir, out_dir, length, nOrbits,
     Output=np.append(Output,np.copy(PhyParas))
     Output=np.append(Output,0.0)
     Output=np.append(Output,np.copy(var))
-    Output=np.append(Output,np.copy(PhyParas[:4])*(1-1/np.copy(PNParas[:4])))
-    Output=np.append(Output,np.copy(PhyParas[7]))
-    Output=np.append(Output,np.copy(PhyParas[:4])/np.copy(PNParas[:4])*np.copy(var[:4]))
-    Output=np.append(Output,np.copy(PhyParas[7])*np.copy(var[7]))
+    if np.linalg.norm(chi1_i)<1e-4 or np.linalg.norm(chi2_i)<1e-4:
+        var[7]=1e-5
+    Output=np.append(Output,np.copy(PhyParas[:2])*(1-1/np.copy(PNParas[:2])))
+    Output=np.append(Output,np.linalg.norm(np.copy(PhyParas[2:5]))*(1-1/np.copy(PNParas[2])))
+    Output=np.append(Output,np.linalg.norm(np.copy(PhyParas[5:8]))*(1-1/np.copy(PNParas[3])))
+    Output=np.append(Output,np.copy(PNParas[7]))
+    Output=np.append(Output,np.copy(PhyParas[:2])/np.copy(PNParas[:2])*np.copy(var[:2]))
+    Output=np.append(Output,np.linalg.norm(np.copy(PhyParas[2:5]))/np.copy(PNParas[2])*np.copy(var[2]))
+    Output=np.append(Output,np.linalg.norm(np.copy(PhyParas[5:8]))/np.copy(PNParas[3])*np.copy(var[3]))
+    Output=np.append(Output,np.copy(var[7]))
     #Output=np.append(Output,np.array([0.0,q_0,np.linalg.norm(chi1_ii),np.linalg.norm(chi2_ii),PhyParas[0],np.linalg.norm((chi1[W_PN.t>=t_end0])[0]),np.linalg.norm((chi2[W_PN.t>=t_end0])[0])]))
     #omega_PNL=W_PN.angular_velocity()
     #chi1L=np.dot((chi1[W_PN.t>=t_end0])[0],(omega_PNL[W_PN.t>=t_end0])[0])/np.linalg.norm((omega_PNL[W_PN.t>=t_end0])[0])
