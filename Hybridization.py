@@ -77,7 +77,7 @@ class hyb_quantites:
         self.Normalization = np.sum(simpson(abs(self.W_NR_matching_in.data)**2.0, self.matchingt, axis=0))
         self.NormalizationOmega = simpson(np.linalg.norm(self.omega_NR_matching, axis=1), self.matchingt)
         
-    def get_window_PN(self, PN):
+    def get_window_PN(self, W_PN):
         omega_PN = W_PN.angular_velocity()
         self.omega_PN_spline = SplineArray(W_PN.t, omega_PN)
         omega_PN_mag = gaussian_filter(np.linalg.norm(omega_PN, axis=1),100)
@@ -86,7 +86,7 @@ class hyb_quantites:
         
         
 class PNParameters:
-    def __init__(self, data_dir, t0):
+    def __init__(self, data_dir, hyb, t0):
         self.xHat = quaternion.quaternion(0.0,1.0,0.0,0.0)
         self.yHat = quaternion.quaternion(0.0,0.0,1.0,0.0)
         self.zHat = quaternion.quaternion(0.0,0.0,0.0,1.0)
@@ -99,7 +99,7 @@ class PNParameters:
             xB = f['AhB.dir/CoordCenterInertial.dat'][:,1:]
             mB = f['AhB.dir/ChristodoulouMass.dat'][:,1]
             chiB = f['AhB.dir/chiInertial.dat'][:,1:]
-        self.i = abs(tA-t_start).argmin()
+        self.i = abs(tA - hyb.t_start).argmin()
         self.tA = tA
         
         m1 = mA[self.i]
@@ -231,7 +231,7 @@ class PNParameters:
         chi2_0 = quaternion.quaternion(0,self.chi2_i[0],self.chi2_i[1],self.chi2_i[2])
         rotation = np.exp(self.xHat*x[4] + self.yHat*x[5] + self.zHat*x[6])
         if len(x) == 12:
-            phase = quaternion.quaternion(0.0, omega_mean[0]*x[8]/2, omega_mean[1]*x[8]/2, hyb.omega_mean[2]*x[8]/2)
+            phase = quaternion.quaternion(0.0, hyb.omega_mean[0]*x[8]/2, hyb.omega_mean[1]*x[8]/2, hyb.omega_mean[2]*x[8]/2)
             R_frame = np.exp(quaternion.quaternion(0.0,x[9],x[10],x[11]) + phase)
             chi1_0 = R_frame*chi1_0*R_frame.conjugate()
             chi2_0 = R_frame*chi2_0*R_frame.conjugate()
@@ -342,7 +342,7 @@ def fix_BMS(abd, hyb, PN, PNIter):
     W_NR = scri.WaveformModes()
     if PNIter == 0:
         abd_prime, trans = abd.map_to_superrest_frame(t_0=hyb.t_start+hyb.length/2)
-        W_NR = abd_to_WM(abd_prime):
+        W_NR = abd_to_WM(abd_prime)
         W_NR_corot = scri.to_corotating_frame(W_NR.copy())
         ZeroModes = [2,8,16,26,38,52,68]
         W_NR_corot.data[:,ZeroModes] = 0.0*W_NR_corot.data[:,ZeroModes]
@@ -350,7 +350,7 @@ def fix_BMS(abd, hyb, PN, PNIter):
     else:
         Phys = PN.PhyParas
         W_PN = PostNewtonian.PNWaveform(
-            Phys[0], np.copy(hyb.omega_i)*Phys[1], Phys[2:5], Phys[5:8],hyb.frame_i, np.copy(hyb.t_start)/Phys[1],
+            Phys[0], np.copy(hyb.omega_i)*Phys[1], Phys[2:5], Phys[5:8],PN.frame_i, np.copy(hyb.t_start)/Phys[1],
             t_PNStart=hyb.t_PNStart, t_PNEnd=hyb.t_PNEnd
         )
         W_PN.t = W_PN.t*Phys[1]
@@ -359,7 +359,7 @@ def fix_BMS(abd, hyb, PN, PNIter):
         W_PN.dataType = scri.h
         
         W_PN_PsiM_corot = PostNewtonian.PNWaveform(
-            Phys[0], np.copy(hyb.omega_i)*Phys[1], Phys[2:5], Phys[5:8],hyb.frame_i, np.copy(hyb.t_start)/Phys[1],
+            Phys[0], np.copy(hyb.omega_i)*Phys[1], Phys[2:5], Phys[5:8],PN.frame_i, np.copy(hyb.t_start)/Phys[1],
             t_PNStart=hyb.t_PNStart, t_PNEnd=hyb.t_PNEnd,datatype="Psi_M"
         )
         W_PN_PsiM.t = W_PN_PsiM.t*Phys[1]
@@ -373,10 +373,10 @@ def InitialT(x, hyb):
     return simpson((hyb.omega_NR_mag_matching - hyb.omega_PN_mag_spline(hyb.matchingt + x))**2, hyb.matchingt)/hyb.NormalizationOmega
 
 
-def InitialR(theta, hyb, delta_t):
+def InitialR(theta, hyb, t_delta, R_delta):
     R_temp = R_delta*np.exp(theta/2*quaternion.quaternion(0.0, hyb.omega_NR_hat[0,0], hyb.omega_NR_hat[0,1], hyb.omega_NR_hat[0,2]))
     W_temp = scri.rotate_physical_system(hyb.W_NR_matching_in.copy(), R_temp)
-    cost = (np.angle(W_temp.data[int(len(hyb.matchingt)/2),4]) - np.angle(hyb.PNData_spline(delta_t + W_temp.t[int(len(hyb.matchingt)/2)])[0,4]))**2
+    cost = (np.angle(W_temp.data[int(len(hyb.matchingt)/2),4]) - np.angle(hyb.PNData_spline(t_delta + W_temp.t[int(len(hyb.matchingt)/2)])[0,4]))**2
     return cost
 
 
@@ -420,7 +420,7 @@ def StandardError(minima, PN):
     return var
 
 
-def Align(PN, hyb):
+def Align(PN, hyb, PNIter):
     """
     Generate PN waveform and align it with NR waveform.
     """    
@@ -429,7 +429,7 @@ def Align(PN, hyb):
     print(("Generating PN with parameters q={0}, M={4}, omega_0={1}, chi1_0={2}, chi2_0={3}.").format(
         Phys[0], hyb.omega_i, Phys[2:5], Phys[5:8], Phys[1]))
     W_PN_corot, chi1, chi2 = PostNewtonian.PNWaveform(
-        Phys[0], np.copy(hyb.omega_i)*Phys[1], Phys[2:5], Phys[5:8], hyb.frame_i, np.copy(hyb.t_start)/Phys[1],
+        Phys[0], np.copy(hyb.omega_i)*Phys[1], Phys[2:5], Phys[5:8], PN.frame_i, np.copy(hyb.t_start)/Phys[1],
         t_PNStart=hyb.t_PNStart, t_PNEnd=hyb.t_PNEnd, frametype="corotating", return_chi=True
     )
     
@@ -455,13 +455,13 @@ def Align(PN, hyb):
         Initial2[1:] = quaternion.as_float_array(np.log(R_delta))[1:] - hyb.omega_mean*Phys[8]/2
     else:
         # Get initial guess of time alignment by matching angular velocity
-        mint = least_squares(InitialT, 0.0, bounds=[-10*np.pi/hyb.omega_i, 10*np.pi/hyb.omega_i], ftol=1e-14, xtol=1e-14, gtol=1e-14, args=(hyb))
+        mint = least_squares(InitialT, 0.0, bounds=[-10*np.pi/hyb.omega_i, 10*np.pi/hyb.omega_i], ftol=1e-14, xtol=1e-14, gtol=1e-14, args=([hyb]))
         
         # Get initial guess of frame alignment
         R_delta = quaternion.optimal_alignment_in_Euclidean_metric(
             hyb.omega_NR_matching, hyb.omega_PN_spline(hyb.matchingt + mint.x), hyb.matchingt
         )
-        minf = least_squares(InitialR, 0.0, bounds=[-np.pi,np.pi], ftol=1e-14, xtol=1e-14, gtol=1e-14, args=(hyb, mint.x))
+        minf = least_squares(InitialR, 0.0, bounds=[-np.pi,np.pi], ftol=1e-14, xtol=1e-14, gtol=1e-14, args=(hyb, mint.x, R_delta))
         
         # Pi degeneracy
         phase = quaternion.quaternion(0.0, hyb.omega_mean[0]*mint.x/2, hyb.omega_mean[1]*mint.x/2, hyb.omega_mean[2]*mint.x/2)
@@ -480,22 +480,22 @@ def Align(PN, hyb):
     upbound1 = Initial1 + scale
     lowbound2 = Initial2 - scale
     upbound2 = Initial2 + scale
-    minima1 = least_squares(Optimize4D, Initial1, bounds=(lowbound1,upbound1), ftol=1e-16, xtol=1e-16, gtol=1e-14, x_scale='jac', args=(hyb))
-    minima2 = least_squares(Optimize4D, Initial2, bounds=(lowbound2,upbound2), ftol=1e-16, xtol=1e-16, gtol=1e-14, x_scale='jac', args=(hyb))
+    minima1 = least_squares(Optimize4D, Initial1, bounds=(lowbound1,upbound1), ftol=1e-16, xtol=1e-16, gtol=1e-14, x_scale='jac', args=([hyb]))
+    minima2 = least_squares(Optimize4D, Initial2, bounds=(lowbound2,upbound2), ftol=1e-16, xtol=1e-16, gtol=1e-14, x_scale='jac', args=([hyb]))
     if minima1.cost > minima2.cost:
         minima1.x = minima2.x
         minima1.cost = minima2.cost
     return minima1, W_PN, chi1, chi2
 
 
-def Optimize12D(x, PN, hyb):
+def Optimize12D(x, PN, hyb, PNIter):
     """
     Generate PN waveform and align it with NR waveform.
     """
     PN.Parameterize_to_Physical(hyb)
     Phys = PN.PhyParas
-    PostNewtonian.PNWaveform(
-        Phys[0], np.copy(hyb.omega_i)*Phys[1], Phys[2:5], Phys[5:8], hyb.frame_i, np.copy(hyb.t_start)/Phys[1],
+    W_PN_corot = PostNewtonian.PNWaveform(
+        Phys[0], np.copy(hyb.omega_i)*Phys[1], Phys[2:5], Phys[5:8], PN.frame_i, np.copy(hyb.t_start)/Phys[1],
         t_PNStart=hyb.t_PNStart, t_PNEnd=hyb.t_PNEnd, frametype="corotating"
     )
     
@@ -614,7 +614,7 @@ def Hybridize(WaveformType,t_end, sim_dir, cce_dir, out_dir, length, nOrbits, hy
         PN.Physical_to_Parameterize(hyb)
 
     if OptimizePNParas:
-        minima, W_PN, chiA, chiB = Align(PN, hyb)
+        minima, W_PN, chiA, chiB = Align(PN, hyb, PNIter)
         logR_delta = np.append(minima.x[0], minima.x[1:] + hyb.omega_mean*minima.x[0]/2)
         if len(PN.PhyParas) == 12:
             PN.PhyParas[8:] = logR_delta
@@ -632,14 +632,14 @@ def Hybridize(WaveformType,t_end, sim_dir, cce_dir, out_dir, length, nOrbits, hy
         lowbound12D = PN.OptParas - scale
         upbound12D = PN.OptParas + scale
 
-        minima12D = least_squares(Optimize12D, PN.OptParas, bounds=(lowbound12D, upbound12D), ftol=3e-16, xtol=3e-16, gtol=1e-15, x_scale='jac', args=(PN, hyb))
+        minima12D = least_squares(Optimize12D, PN.OptParas, bounds=(lowbound12D, upbound12D), ftol=3e-16, xtol=3e-16, gtol=1e-15, x_scale='jac', args=(PN, hyb, PNIter))
         PN.OptParas = minima12D.x
         PN.Parameterize_to_Physical(hyb)
     
     
     # Get aligned NR and PN waveforms
     hyb.t_PNStart, hyb.t_PNEnd = -80000, 1000 - hyb.t_start
-    minima, W_PN, chiA, chiB = Align(PN, hyb)
+    minima, W_PN, chiA, chiB = Align(PN, hyb, PNIter)
     
     t_delta = minima.x[0]
     logR_delta = np.append(minima.x[0], minima.x[1:] + hyb.omega_mean*minima.x[0]/2)
@@ -648,7 +648,7 @@ def Hybridize(WaveformType,t_end, sim_dir, cce_dir, out_dir, length, nOrbits, hy
     else:
         PN.PhyParas = np.append(PN.PhyParas, logR_delta)
     PN.Parameterize_to_Physical(hyb)
-    R_delta = np.exp(logR_delta)
+    R_delta = np.exp(quaternion.from_float_array(logR_delta))
     
     W_PN.t = W_PN.t - t_delta
     W_NR = scri.rotate_physical_system(W_NR, R_delta)
@@ -735,7 +735,7 @@ else:
     maxiter = 0
     
 hyb = hyb_quantites(t_end, length)
-PN = PNParameters(data_dir, t0)
+PN = PNParameters(data_dir, hyb, t0)
     
 while PNIter<=maxiter:
     print("PNIter=: ", PNIter)
