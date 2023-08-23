@@ -358,7 +358,7 @@ def fix_BMS(abd, hyb, PN, PNIter):
         W_PN.ells = 0,8
         W_PN.dataType = scri.h
         
-        W_PN_PsiM_corot = PostNewtonian.PNWaveform(
+        W_PN_PsiM = PostNewtonian.PNWaveform(
             Phys[0], np.copy(hyb.omega_i)*Phys[1], Phys[2:5], Phys[5:8],PN.frame_i, np.copy(hyb.t_start)/Phys[1],
             t_PNStart=hyb.t_PNStart, t_PNEnd=hyb.t_PNEnd,datatype="Psi_M"
         )
@@ -394,7 +394,7 @@ def SquaredError(W1, W2, t1, t2, mode=None):
     """
     W2_spline = SplineArray(W2.t, W2.data)
     matchingt = W1.t[(W1.t>=t1)&(W1.t<=t2)]
-    h1h2 = np.sum(simpson(abs(W2_spline(matchingtt) - W1.data[(W1.t>=t1)&(W1.t<=t2),:])**2.0, matchingt, axis=0))
+    h1h2 = np.sum(simpson(abs(W2_spline(matchingt) - W1.data[(W1.t>=t1)&(W1.t<=t2),:])**2.0, matchingt, axis=0))
     h1h1 = np.sum(simpson(abs(W1.data[(W1.t>=t1)&(W1.t<=t2),:])**2.0, matchingt, axis=0))
     if type(mode) != type(None):
         h1h2 = np.sum(simpson(abs(W2_spline(matchingt) - W1.data[(W1.t>=t1)&(W1.t<=t2),:])[:,mode]**2.0, matchingt, axis=0))
@@ -523,7 +523,7 @@ def Stitch(W_PN, W_NR, hyb):
     matching_data = (1 - Smooth)*PNData_spline(hyb.matchingt) + Smooth*W_NR.data[(W_NR.t>=hyb.t_start)&(W_NR.t<=hyb.t_end),:]
     dataTemp[tTemp<hyb.t_start,:] = W_PN.data[W_PN.t<hyb.t_start,:]
     dataTemp[(tTemp>=hyb.t_start)&(tTemp<=hyb.t_end),:] = matching_data
-    dataTemp[tTemp>t_end0,:] = W_NR.data[W_NR.t>hyb.t_end,:]
+    dataTemp[tTemp>hyb.t_end,:] = W_NR.data[W_NR.t>hyb.t_end,:]
     
     # Delete indices that cause tiny time step
     minstep = min(min(np.diff(W_NR.t[(W_NR.t>hyb.t_start-10)&(W_NR.t<hyb.t_end+10)])),
@@ -656,6 +656,8 @@ def Hybridize(WaveformType,t_end, sim_dir, cce_dir, out_dir, length, nOrbits, hy
     chiB = R_delta*chiB*R_delta.conjugate()
 
     print("SquaredError over matching window: ",SquaredError(W_NR, W_PN, hyb.t_start, hyb.t_start + hyb.length))
+    print(minima12D)###################################################################################################
+    print(minima)########################################################################################################
     
     
     # Stitch PN and NR waveforms
@@ -695,6 +697,8 @@ def Hybridize(WaveformType,t_end, sim_dir, cce_dir, out_dir, length, nOrbits, hy
         ax3.axvline(t_end0, linestyle='dotted')
         fig.savefig(out_dir + "/hybridCheckResults")
         fig.clf()
+        
+    return W_NR, W_PN, W_H, minima
 
     
 # Run the code
@@ -720,6 +724,7 @@ WaveformType = args['WaveformType']
 t_end = args['t']
 data_dir = args['SimDir']
 cce_dir = args['CCEDir']
+out_dir = args['OutDir']
 length = np.array(args['length'])
 nOrbits = args['nOrbits']
 truncate = args['truncate']
@@ -739,7 +744,7 @@ PN = PNParameters(data_dir, hyb, t0)
     
 while PNIter<=maxiter:
     print("PNIter=: ", PNIter)
-    W_NR, W_PN, W_H, minima = Hybridize(WaveformType, t_end, data_dir, cce_dir, args['OutDir'], length, nOrbits, hyb, PN, PNIter=PNIter, debug=0, OptimizePNParas=OptArg, truncate=truncate)
+    W_NR, W_PN, W_H, minima = Hybridize(WaveformType, t_end, data_dir, cce_dir, out_dir, length, nOrbits, hyb, PN, PNIter=PNIter, debug=0, OptimizePNParas=OptArg, truncate=truncate)
     cost.append(minima.cost)
     
     if PNIter >= 2 and abs(cost[-1]-cost[-2])/cost[-1]<1e-2 and abs(cost[-1]-cost[-3])/cost[-1]<1e-2:
