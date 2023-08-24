@@ -561,7 +561,7 @@ def Output(out_dir, W_NR, W_PN, W_H, minima12D, PN, hyb, nOrbits):
     for i in range(len(W_NR.data[0,:])):
         ModeError.append(SquaredError(W_NR, W_PN, hyb.t_start, hyb.t_start + length, mode=i))
     
-    var = StandardError(minima, PN)
+    var = StandardError(minima12D, PN)
     
     change = []
     change.append(PN.PhyParas[:2]*(1 - 1/PN.OptParas[:2]))
@@ -572,6 +572,7 @@ def Output(out_dir, W_NR, W_PN, W_H, minima12D, PN, hyb, nOrbits):
     change.append(np.linalg.norm(PN.PhyParas[2:5])/PN.OptParas[2]*var[2])
     change.append(np.linalg.norm(PN.PhyParas[5:8])/PN.OptParas[3]*var[3])
     change.append(var[7])
+    print(change)
 
     np.savez(
         'Output' + str(nOrbits)[0] + '.npz',
@@ -656,8 +657,8 @@ def Hybridize(WaveformType,t_end, sim_dir, cce_dir, out_dir, length, nOrbits, hy
     chiB = R_delta*chiB*R_delta.conjugate()
 
     print("SquaredError over matching window: ",SquaredError(W_NR, W_PN, hyb.t_start, hyb.t_start + hyb.length))
-    print(minima12D)###################################################################################################
-    print(minima)########################################################################################################
+    print(minima12D)
+    print(minima)
     
     
     # Stitch PN and NR waveforms
@@ -697,8 +698,9 @@ def Hybridize(WaveformType,t_end, sim_dir, cce_dir, out_dir, length, nOrbits, hy
         ax3.axvline(t_end0, linestyle='dotted')
         fig.savefig(out_dir + "/hybridCheckResults")
         fig.clf()
-        
-    return W_NR, W_PN, W_H, minima
+    
+    Output(out_dir, W_NR, W_PN, W_H, minima12D, PN, hyb, nOrbits)    
+    return W_NR, W_PN, W_H, minima12D
 
     
 # Run the code
@@ -744,8 +746,8 @@ PN = PNParameters(data_dir, hyb, t0)
     
 while PNIter<=maxiter:
     print("PNIter=: ", PNIter)
-    W_NR, W_PN, W_H, minima = Hybridize(WaveformType, t_end, data_dir, cce_dir, out_dir, length, nOrbits, hyb, PN, PNIter=PNIter, debug=0, OptimizePNParas=OptArg, truncate=truncate)
-    cost.append(minima.cost)
+    W_NR, W_PN, W_H, minima12D = Hybridize(WaveformType, t_end, data_dir, cce_dir, out_dir, length, nOrbits, hyb, PN, PNIter=PNIter, debug=0, OptimizePNParas=OptArg, truncate=truncate)
+    cost.append(minima12D.cost)
     
     if PNIter >= 2 and abs(cost[-1]-cost[-2])/cost[-1]<1e-2 and abs(cost[-1]-cost[-3])/cost[-1]<1e-2:
         PNIter = maxiter + 1
