@@ -385,7 +385,8 @@ def Optimize4D(x, hyb):
     R_delta = np.exp(quaternion.quaternion(0.0,x[1],x[2],x[3]) + phase)
     W_temp = scri.rotate_physical_system(hyb.W_NR_matching_in.copy(), R_delta)
     temp = hyb.PNData_spline(hyb.matchingt + x[0])
-    return abs(temp - W_temp.data).flatten('F')/np.sqrt(np.sum(abs(temp)**2.0))
+    cost = temp - W_temp.data
+    return np.array([cost.real, cost.imag]).flatten('F')/np.sqrt(np.sum(abs(temp)**2.0))
 
     
 def SquaredError(W1, W2, t1, t2, mode=None):
