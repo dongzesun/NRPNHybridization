@@ -296,8 +296,8 @@ def OmegaVec_chiVec_2_0(Cons,Vars):
 
 @njit
 def OmegaVec_0(Cons,Vars):
-    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
     gamma_PN_0 = 1.00000000000000
+    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
     return Vars.ellHat*Vars.v**3/Cons.M + a_ell_0*gamma_PN_0*Vars.nHat*Vars.v**6/Cons.M**3
 
 
@@ -410,9 +410,10 @@ def OmegaVec_chiVec_2_0p50(Cons,Vars):
 
 @njit
 def OmegaVec_0p50(Cons,Vars):
-    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
     gamma_PN_0 = 1.00000000000000
-    return Vars.ellHat*Vars.v**3/Cons.M + a_ell_0*gamma_PN_0*Vars.nHat*Vars.v**6/Cons.M**3
+    a_ell_1 = 3.0*Vars.Sigma_ell*Vars.Sigma_n*Cons.nu*(Cons.kappa_p + 2.0)/Cons.M**2 - 3.0*Cons.delta*(Vars.S_ell*Vars.Sigma_n + Vars.S_n*Vars.Sigma_ell)/Cons.M**2 - 0.5*(3.0*Vars.S_n*(2.0*Vars.S_ell*(Cons.kappa_p + 2.0) + Vars.Sigma_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m)) + 3.0*Vars.Sigma_n*(Vars.S_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m) + Vars.Sigma_ell*(-Cons.delta*Cons.kappa_m + Cons.kappa_p)))/Cons.M**2
+    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    return Vars.ellHat*Vars.v**3/Cons.M + gamma_PN_0*Vars.nHat*Vars.v**6*(a_ell_0 + a_ell_1*Vars.v)/Cons.M**3
 
 
 @njit(cache=True)
@@ -524,11 +525,12 @@ def OmegaVec_chiVec_2_1p0(Cons,Vars):
 
 @njit
 def OmegaVec_1p0(Cons,Vars):
-    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
     gamma_PN_0 = 1.00000000000000
+    a_ell_1 = 3.0*Vars.Sigma_ell*Vars.Sigma_n*Cons.nu*(Cons.kappa_p + 2.0)/Cons.M**2 - 3.0*Cons.delta*(Vars.S_ell*Vars.Sigma_n + Vars.S_n*Vars.Sigma_ell)/Cons.M**2 - 0.5*(3.0*Vars.S_n*(2.0*Vars.S_ell*(Cons.kappa_p + 2.0) + Vars.Sigma_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m)) + 3.0*Vars.Sigma_n*(Vars.S_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m) + Vars.Sigma_ell*(-Cons.delta*Cons.kappa_m + Cons.kappa_p)))/Cons.M**2
     a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
     gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
-    return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + a_ell_2*Vars.v**2)*(gamma_PN_0 + gamma_PN_2*Vars.v**2)/Cons.M**3
+    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v*(a_ell_1 + a_ell_2*Vars.v))*(gamma_PN_0 + gamma_PN_2*Vars.v**2)/Cons.M**3
 
 
 @njit(cache=True)
@@ -642,12 +644,14 @@ def OmegaVec_chiVec_2_1p5(Cons,Vars):
 
 @njit
 def OmegaVec_1p5(Cons,Vars):
-    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
     gamma_PN_0 = 1.00000000000000
+    a_ell_1 = 3.0*Vars.Sigma_ell*Vars.Sigma_n*Cons.nu*(Cons.kappa_p + 2.0)/Cons.M**2 - 3.0*Cons.delta*(Vars.S_ell*Vars.Sigma_n + Vars.S_n*Vars.Sigma_ell)/Cons.M**2 - 0.5*(3.0*Vars.S_n*(2.0*Vars.S_ell*(Cons.kappa_p + 2.0) + Vars.Sigma_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m)) + 3.0*Vars.Sigma_n*(Vars.S_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m) + Vars.Sigma_ell*(-Cons.delta*Cons.kappa_m + Cons.kappa_p)))/Cons.M**2
     a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
-    gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
     gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
-    return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + a_ell_2*Vars.v**2)*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + gamma_PN_3*Vars.v))/Cons.M**3
+    a_ell_3 = Cons.nu*(4.0*Cons.delta*(Vars.S_ell*Vars.Sigma_n + Vars.S_n*Vars.Sigma_ell)/Cons.M**2 + 0.5*(2.0*Vars.S_n*(4.0*Vars.S_ell*(Cons.kappa_p + 2.0) + Vars.Sigma_ell*(2.0*Cons.delta*Cons.kappa_p + 7.0*Cons.kappa_m)) + Vars.Sigma_n*(2.0*Vars.S_ell*(2.0*Cons.delta*Cons.kappa_p + 7.0*Cons.kappa_m) + Vars.Sigma_ell*(5.0*Cons.delta*Cons.kappa_m - 17.0*Cons.kappa_p - 26.0)))/Cons.M**2) - 4.0*Vars.Sigma_ell*Vars.Sigma_n*Cons.nu**2*(Cons.kappa_p + 2.0)/Cons.M**2 + 6.0*Cons.delta*(Vars.S_ell*Vars.Sigma_n + Vars.S_n*Vars.Sigma_ell)/Cons.M**2 + 0.5*(Vars.S_n*(Vars.S_ell*(-9.0*Cons.delta*Cons.kappa_m + 3.0*Cons.kappa_p + 22.0) + Vars.Sigma_ell*(6.0*Cons.delta*Cons.kappa_p - 6.0*Cons.kappa_m)) + 6.0*Vars.Sigma_n*(Vars.S_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m) + Vars.Sigma_ell*(-Cons.delta*Cons.kappa_m + Cons.kappa_p + 1.0)))/Cons.M**2
+    gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
+    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v*(a_ell_1 + Vars.v*(a_ell_2 + a_ell_3*Vars.v)))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + gamma_PN_3*Vars.v))/Cons.M**3
 
 
 @njit(cache=True)
@@ -763,14 +767,16 @@ def OmegaVec_chiVec_2_2p0(Cons,Vars):
 
 @njit
 def OmegaVec_2p0(Cons,Vars):
-    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
-    a_ell_4 = Vars.S_n*(5.77777777777778*Cons.nu**2 + 14.75*Cons.nu + 1.5) + Vars.Sigma_n*Cons.delta*(2.83333333333333*Cons.nu**2 + 9.125*Cons.nu + 1.5)
-    gamma_PN_4 = -5.41666666666667*Cons.nu + 1.0 + (Vars.S_ell**2*(-0.5*Cons.kappa_p - 1.0) + Vars.S_ell*Vars.Sigma_ell*(-0.5*Cons.delta*Cons.kappa_p - Cons.delta + 0.5*Cons.kappa_m) + Vars.Sigma_ell**2*(0.25*Cons.delta*Cons.kappa_m - 0.25*Cons.kappa_p + Cons.nu*(0.5*Cons.kappa_p + 1.0)))/Cons.M**8
     gamma_PN_0 = 1.00000000000000
+    a_ell_4 = Vars.S_n*(5.77777777777778*Cons.nu**2 + 14.75*Cons.nu + 1.5) + Vars.Sigma_n*Cons.delta*(2.83333333333333*Cons.nu**2 + 9.125*Cons.nu + 1.5)
+    a_ell_1 = 3.0*Vars.Sigma_ell*Vars.Sigma_n*Cons.nu*(Cons.kappa_p + 2.0)/Cons.M**2 - 3.0*Cons.delta*(Vars.S_ell*Vars.Sigma_n + Vars.S_n*Vars.Sigma_ell)/Cons.M**2 - 0.5*(3.0*Vars.S_n*(2.0*Vars.S_ell*(Cons.kappa_p + 2.0) + Vars.Sigma_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m)) + 3.0*Vars.Sigma_n*(Vars.S_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m) + Vars.Sigma_ell*(-Cons.delta*Cons.kappa_m + Cons.kappa_p)))/Cons.M**2
     a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
-    gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
     gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
-    return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v**2*(a_ell_2 + a_ell_4*Vars.v**2))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + Vars.v*(gamma_PN_3 + gamma_PN_4*Vars.v)))/Cons.M**3
+    a_ell_3 = Cons.nu*(4.0*Cons.delta*(Vars.S_ell*Vars.Sigma_n + Vars.S_n*Vars.Sigma_ell)/Cons.M**2 + 0.5*(2.0*Vars.S_n*(4.0*Vars.S_ell*(Cons.kappa_p + 2.0) + Vars.Sigma_ell*(2.0*Cons.delta*Cons.kappa_p + 7.0*Cons.kappa_m)) + Vars.Sigma_n*(2.0*Vars.S_ell*(2.0*Cons.delta*Cons.kappa_p + 7.0*Cons.kappa_m) + Vars.Sigma_ell*(5.0*Cons.delta*Cons.kappa_m - 17.0*Cons.kappa_p - 26.0)))/Cons.M**2) - 4.0*Vars.Sigma_ell*Vars.Sigma_n*Cons.nu**2*(Cons.kappa_p + 2.0)/Cons.M**2 + 6.0*Cons.delta*(Vars.S_ell*Vars.Sigma_n + Vars.S_n*Vars.Sigma_ell)/Cons.M**2 + 0.5*(Vars.S_n*(Vars.S_ell*(-9.0*Cons.delta*Cons.kappa_m + 3.0*Cons.kappa_p + 22.0) + Vars.Sigma_ell*(6.0*Cons.delta*Cons.kappa_p - 6.0*Cons.kappa_m)) + 6.0*Vars.Sigma_n*(Vars.S_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m) + Vars.Sigma_ell*(-Cons.delta*Cons.kappa_m + Cons.kappa_p + 1.0)))/Cons.M**2
+    gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
+    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_4 = -5.41666666666667*Cons.nu + 1.0 + (Vars.S_ell**2*(-0.5*Cons.kappa_p - 1.0) + Vars.S_ell*Vars.Sigma_ell*(-0.5*Cons.delta*Cons.kappa_p - Cons.delta + 0.5*Cons.kappa_m) + Vars.Sigma_ell**2*(0.25*Cons.delta*Cons.kappa_m - 0.25*Cons.kappa_p + Cons.nu*(0.5*Cons.kappa_p + 1.0)))/Cons.M**8
+    return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v*(a_ell_1 + Vars.v*(a_ell_2 + Vars.v*(a_ell_3 + a_ell_4*Vars.v))))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + Vars.v*(gamma_PN_3 + gamma_PN_4*Vars.v)))/Cons.M**3
 
 
 @njit(cache=True)
@@ -889,15 +895,17 @@ def OmegaVec_chiVec_2_2p5(Cons,Vars):
 
 @njit
 def OmegaVec_2p5(Cons,Vars):
-    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
-    a_ell_4 = Vars.S_n*(5.77777777777778*Cons.nu**2 + 14.75*Cons.nu + 1.5) + Vars.Sigma_n*Cons.delta*(2.83333333333333*Cons.nu**2 + 9.125*Cons.nu + 1.5)
-    gamma_PN_4 = -5.41666666666667*Cons.nu + 1.0 + (Vars.S_ell**2*(-0.5*Cons.kappa_p - 1.0) + Vars.S_ell*Vars.Sigma_ell*(-0.5*Cons.delta*Cons.kappa_p - Cons.delta + 0.5*Cons.kappa_m) + Vars.Sigma_ell**2*(0.25*Cons.delta*Cons.kappa_m - 0.25*Cons.kappa_p + Cons.nu*(0.5*Cons.kappa_p + 1.0)))/Cons.M**8
-    gamma_PN_0 = 1.00000000000000
-    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
-    gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
     gamma_PN_5 = (0.888888888888889*Vars.S_ell*Cons.nu + 3.33333333333333*Vars.S_ell)/Cons.M**2 + 2.0*Vars.Sigma_ell*Cons.delta/Cons.M**3
+    gamma_PN_0 = 1.00000000000000
+    a_ell_4 = Vars.S_n*(5.77777777777778*Cons.nu**2 + 14.75*Cons.nu + 1.5) + Vars.Sigma_n*Cons.delta*(2.83333333333333*Cons.nu**2 + 9.125*Cons.nu + 1.5)
+    a_ell_1 = 3.0*Vars.Sigma_ell*Vars.Sigma_n*Cons.nu*(Cons.kappa_p + 2.0)/Cons.M**2 - 3.0*Cons.delta*(Vars.S_ell*Vars.Sigma_n + Vars.S_n*Vars.Sigma_ell)/Cons.M**2 - 0.5*(3.0*Vars.S_n*(2.0*Vars.S_ell*(Cons.kappa_p + 2.0) + Vars.Sigma_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m)) + 3.0*Vars.Sigma_n*(Vars.S_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m) + Vars.Sigma_ell*(-Cons.delta*Cons.kappa_m + Cons.kappa_p)))/Cons.M**2
+    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
     gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
-    return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v**2*(a_ell_2 + a_ell_4*Vars.v**2))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + Vars.v*(gamma_PN_3 + Vars.v*(gamma_PN_4 + gamma_PN_5*Vars.v))))/Cons.M**3
+    a_ell_3 = Cons.nu*(4.0*Cons.delta*(Vars.S_ell*Vars.Sigma_n + Vars.S_n*Vars.Sigma_ell)/Cons.M**2 + 0.5*(2.0*Vars.S_n*(4.0*Vars.S_ell*(Cons.kappa_p + 2.0) + Vars.Sigma_ell*(2.0*Cons.delta*Cons.kappa_p + 7.0*Cons.kappa_m)) + Vars.Sigma_n*(2.0*Vars.S_ell*(2.0*Cons.delta*Cons.kappa_p + 7.0*Cons.kappa_m) + Vars.Sigma_ell*(5.0*Cons.delta*Cons.kappa_m - 17.0*Cons.kappa_p - 26.0)))/Cons.M**2) - 4.0*Vars.Sigma_ell*Vars.Sigma_n*Cons.nu**2*(Cons.kappa_p + 2.0)/Cons.M**2 + 6.0*Cons.delta*(Vars.S_ell*Vars.Sigma_n + Vars.S_n*Vars.Sigma_ell)/Cons.M**2 + 0.5*(Vars.S_n*(Vars.S_ell*(-9.0*Cons.delta*Cons.kappa_m + 3.0*Cons.kappa_p + 22.0) + Vars.Sigma_ell*(6.0*Cons.delta*Cons.kappa_p - 6.0*Cons.kappa_m)) + 6.0*Vars.Sigma_n*(Vars.S_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m) + Vars.Sigma_ell*(-Cons.delta*Cons.kappa_m + Cons.kappa_p + 1.0)))/Cons.M**2
+    gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
+    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_4 = -5.41666666666667*Cons.nu + 1.0 + (Vars.S_ell**2*(-0.5*Cons.kappa_p - 1.0) + Vars.S_ell*Vars.Sigma_ell*(-0.5*Cons.delta*Cons.kappa_p - Cons.delta + 0.5*Cons.kappa_m) + Vars.Sigma_ell**2*(0.25*Cons.delta*Cons.kappa_m - 0.25*Cons.kappa_p + Cons.nu*(0.5*Cons.kappa_p + 1.0)))/Cons.M**8
+    return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v*(a_ell_1 + Vars.v*(a_ell_2 + Vars.v*(a_ell_3 + a_ell_4*Vars.v))))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + Vars.v*(gamma_PN_3 + Vars.v*(gamma_PN_4 + gamma_PN_5*Vars.v))))/Cons.M**3
 
 
 @njit(cache=True)
@@ -1020,16 +1028,18 @@ def OmegaVec_chiVec_2_3p0(Cons,Vars):
 
 @njit
 def OmegaVec_3p0(Cons,Vars):
-    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
-    a_ell_4 = Vars.S_n*(5.77777777777778*Cons.nu**2 + 14.75*Cons.nu + 1.5) + Vars.Sigma_n*Cons.delta*(2.83333333333333*Cons.nu**2 + 9.125*Cons.nu + 1.5)
-    gamma_PN_4 = -5.41666666666667*Cons.nu + 1.0 + (Vars.S_ell**2*(-0.5*Cons.kappa_p - 1.0) + Vars.S_ell*Vars.Sigma_ell*(-0.5*Cons.delta*Cons.kappa_p - Cons.delta + 0.5*Cons.kappa_m) + Vars.Sigma_ell**2*(0.25*Cons.delta*Cons.kappa_m - 0.25*Cons.kappa_p + Cons.nu*(0.5*Cons.kappa_p + 1.0)))/Cons.M**8
-    gamma_PN_0 = 1.00000000000000
-    gamma_PN_6 = Vars.S_ell**2*(-0.916666666666667*Cons.delta*Cons.kappa_m - 0.916666666666667*Cons.kappa_p + Cons.nu*(-0.166666666666667*Cons.kappa_p - 0.333333333333333) + 1.55555555555556) + Vars.S_ell*Vars.Sigma_ell*(1.66666666666667*Cons.delta + Cons.nu*(-0.166666666666667*Cons.delta*Cons.kappa_p - 0.333333333333333*Cons.delta + 3.83333333333333*Cons.kappa_m)) + Vars.Sigma_ell**2*(Cons.nu**2*(0.166666666666667*Cons.kappa_p + 0.333333333333333) + Cons.nu*(Cons.delta*Cons.kappa_m - Cons.kappa_p - 2.0) + 1.0) + 0.0123456790123457*Cons.nu**3 + 6.36111111111111*Cons.nu**2 - 2.98177812235564*Cons.nu + 1.0
-    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
-    gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
     gamma_PN_5 = (0.888888888888889*Vars.S_ell*Cons.nu + 3.33333333333333*Vars.S_ell)/Cons.M**2 + 2.0*Vars.Sigma_ell*Cons.delta/Cons.M**3
+    gamma_PN_6 = Vars.S_ell**2*(-0.916666666666667*Cons.delta*Cons.kappa_m - 0.916666666666667*Cons.kappa_p + Cons.nu*(-0.166666666666667*Cons.kappa_p - 0.333333333333333) + 1.55555555555556) + Vars.S_ell*Vars.Sigma_ell*(1.66666666666667*Cons.delta + Cons.nu*(-0.166666666666667*Cons.delta*Cons.kappa_p - 0.333333333333333*Cons.delta + 3.83333333333333*Cons.kappa_m)) + Vars.Sigma_ell**2*(Cons.nu**2*(0.166666666666667*Cons.kappa_p + 0.333333333333333) + Cons.nu*(Cons.delta*Cons.kappa_m - Cons.kappa_p - 2.0) + 1.0) + 0.0123456790123457*Cons.nu**3 + 6.36111111111111*Cons.nu**2 - 2.98177812235564*Cons.nu + 1.0
+    gamma_PN_0 = 1.00000000000000
+    a_ell_4 = Vars.S_n*(5.77777777777778*Cons.nu**2 + 14.75*Cons.nu + 1.5) + Vars.Sigma_n*Cons.delta*(2.83333333333333*Cons.nu**2 + 9.125*Cons.nu + 1.5)
+    a_ell_1 = 3.0*Vars.Sigma_ell*Vars.Sigma_n*Cons.nu*(Cons.kappa_p + 2.0)/Cons.M**2 - 3.0*Cons.delta*(Vars.S_ell*Vars.Sigma_n + Vars.S_n*Vars.Sigma_ell)/Cons.M**2 - 0.5*(3.0*Vars.S_n*(2.0*Vars.S_ell*(Cons.kappa_p + 2.0) + Vars.Sigma_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m)) + 3.0*Vars.Sigma_n*(Vars.S_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m) + Vars.Sigma_ell*(-Cons.delta*Cons.kappa_m + Cons.kappa_p)))/Cons.M**2
+    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
     gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
-    return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v**2*(a_ell_2 + a_ell_4*Vars.v**2))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + Vars.v*(gamma_PN_3 + Vars.v*(gamma_PN_4 + Vars.v*(gamma_PN_5 + gamma_PN_6*Vars.v)))))/Cons.M**3
+    a_ell_3 = Cons.nu*(4.0*Cons.delta*(Vars.S_ell*Vars.Sigma_n + Vars.S_n*Vars.Sigma_ell)/Cons.M**2 + 0.5*(2.0*Vars.S_n*(4.0*Vars.S_ell*(Cons.kappa_p + 2.0) + Vars.Sigma_ell*(2.0*Cons.delta*Cons.kappa_p + 7.0*Cons.kappa_m)) + Vars.Sigma_n*(2.0*Vars.S_ell*(2.0*Cons.delta*Cons.kappa_p + 7.0*Cons.kappa_m) + Vars.Sigma_ell*(5.0*Cons.delta*Cons.kappa_m - 17.0*Cons.kappa_p - 26.0)))/Cons.M**2) - 4.0*Vars.Sigma_ell*Vars.Sigma_n*Cons.nu**2*(Cons.kappa_p + 2.0)/Cons.M**2 + 6.0*Cons.delta*(Vars.S_ell*Vars.Sigma_n + Vars.S_n*Vars.Sigma_ell)/Cons.M**2 + 0.5*(Vars.S_n*(Vars.S_ell*(-9.0*Cons.delta*Cons.kappa_m + 3.0*Cons.kappa_p + 22.0) + Vars.Sigma_ell*(6.0*Cons.delta*Cons.kappa_p - 6.0*Cons.kappa_m)) + 6.0*Vars.Sigma_n*(Vars.S_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m) + Vars.Sigma_ell*(-Cons.delta*Cons.kappa_m + Cons.kappa_p + 1.0)))/Cons.M**2
+    gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
+    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_4 = -5.41666666666667*Cons.nu + 1.0 + (Vars.S_ell**2*(-0.5*Cons.kappa_p - 1.0) + Vars.S_ell*Vars.Sigma_ell*(-0.5*Cons.delta*Cons.kappa_p - Cons.delta + 0.5*Cons.kappa_m) + Vars.Sigma_ell**2*(0.25*Cons.delta*Cons.kappa_m - 0.25*Cons.kappa_p + Cons.nu*(0.5*Cons.kappa_p + 1.0)))/Cons.M**8
+    return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v*(a_ell_1 + Vars.v*(a_ell_2 + Vars.v*(a_ell_3 + a_ell_4*Vars.v))))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + Vars.v*(gamma_PN_3 + Vars.v*(gamma_PN_4 + Vars.v*(gamma_PN_5 + gamma_PN_6*Vars.v)))))/Cons.M**3
 
 
 @njit(cache=True)
@@ -1156,17 +1166,19 @@ def OmegaVec_chiVec_2_3p5(Cons,Vars):
 
 @njit
 def OmegaVec_3p5(Cons,Vars):
-    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
-    a_ell_4 = Vars.S_n*(5.77777777777778*Cons.nu**2 + 14.75*Cons.nu + 1.5) + Vars.Sigma_n*Cons.delta*(2.83333333333333*Cons.nu**2 + 9.125*Cons.nu + 1.5)
-    gamma_PN_4 = -5.41666666666667*Cons.nu + 1.0 + (Vars.S_ell**2*(-0.5*Cons.kappa_p - 1.0) + Vars.S_ell*Vars.Sigma_ell*(-0.5*Cons.delta*Cons.kappa_p - Cons.delta + 0.5*Cons.kappa_m) + Vars.Sigma_ell**2*(0.25*Cons.delta*Cons.kappa_m - 0.25*Cons.kappa_p + Cons.nu*(0.5*Cons.kappa_p + 1.0)))/Cons.M**8
-    gamma_PN_0 = 1.00000000000000
-    gamma_PN_7 = (Vars.S_ell*(-6.0*Cons.nu**2 - 10.5833333333333*Cons.nu + 5.0) - 2.66666666666667*Vars.Sigma_ell*Cons.delta*Cons.nu**2 + Vars.Sigma_ell*Cons.delta*(3.0 - 10.1666666666667*Cons.nu))/Cons.M**2
-    gamma_PN_6 = Vars.S_ell**2*(-0.916666666666667*Cons.delta*Cons.kappa_m - 0.916666666666667*Cons.kappa_p + Cons.nu*(-0.166666666666667*Cons.kappa_p - 0.333333333333333) + 1.55555555555556) + Vars.S_ell*Vars.Sigma_ell*(1.66666666666667*Cons.delta + Cons.nu*(-0.166666666666667*Cons.delta*Cons.kappa_p - 0.333333333333333*Cons.delta + 3.83333333333333*Cons.kappa_m)) + Vars.Sigma_ell**2*(Cons.nu**2*(0.166666666666667*Cons.kappa_p + 0.333333333333333) + Cons.nu*(Cons.delta*Cons.kappa_m - Cons.kappa_p - 2.0) + 1.0) + 0.0123456790123457*Cons.nu**3 + 6.36111111111111*Cons.nu**2 - 2.98177812235564*Cons.nu + 1.0
-    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
-    gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
     gamma_PN_5 = (0.888888888888889*Vars.S_ell*Cons.nu + 3.33333333333333*Vars.S_ell)/Cons.M**2 + 2.0*Vars.Sigma_ell*Cons.delta/Cons.M**3
+    gamma_PN_6 = Vars.S_ell**2*(-0.916666666666667*Cons.delta*Cons.kappa_m - 0.916666666666667*Cons.kappa_p + Cons.nu*(-0.166666666666667*Cons.kappa_p - 0.333333333333333) + 1.55555555555556) + Vars.S_ell*Vars.Sigma_ell*(1.66666666666667*Cons.delta + Cons.nu*(-0.166666666666667*Cons.delta*Cons.kappa_p - 0.333333333333333*Cons.delta + 3.83333333333333*Cons.kappa_m)) + Vars.Sigma_ell**2*(Cons.nu**2*(0.166666666666667*Cons.kappa_p + 0.333333333333333) + Cons.nu*(Cons.delta*Cons.kappa_m - Cons.kappa_p - 2.0) + 1.0) + 0.0123456790123457*Cons.nu**3 + 6.36111111111111*Cons.nu**2 - 2.98177812235564*Cons.nu + 1.0
+    gamma_PN_0 = 1.00000000000000
+    a_ell_4 = Vars.S_n*(5.77777777777778*Cons.nu**2 + 14.75*Cons.nu + 1.5) + Vars.Sigma_n*Cons.delta*(2.83333333333333*Cons.nu**2 + 9.125*Cons.nu + 1.5)
+    a_ell_1 = 3.0*Vars.Sigma_ell*Vars.Sigma_n*Cons.nu*(Cons.kappa_p + 2.0)/Cons.M**2 - 3.0*Cons.delta*(Vars.S_ell*Vars.Sigma_n + Vars.S_n*Vars.Sigma_ell)/Cons.M**2 - 0.5*(3.0*Vars.S_n*(2.0*Vars.S_ell*(Cons.kappa_p + 2.0) + Vars.Sigma_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m)) + 3.0*Vars.Sigma_n*(Vars.S_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m) + Vars.Sigma_ell*(-Cons.delta*Cons.kappa_m + Cons.kappa_p)))/Cons.M**2
+    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
+    gamma_PN_7 = (Vars.S_ell*(-6.0*Cons.nu**2 - 10.5833333333333*Cons.nu + 5.0) - 2.66666666666667*Vars.Sigma_ell*Cons.delta*Cons.nu**2 + Vars.Sigma_ell*Cons.delta*(3.0 - 10.1666666666667*Cons.nu))/Cons.M**2
     gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
-    return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v**2*(a_ell_2 + a_ell_4*Vars.v**2))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + Vars.v*(gamma_PN_3 + Vars.v*(gamma_PN_4 + Vars.v*(gamma_PN_5 + Vars.v*(gamma_PN_6 + gamma_PN_7*Vars.v))))))/Cons.M**3
+    a_ell_3 = Cons.nu*(4.0*Cons.delta*(Vars.S_ell*Vars.Sigma_n + Vars.S_n*Vars.Sigma_ell)/Cons.M**2 + 0.5*(2.0*Vars.S_n*(4.0*Vars.S_ell*(Cons.kappa_p + 2.0) + Vars.Sigma_ell*(2.0*Cons.delta*Cons.kappa_p + 7.0*Cons.kappa_m)) + Vars.Sigma_n*(2.0*Vars.S_ell*(2.0*Cons.delta*Cons.kappa_p + 7.0*Cons.kappa_m) + Vars.Sigma_ell*(5.0*Cons.delta*Cons.kappa_m - 17.0*Cons.kappa_p - 26.0)))/Cons.M**2) - 4.0*Vars.Sigma_ell*Vars.Sigma_n*Cons.nu**2*(Cons.kappa_p + 2.0)/Cons.M**2 + 6.0*Cons.delta*(Vars.S_ell*Vars.Sigma_n + Vars.S_n*Vars.Sigma_ell)/Cons.M**2 + 0.5*(Vars.S_n*(Vars.S_ell*(-9.0*Cons.delta*Cons.kappa_m + 3.0*Cons.kappa_p + 22.0) + Vars.Sigma_ell*(6.0*Cons.delta*Cons.kappa_p - 6.0*Cons.kappa_m)) + 6.0*Vars.Sigma_n*(Vars.S_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m) + Vars.Sigma_ell*(-Cons.delta*Cons.kappa_m + Cons.kappa_p + 1.0)))/Cons.M**2
+    gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
+    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_4 = -5.41666666666667*Cons.nu + 1.0 + (Vars.S_ell**2*(-0.5*Cons.kappa_p - 1.0) + Vars.S_ell*Vars.Sigma_ell*(-0.5*Cons.delta*Cons.kappa_p - Cons.delta + 0.5*Cons.kappa_m) + Vars.Sigma_ell**2*(0.25*Cons.delta*Cons.kappa_m - 0.25*Cons.kappa_p + Cons.nu*(0.5*Cons.kappa_p + 1.0)))/Cons.M**8
+    return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v*(a_ell_1 + Vars.v*(a_ell_2 + Vars.v*(a_ell_3 + a_ell_4*Vars.v))))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + Vars.v*(gamma_PN_3 + Vars.v*(gamma_PN_4 + Vars.v*(gamma_PN_5 + Vars.v*(gamma_PN_6 + gamma_PN_7*Vars.v))))))/Cons.M**3
 
 
 @njit(cache=True)
@@ -1294,17 +1306,19 @@ def OmegaVec_chiVec_2_4p0(Cons,Vars):
 
 @njit
 def OmegaVec_4p0(Cons,Vars):
-    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
-    a_ell_4 = Vars.S_n*(5.77777777777778*Cons.nu**2 + 14.75*Cons.nu + 1.5) + Vars.Sigma_n*Cons.delta*(2.83333333333333*Cons.nu**2 + 9.125*Cons.nu + 1.5)
-    gamma_PN_4 = -5.41666666666667*Cons.nu + 1.0 + (Vars.S_ell**2*(-0.5*Cons.kappa_p - 1.0) + Vars.S_ell*Vars.Sigma_ell*(-0.5*Cons.delta*Cons.kappa_p - Cons.delta + 0.5*Cons.kappa_m) + Vars.Sigma_ell**2*(0.25*Cons.delta*Cons.kappa_m - 0.25*Cons.kappa_p + Cons.nu*(0.5*Cons.kappa_p + 1.0)))/Cons.M**8
-    gamma_PN_0 = 1.00000000000000
-    gamma_PN_7 = (Vars.S_ell*(-6.0*Cons.nu**2 - 10.5833333333333*Cons.nu + 5.0) - 2.66666666666667*Vars.Sigma_ell*Cons.delta*Cons.nu**2 + Vars.Sigma_ell*Cons.delta*(3.0 - 10.1666666666667*Cons.nu))/Cons.M**2
-    gamma_PN_6 = Vars.S_ell**2*(-0.916666666666667*Cons.delta*Cons.kappa_m - 0.916666666666667*Cons.kappa_p + Cons.nu*(-0.166666666666667*Cons.kappa_p - 0.333333333333333) + 1.55555555555556) + Vars.S_ell*Vars.Sigma_ell*(1.66666666666667*Cons.delta + Cons.nu*(-0.166666666666667*Cons.delta*Cons.kappa_p - 0.333333333333333*Cons.delta + 3.83333333333333*Cons.kappa_m)) + Vars.Sigma_ell**2*(Cons.nu**2*(0.166666666666667*Cons.kappa_p + 0.333333333333333) + Cons.nu*(Cons.delta*Cons.kappa_m - Cons.kappa_p - 2.0) + 1.0) + 0.0123456790123457*Cons.nu**3 + 6.36111111111111*Cons.nu**2 - 2.98177812235564*Cons.nu + 1.0
-    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
-    gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
     gamma_PN_5 = (0.888888888888889*Vars.S_ell*Cons.nu + 3.33333333333333*Vars.S_ell)/Cons.M**2 + 2.0*Vars.Sigma_ell*Cons.delta/Cons.M**3
+    gamma_PN_6 = Vars.S_ell**2*(-0.916666666666667*Cons.delta*Cons.kappa_m - 0.916666666666667*Cons.kappa_p + Cons.nu*(-0.166666666666667*Cons.kappa_p - 0.333333333333333) + 1.55555555555556) + Vars.S_ell*Vars.Sigma_ell*(1.66666666666667*Cons.delta + Cons.nu*(-0.166666666666667*Cons.delta*Cons.kappa_p - 0.333333333333333*Cons.delta + 3.83333333333333*Cons.kappa_m)) + Vars.Sigma_ell**2*(Cons.nu**2*(0.166666666666667*Cons.kappa_p + 0.333333333333333) + Cons.nu*(Cons.delta*Cons.kappa_m - Cons.kappa_p - 2.0) + 1.0) + 0.0123456790123457*Cons.nu**3 + 6.36111111111111*Cons.nu**2 - 2.98177812235564*Cons.nu + 1.0
+    gamma_PN_0 = 1.00000000000000
+    a_ell_4 = Vars.S_n*(5.77777777777778*Cons.nu**2 + 14.75*Cons.nu + 1.5) + Vars.Sigma_n*Cons.delta*(2.83333333333333*Cons.nu**2 + 9.125*Cons.nu + 1.5)
+    a_ell_1 = 3.0*Vars.Sigma_ell*Vars.Sigma_n*Cons.nu*(Cons.kappa_p + 2.0)/Cons.M**2 - 3.0*Cons.delta*(Vars.S_ell*Vars.Sigma_n + Vars.S_n*Vars.Sigma_ell)/Cons.M**2 - 0.5*(3.0*Vars.S_n*(2.0*Vars.S_ell*(Cons.kappa_p + 2.0) + Vars.Sigma_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m)) + 3.0*Vars.Sigma_n*(Vars.S_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m) + Vars.Sigma_ell*(-Cons.delta*Cons.kappa_m + Cons.kappa_p)))/Cons.M**2
+    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
+    gamma_PN_7 = (Vars.S_ell*(-6.0*Cons.nu**2 - 10.5833333333333*Cons.nu + 5.0) - 2.66666666666667*Vars.Sigma_ell*Cons.delta*Cons.nu**2 + Vars.Sigma_ell*Cons.delta*(3.0 - 10.1666666666667*Cons.nu))/Cons.M**2
     gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
-    return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v**2*(a_ell_2 + a_ell_4*Vars.v**2))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + Vars.v*(gamma_PN_3 + Vars.v*(gamma_PN_4 + Vars.v*(gamma_PN_5 + Vars.v*(gamma_PN_6 + gamma_PN_7*Vars.v))))))/Cons.M**3
+    a_ell_3 = Cons.nu*(4.0*Cons.delta*(Vars.S_ell*Vars.Sigma_n + Vars.S_n*Vars.Sigma_ell)/Cons.M**2 + 0.5*(2.0*Vars.S_n*(4.0*Vars.S_ell*(Cons.kappa_p + 2.0) + Vars.Sigma_ell*(2.0*Cons.delta*Cons.kappa_p + 7.0*Cons.kappa_m)) + Vars.Sigma_n*(2.0*Vars.S_ell*(2.0*Cons.delta*Cons.kappa_p + 7.0*Cons.kappa_m) + Vars.Sigma_ell*(5.0*Cons.delta*Cons.kappa_m - 17.0*Cons.kappa_p - 26.0)))/Cons.M**2) - 4.0*Vars.Sigma_ell*Vars.Sigma_n*Cons.nu**2*(Cons.kappa_p + 2.0)/Cons.M**2 + 6.0*Cons.delta*(Vars.S_ell*Vars.Sigma_n + Vars.S_n*Vars.Sigma_ell)/Cons.M**2 + 0.5*(Vars.S_n*(Vars.S_ell*(-9.0*Cons.delta*Cons.kappa_m + 3.0*Cons.kappa_p + 22.0) + Vars.Sigma_ell*(6.0*Cons.delta*Cons.kappa_p - 6.0*Cons.kappa_m)) + 6.0*Vars.Sigma_n*(Vars.S_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m) + Vars.Sigma_ell*(-Cons.delta*Cons.kappa_m + Cons.kappa_p + 1.0)))/Cons.M**2
+    gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
+    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_4 = -5.41666666666667*Cons.nu + 1.0 + (Vars.S_ell**2*(-0.5*Cons.kappa_p - 1.0) + Vars.S_ell*Vars.Sigma_ell*(-0.5*Cons.delta*Cons.kappa_p - Cons.delta + 0.5*Cons.kappa_m) + Vars.Sigma_ell**2*(0.25*Cons.delta*Cons.kappa_m - 0.25*Cons.kappa_p + Cons.nu*(0.5*Cons.kappa_p + 1.0)))/Cons.M**8
+    return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v*(a_ell_1 + Vars.v*(a_ell_2 + Vars.v*(a_ell_3 + a_ell_4*Vars.v))))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + Vars.v*(gamma_PN_3 + Vars.v*(gamma_PN_4 + Vars.v*(gamma_PN_5 + Vars.v*(gamma_PN_6 + gamma_PN_7*Vars.v))))))/Cons.M**3
 
 
 @njit(cache=True)
@@ -1432,17 +1446,19 @@ def OmegaVec_chiVec_2_4p5(Cons,Vars):
 
 @njit
 def OmegaVec_4p5(Cons,Vars):
-    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
-    a_ell_4 = Vars.S_n*(5.77777777777778*Cons.nu**2 + 14.75*Cons.nu + 1.5) + Vars.Sigma_n*Cons.delta*(2.83333333333333*Cons.nu**2 + 9.125*Cons.nu + 1.5)
-    gamma_PN_4 = -5.41666666666667*Cons.nu + 1.0 + (Vars.S_ell**2*(-0.5*Cons.kappa_p - 1.0) + Vars.S_ell*Vars.Sigma_ell*(-0.5*Cons.delta*Cons.kappa_p - Cons.delta + 0.5*Cons.kappa_m) + Vars.Sigma_ell**2*(0.25*Cons.delta*Cons.kappa_m - 0.25*Cons.kappa_p + Cons.nu*(0.5*Cons.kappa_p + 1.0)))/Cons.M**8
-    gamma_PN_0 = 1.00000000000000
-    gamma_PN_7 = (Vars.S_ell*(-6.0*Cons.nu**2 - 10.5833333333333*Cons.nu + 5.0) - 2.66666666666667*Vars.Sigma_ell*Cons.delta*Cons.nu**2 + Vars.Sigma_ell*Cons.delta*(3.0 - 10.1666666666667*Cons.nu))/Cons.M**2
-    gamma_PN_6 = Vars.S_ell**2*(-0.916666666666667*Cons.delta*Cons.kappa_m - 0.916666666666667*Cons.kappa_p + Cons.nu*(-0.166666666666667*Cons.kappa_p - 0.333333333333333) + 1.55555555555556) + Vars.S_ell*Vars.Sigma_ell*(1.66666666666667*Cons.delta + Cons.nu*(-0.166666666666667*Cons.delta*Cons.kappa_p - 0.333333333333333*Cons.delta + 3.83333333333333*Cons.kappa_m)) + Vars.Sigma_ell**2*(Cons.nu**2*(0.166666666666667*Cons.kappa_p + 0.333333333333333) + Cons.nu*(Cons.delta*Cons.kappa_m - Cons.kappa_p - 2.0) + 1.0) + 0.0123456790123457*Cons.nu**3 + 6.36111111111111*Cons.nu**2 - 2.98177812235564*Cons.nu + 1.0
-    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
-    gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
     gamma_PN_5 = (0.888888888888889*Vars.S_ell*Cons.nu + 3.33333333333333*Vars.S_ell)/Cons.M**2 + 2.0*Vars.Sigma_ell*Cons.delta/Cons.M**3
+    gamma_PN_6 = Vars.S_ell**2*(-0.916666666666667*Cons.delta*Cons.kappa_m - 0.916666666666667*Cons.kappa_p + Cons.nu*(-0.166666666666667*Cons.kappa_p - 0.333333333333333) + 1.55555555555556) + Vars.S_ell*Vars.Sigma_ell*(1.66666666666667*Cons.delta + Cons.nu*(-0.166666666666667*Cons.delta*Cons.kappa_p - 0.333333333333333*Cons.delta + 3.83333333333333*Cons.kappa_m)) + Vars.Sigma_ell**2*(Cons.nu**2*(0.166666666666667*Cons.kappa_p + 0.333333333333333) + Cons.nu*(Cons.delta*Cons.kappa_m - Cons.kappa_p - 2.0) + 1.0) + 0.0123456790123457*Cons.nu**3 + 6.36111111111111*Cons.nu**2 - 2.98177812235564*Cons.nu + 1.0
+    gamma_PN_0 = 1.00000000000000
+    a_ell_4 = Vars.S_n*(5.77777777777778*Cons.nu**2 + 14.75*Cons.nu + 1.5) + Vars.Sigma_n*Cons.delta*(2.83333333333333*Cons.nu**2 + 9.125*Cons.nu + 1.5)
+    a_ell_1 = 3.0*Vars.Sigma_ell*Vars.Sigma_n*Cons.nu*(Cons.kappa_p + 2.0)/Cons.M**2 - 3.0*Cons.delta*(Vars.S_ell*Vars.Sigma_n + Vars.S_n*Vars.Sigma_ell)/Cons.M**2 - 0.5*(3.0*Vars.S_n*(2.0*Vars.S_ell*(Cons.kappa_p + 2.0) + Vars.Sigma_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m)) + 3.0*Vars.Sigma_n*(Vars.S_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m) + Vars.Sigma_ell*(-Cons.delta*Cons.kappa_m + Cons.kappa_p)))/Cons.M**2
+    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
+    gamma_PN_7 = (Vars.S_ell*(-6.0*Cons.nu**2 - 10.5833333333333*Cons.nu + 5.0) - 2.66666666666667*Vars.Sigma_ell*Cons.delta*Cons.nu**2 + Vars.Sigma_ell*Cons.delta*(3.0 - 10.1666666666667*Cons.nu))/Cons.M**2
     gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
-    return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v**2*(a_ell_2 + a_ell_4*Vars.v**2))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + Vars.v*(gamma_PN_3 + Vars.v*(gamma_PN_4 + Vars.v*(gamma_PN_5 + Vars.v*(gamma_PN_6 + gamma_PN_7*Vars.v))))))/Cons.M**3
+    a_ell_3 = Cons.nu*(4.0*Cons.delta*(Vars.S_ell*Vars.Sigma_n + Vars.S_n*Vars.Sigma_ell)/Cons.M**2 + 0.5*(2.0*Vars.S_n*(4.0*Vars.S_ell*(Cons.kappa_p + 2.0) + Vars.Sigma_ell*(2.0*Cons.delta*Cons.kappa_p + 7.0*Cons.kappa_m)) + Vars.Sigma_n*(2.0*Vars.S_ell*(2.0*Cons.delta*Cons.kappa_p + 7.0*Cons.kappa_m) + Vars.Sigma_ell*(5.0*Cons.delta*Cons.kappa_m - 17.0*Cons.kappa_p - 26.0)))/Cons.M**2) - 4.0*Vars.Sigma_ell*Vars.Sigma_n*Cons.nu**2*(Cons.kappa_p + 2.0)/Cons.M**2 + 6.0*Cons.delta*(Vars.S_ell*Vars.Sigma_n + Vars.S_n*Vars.Sigma_ell)/Cons.M**2 + 0.5*(Vars.S_n*(Vars.S_ell*(-9.0*Cons.delta*Cons.kappa_m + 3.0*Cons.kappa_p + 22.0) + Vars.Sigma_ell*(6.0*Cons.delta*Cons.kappa_p - 6.0*Cons.kappa_m)) + 6.0*Vars.Sigma_n*(Vars.S_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m) + Vars.Sigma_ell*(-Cons.delta*Cons.kappa_m + Cons.kappa_p + 1.0)))/Cons.M**2
+    gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
+    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_4 = -5.41666666666667*Cons.nu + 1.0 + (Vars.S_ell**2*(-0.5*Cons.kappa_p - 1.0) + Vars.S_ell*Vars.Sigma_ell*(-0.5*Cons.delta*Cons.kappa_p - Cons.delta + 0.5*Cons.kappa_m) + Vars.Sigma_ell**2*(0.25*Cons.delta*Cons.kappa_m - 0.25*Cons.kappa_p + Cons.nu*(0.5*Cons.kappa_p + 1.0)))/Cons.M**8
+    return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v*(a_ell_1 + Vars.v*(a_ell_2 + Vars.v*(a_ell_3 + a_ell_4*Vars.v))))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + Vars.v*(gamma_PN_3 + Vars.v*(gamma_PN_4 + Vars.v*(gamma_PN_5 + Vars.v*(gamma_PN_6 + gamma_PN_7*Vars.v))))))/Cons.M**3
 
 
 @njit(cache=True)
@@ -1570,17 +1586,19 @@ def OmegaVec_chiVec_2_5p0(Cons,Vars):
 
 @njit
 def OmegaVec_5p0(Cons,Vars):
-    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
-    a_ell_4 = Vars.S_n*(5.77777777777778*Cons.nu**2 + 14.75*Cons.nu + 1.5) + Vars.Sigma_n*Cons.delta*(2.83333333333333*Cons.nu**2 + 9.125*Cons.nu + 1.5)
-    gamma_PN_4 = -5.41666666666667*Cons.nu + 1.0 + (Vars.S_ell**2*(-0.5*Cons.kappa_p - 1.0) + Vars.S_ell*Vars.Sigma_ell*(-0.5*Cons.delta*Cons.kappa_p - Cons.delta + 0.5*Cons.kappa_m) + Vars.Sigma_ell**2*(0.25*Cons.delta*Cons.kappa_m - 0.25*Cons.kappa_p + Cons.nu*(0.5*Cons.kappa_p + 1.0)))/Cons.M**8
-    gamma_PN_0 = 1.00000000000000
-    gamma_PN_7 = (Vars.S_ell*(-6.0*Cons.nu**2 - 10.5833333333333*Cons.nu + 5.0) - 2.66666666666667*Vars.Sigma_ell*Cons.delta*Cons.nu**2 + Vars.Sigma_ell*Cons.delta*(3.0 - 10.1666666666667*Cons.nu))/Cons.M**2
-    gamma_PN_6 = Vars.S_ell**2*(-0.916666666666667*Cons.delta*Cons.kappa_m - 0.916666666666667*Cons.kappa_p + Cons.nu*(-0.166666666666667*Cons.kappa_p - 0.333333333333333) + 1.55555555555556) + Vars.S_ell*Vars.Sigma_ell*(1.66666666666667*Cons.delta + Cons.nu*(-0.166666666666667*Cons.delta*Cons.kappa_p - 0.333333333333333*Cons.delta + 3.83333333333333*Cons.kappa_m)) + Vars.Sigma_ell**2*(Cons.nu**2*(0.166666666666667*Cons.kappa_p + 0.333333333333333) + Cons.nu*(Cons.delta*Cons.kappa_m - Cons.kappa_p - 2.0) + 1.0) + 0.0123456790123457*Cons.nu**3 + 6.36111111111111*Cons.nu**2 - 2.98177812235564*Cons.nu + 1.0
-    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
-    gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
     gamma_PN_5 = (0.888888888888889*Vars.S_ell*Cons.nu + 3.33333333333333*Vars.S_ell)/Cons.M**2 + 2.0*Vars.Sigma_ell*Cons.delta/Cons.M**3
+    gamma_PN_6 = Vars.S_ell**2*(-0.916666666666667*Cons.delta*Cons.kappa_m - 0.916666666666667*Cons.kappa_p + Cons.nu*(-0.166666666666667*Cons.kappa_p - 0.333333333333333) + 1.55555555555556) + Vars.S_ell*Vars.Sigma_ell*(1.66666666666667*Cons.delta + Cons.nu*(-0.166666666666667*Cons.delta*Cons.kappa_p - 0.333333333333333*Cons.delta + 3.83333333333333*Cons.kappa_m)) + Vars.Sigma_ell**2*(Cons.nu**2*(0.166666666666667*Cons.kappa_p + 0.333333333333333) + Cons.nu*(Cons.delta*Cons.kappa_m - Cons.kappa_p - 2.0) + 1.0) + 0.0123456790123457*Cons.nu**3 + 6.36111111111111*Cons.nu**2 - 2.98177812235564*Cons.nu + 1.0
+    gamma_PN_0 = 1.00000000000000
+    a_ell_4 = Vars.S_n*(5.77777777777778*Cons.nu**2 + 14.75*Cons.nu + 1.5) + Vars.Sigma_n*Cons.delta*(2.83333333333333*Cons.nu**2 + 9.125*Cons.nu + 1.5)
+    a_ell_1 = 3.0*Vars.Sigma_ell*Vars.Sigma_n*Cons.nu*(Cons.kappa_p + 2.0)/Cons.M**2 - 3.0*Cons.delta*(Vars.S_ell*Vars.Sigma_n + Vars.S_n*Vars.Sigma_ell)/Cons.M**2 - 0.5*(3.0*Vars.S_n*(2.0*Vars.S_ell*(Cons.kappa_p + 2.0) + Vars.Sigma_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m)) + 3.0*Vars.Sigma_n*(Vars.S_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m) + Vars.Sigma_ell*(-Cons.delta*Cons.kappa_m + Cons.kappa_p)))/Cons.M**2
+    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
+    gamma_PN_7 = (Vars.S_ell*(-6.0*Cons.nu**2 - 10.5833333333333*Cons.nu + 5.0) - 2.66666666666667*Vars.Sigma_ell*Cons.delta*Cons.nu**2 + Vars.Sigma_ell*Cons.delta*(3.0 - 10.1666666666667*Cons.nu))/Cons.M**2
     gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
-    return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v**2*(a_ell_2 + a_ell_4*Vars.v**2))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + Vars.v*(gamma_PN_3 + Vars.v*(gamma_PN_4 + Vars.v*(gamma_PN_5 + Vars.v*(gamma_PN_6 + gamma_PN_7*Vars.v))))))/Cons.M**3
+    a_ell_3 = Cons.nu*(4.0*Cons.delta*(Vars.S_ell*Vars.Sigma_n + Vars.S_n*Vars.Sigma_ell)/Cons.M**2 + 0.5*(2.0*Vars.S_n*(4.0*Vars.S_ell*(Cons.kappa_p + 2.0) + Vars.Sigma_ell*(2.0*Cons.delta*Cons.kappa_p + 7.0*Cons.kappa_m)) + Vars.Sigma_n*(2.0*Vars.S_ell*(2.0*Cons.delta*Cons.kappa_p + 7.0*Cons.kappa_m) + Vars.Sigma_ell*(5.0*Cons.delta*Cons.kappa_m - 17.0*Cons.kappa_p - 26.0)))/Cons.M**2) - 4.0*Vars.Sigma_ell*Vars.Sigma_n*Cons.nu**2*(Cons.kappa_p + 2.0)/Cons.M**2 + 6.0*Cons.delta*(Vars.S_ell*Vars.Sigma_n + Vars.S_n*Vars.Sigma_ell)/Cons.M**2 + 0.5*(Vars.S_n*(Vars.S_ell*(-9.0*Cons.delta*Cons.kappa_m + 3.0*Cons.kappa_p + 22.0) + Vars.Sigma_ell*(6.0*Cons.delta*Cons.kappa_p - 6.0*Cons.kappa_m)) + 6.0*Vars.Sigma_n*(Vars.S_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m) + Vars.Sigma_ell*(-Cons.delta*Cons.kappa_m + Cons.kappa_p + 1.0)))/Cons.M**2
+    gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
+    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_4 = -5.41666666666667*Cons.nu + 1.0 + (Vars.S_ell**2*(-0.5*Cons.kappa_p - 1.0) + Vars.S_ell*Vars.Sigma_ell*(-0.5*Cons.delta*Cons.kappa_p - Cons.delta + 0.5*Cons.kappa_m) + Vars.Sigma_ell**2*(0.25*Cons.delta*Cons.kappa_m - 0.25*Cons.kappa_p + Cons.nu*(0.5*Cons.kappa_p + 1.0)))/Cons.M**8
+    return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v*(a_ell_1 + Vars.v*(a_ell_2 + Vars.v*(a_ell_3 + a_ell_4*Vars.v))))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + Vars.v*(gamma_PN_3 + Vars.v*(gamma_PN_4 + Vars.v*(gamma_PN_5 + Vars.v*(gamma_PN_6 + gamma_PN_7*Vars.v))))))/Cons.M**3
 
 
 @njit(cache=True)
@@ -1708,17 +1726,19 @@ def OmegaVec_chiVec_2_5p5(Cons,Vars):
 
 @njit
 def OmegaVec_5p5(Cons,Vars):
-    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
-    a_ell_4 = Vars.S_n*(5.77777777777778*Cons.nu**2 + 14.75*Cons.nu + 1.5) + Vars.Sigma_n*Cons.delta*(2.83333333333333*Cons.nu**2 + 9.125*Cons.nu + 1.5)
-    gamma_PN_4 = -5.41666666666667*Cons.nu + 1.0 + (Vars.S_ell**2*(-0.5*Cons.kappa_p - 1.0) + Vars.S_ell*Vars.Sigma_ell*(-0.5*Cons.delta*Cons.kappa_p - Cons.delta + 0.5*Cons.kappa_m) + Vars.Sigma_ell**2*(0.25*Cons.delta*Cons.kappa_m - 0.25*Cons.kappa_p + Cons.nu*(0.5*Cons.kappa_p + 1.0)))/Cons.M**8
-    gamma_PN_0 = 1.00000000000000
-    gamma_PN_7 = (Vars.S_ell*(-6.0*Cons.nu**2 - 10.5833333333333*Cons.nu + 5.0) - 2.66666666666667*Vars.Sigma_ell*Cons.delta*Cons.nu**2 + Vars.Sigma_ell*Cons.delta*(3.0 - 10.1666666666667*Cons.nu))/Cons.M**2
-    gamma_PN_6 = Vars.S_ell**2*(-0.916666666666667*Cons.delta*Cons.kappa_m - 0.916666666666667*Cons.kappa_p + Cons.nu*(-0.166666666666667*Cons.kappa_p - 0.333333333333333) + 1.55555555555556) + Vars.S_ell*Vars.Sigma_ell*(1.66666666666667*Cons.delta + Cons.nu*(-0.166666666666667*Cons.delta*Cons.kappa_p - 0.333333333333333*Cons.delta + 3.83333333333333*Cons.kappa_m)) + Vars.Sigma_ell**2*(Cons.nu**2*(0.166666666666667*Cons.kappa_p + 0.333333333333333) + Cons.nu*(Cons.delta*Cons.kappa_m - Cons.kappa_p - 2.0) + 1.0) + 0.0123456790123457*Cons.nu**3 + 6.36111111111111*Cons.nu**2 - 2.98177812235564*Cons.nu + 1.0
-    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
-    gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
     gamma_PN_5 = (0.888888888888889*Vars.S_ell*Cons.nu + 3.33333333333333*Vars.S_ell)/Cons.M**2 + 2.0*Vars.Sigma_ell*Cons.delta/Cons.M**3
+    gamma_PN_6 = Vars.S_ell**2*(-0.916666666666667*Cons.delta*Cons.kappa_m - 0.916666666666667*Cons.kappa_p + Cons.nu*(-0.166666666666667*Cons.kappa_p - 0.333333333333333) + 1.55555555555556) + Vars.S_ell*Vars.Sigma_ell*(1.66666666666667*Cons.delta + Cons.nu*(-0.166666666666667*Cons.delta*Cons.kappa_p - 0.333333333333333*Cons.delta + 3.83333333333333*Cons.kappa_m)) + Vars.Sigma_ell**2*(Cons.nu**2*(0.166666666666667*Cons.kappa_p + 0.333333333333333) + Cons.nu*(Cons.delta*Cons.kappa_m - Cons.kappa_p - 2.0) + 1.0) + 0.0123456790123457*Cons.nu**3 + 6.36111111111111*Cons.nu**2 - 2.98177812235564*Cons.nu + 1.0
+    gamma_PN_0 = 1.00000000000000
+    a_ell_4 = Vars.S_n*(5.77777777777778*Cons.nu**2 + 14.75*Cons.nu + 1.5) + Vars.Sigma_n*Cons.delta*(2.83333333333333*Cons.nu**2 + 9.125*Cons.nu + 1.5)
+    a_ell_1 = 3.0*Vars.Sigma_ell*Vars.Sigma_n*Cons.nu*(Cons.kappa_p + 2.0)/Cons.M**2 - 3.0*Cons.delta*(Vars.S_ell*Vars.Sigma_n + Vars.S_n*Vars.Sigma_ell)/Cons.M**2 - 0.5*(3.0*Vars.S_n*(2.0*Vars.S_ell*(Cons.kappa_p + 2.0) + Vars.Sigma_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m)) + 3.0*Vars.Sigma_n*(Vars.S_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m) + Vars.Sigma_ell*(-Cons.delta*Cons.kappa_m + Cons.kappa_p)))/Cons.M**2
+    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
+    gamma_PN_7 = (Vars.S_ell*(-6.0*Cons.nu**2 - 10.5833333333333*Cons.nu + 5.0) - 2.66666666666667*Vars.Sigma_ell*Cons.delta*Cons.nu**2 + Vars.Sigma_ell*Cons.delta*(3.0 - 10.1666666666667*Cons.nu))/Cons.M**2
     gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
-    return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v**2*(a_ell_2 + a_ell_4*Vars.v**2))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + Vars.v*(gamma_PN_3 + Vars.v*(gamma_PN_4 + Vars.v*(gamma_PN_5 + Vars.v*(gamma_PN_6 + gamma_PN_7*Vars.v))))))/Cons.M**3
+    a_ell_3 = Cons.nu*(4.0*Cons.delta*(Vars.S_ell*Vars.Sigma_n + Vars.S_n*Vars.Sigma_ell)/Cons.M**2 + 0.5*(2.0*Vars.S_n*(4.0*Vars.S_ell*(Cons.kappa_p + 2.0) + Vars.Sigma_ell*(2.0*Cons.delta*Cons.kappa_p + 7.0*Cons.kappa_m)) + Vars.Sigma_n*(2.0*Vars.S_ell*(2.0*Cons.delta*Cons.kappa_p + 7.0*Cons.kappa_m) + Vars.Sigma_ell*(5.0*Cons.delta*Cons.kappa_m - 17.0*Cons.kappa_p - 26.0)))/Cons.M**2) - 4.0*Vars.Sigma_ell*Vars.Sigma_n*Cons.nu**2*(Cons.kappa_p + 2.0)/Cons.M**2 + 6.0*Cons.delta*(Vars.S_ell*Vars.Sigma_n + Vars.S_n*Vars.Sigma_ell)/Cons.M**2 + 0.5*(Vars.S_n*(Vars.S_ell*(-9.0*Cons.delta*Cons.kappa_m + 3.0*Cons.kappa_p + 22.0) + Vars.Sigma_ell*(6.0*Cons.delta*Cons.kappa_p - 6.0*Cons.kappa_m)) + 6.0*Vars.Sigma_n*(Vars.S_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m) + Vars.Sigma_ell*(-Cons.delta*Cons.kappa_m + Cons.kappa_p + 1.0)))/Cons.M**2
+    gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
+    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_4 = -5.41666666666667*Cons.nu + 1.0 + (Vars.S_ell**2*(-0.5*Cons.kappa_p - 1.0) + Vars.S_ell*Vars.Sigma_ell*(-0.5*Cons.delta*Cons.kappa_p - Cons.delta + 0.5*Cons.kappa_m) + Vars.Sigma_ell**2*(0.25*Cons.delta*Cons.kappa_m - 0.25*Cons.kappa_p + Cons.nu*(0.5*Cons.kappa_p + 1.0)))/Cons.M**8
+    return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v*(a_ell_1 + Vars.v*(a_ell_2 + Vars.v*(a_ell_3 + a_ell_4*Vars.v))))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + Vars.v*(gamma_PN_3 + Vars.v*(gamma_PN_4 + Vars.v*(gamma_PN_5 + Vars.v*(gamma_PN_6 + gamma_PN_7*Vars.v))))))/Cons.M**3
 
 
 @njit(cache=True)
@@ -1846,17 +1866,19 @@ def OmegaVec_chiVec_2_6p0(Cons,Vars):
 
 @njit
 def OmegaVec_6p0(Cons,Vars):
-    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
-    a_ell_4 = Vars.S_n*(5.77777777777778*Cons.nu**2 + 14.75*Cons.nu + 1.5) + Vars.Sigma_n*Cons.delta*(2.83333333333333*Cons.nu**2 + 9.125*Cons.nu + 1.5)
-    gamma_PN_4 = -5.41666666666667*Cons.nu + 1.0 + (Vars.S_ell**2*(-0.5*Cons.kappa_p - 1.0) + Vars.S_ell*Vars.Sigma_ell*(-0.5*Cons.delta*Cons.kappa_p - Cons.delta + 0.5*Cons.kappa_m) + Vars.Sigma_ell**2*(0.25*Cons.delta*Cons.kappa_m - 0.25*Cons.kappa_p + Cons.nu*(0.5*Cons.kappa_p + 1.0)))/Cons.M**8
-    gamma_PN_0 = 1.00000000000000
-    gamma_PN_7 = (Vars.S_ell*(-6.0*Cons.nu**2 - 10.5833333333333*Cons.nu + 5.0) - 2.66666666666667*Vars.Sigma_ell*Cons.delta*Cons.nu**2 + Vars.Sigma_ell*Cons.delta*(3.0 - 10.1666666666667*Cons.nu))/Cons.M**2
-    gamma_PN_6 = Vars.S_ell**2*(-0.916666666666667*Cons.delta*Cons.kappa_m - 0.916666666666667*Cons.kappa_p + Cons.nu*(-0.166666666666667*Cons.kappa_p - 0.333333333333333) + 1.55555555555556) + Vars.S_ell*Vars.Sigma_ell*(1.66666666666667*Cons.delta + Cons.nu*(-0.166666666666667*Cons.delta*Cons.kappa_p - 0.333333333333333*Cons.delta + 3.83333333333333*Cons.kappa_m)) + Vars.Sigma_ell**2*(Cons.nu**2*(0.166666666666667*Cons.kappa_p + 0.333333333333333) + Cons.nu*(Cons.delta*Cons.kappa_m - Cons.kappa_p - 2.0) + 1.0) + 0.0123456790123457*Cons.nu**3 + 6.36111111111111*Cons.nu**2 - 2.98177812235564*Cons.nu + 1.0
-    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
-    gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
     gamma_PN_5 = (0.888888888888889*Vars.S_ell*Cons.nu + 3.33333333333333*Vars.S_ell)/Cons.M**2 + 2.0*Vars.Sigma_ell*Cons.delta/Cons.M**3
+    gamma_PN_6 = Vars.S_ell**2*(-0.916666666666667*Cons.delta*Cons.kappa_m - 0.916666666666667*Cons.kappa_p + Cons.nu*(-0.166666666666667*Cons.kappa_p - 0.333333333333333) + 1.55555555555556) + Vars.S_ell*Vars.Sigma_ell*(1.66666666666667*Cons.delta + Cons.nu*(-0.166666666666667*Cons.delta*Cons.kappa_p - 0.333333333333333*Cons.delta + 3.83333333333333*Cons.kappa_m)) + Vars.Sigma_ell**2*(Cons.nu**2*(0.166666666666667*Cons.kappa_p + 0.333333333333333) + Cons.nu*(Cons.delta*Cons.kappa_m - Cons.kappa_p - 2.0) + 1.0) + 0.0123456790123457*Cons.nu**3 + 6.36111111111111*Cons.nu**2 - 2.98177812235564*Cons.nu + 1.0
+    gamma_PN_0 = 1.00000000000000
+    a_ell_4 = Vars.S_n*(5.77777777777778*Cons.nu**2 + 14.75*Cons.nu + 1.5) + Vars.Sigma_n*Cons.delta*(2.83333333333333*Cons.nu**2 + 9.125*Cons.nu + 1.5)
+    a_ell_1 = 3.0*Vars.Sigma_ell*Vars.Sigma_n*Cons.nu*(Cons.kappa_p + 2.0)/Cons.M**2 - 3.0*Cons.delta*(Vars.S_ell*Vars.Sigma_n + Vars.S_n*Vars.Sigma_ell)/Cons.M**2 - 0.5*(3.0*Vars.S_n*(2.0*Vars.S_ell*(Cons.kappa_p + 2.0) + Vars.Sigma_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m)) + 3.0*Vars.Sigma_n*(Vars.S_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m) + Vars.Sigma_ell*(-Cons.delta*Cons.kappa_m + Cons.kappa_p)))/Cons.M**2
+    a_ell_2 = Vars.S_n*(-9.66666666666667*Cons.nu - 10.0) + Vars.Sigma_n*Cons.delta*(-4.5*Cons.nu - 6.0)
+    gamma_PN_7 = (Vars.S_ell*(-6.0*Cons.nu**2 - 10.5833333333333*Cons.nu + 5.0) - 2.66666666666667*Vars.Sigma_ell*Cons.delta*Cons.nu**2 + Vars.Sigma_ell*Cons.delta*(3.0 - 10.1666666666667*Cons.nu))/Cons.M**2
     gamma_PN_2 = 1.0 - 0.333333333333333*Cons.nu
-    return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v**2*(a_ell_2 + a_ell_4*Vars.v**2))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + Vars.v*(gamma_PN_3 + Vars.v*(gamma_PN_4 + Vars.v*(gamma_PN_5 + Vars.v*(gamma_PN_6 + gamma_PN_7*Vars.v))))))/Cons.M**3
+    a_ell_3 = Cons.nu*(4.0*Cons.delta*(Vars.S_ell*Vars.Sigma_n + Vars.S_n*Vars.Sigma_ell)/Cons.M**2 + 0.5*(2.0*Vars.S_n*(4.0*Vars.S_ell*(Cons.kappa_p + 2.0) + Vars.Sigma_ell*(2.0*Cons.delta*Cons.kappa_p + 7.0*Cons.kappa_m)) + Vars.Sigma_n*(2.0*Vars.S_ell*(2.0*Cons.delta*Cons.kappa_p + 7.0*Cons.kappa_m) + Vars.Sigma_ell*(5.0*Cons.delta*Cons.kappa_m - 17.0*Cons.kappa_p - 26.0)))/Cons.M**2) - 4.0*Vars.Sigma_ell*Vars.Sigma_n*Cons.nu**2*(Cons.kappa_p + 2.0)/Cons.M**2 + 6.0*Cons.delta*(Vars.S_ell*Vars.Sigma_n + Vars.S_n*Vars.Sigma_ell)/Cons.M**2 + 0.5*(Vars.S_n*(Vars.S_ell*(-9.0*Cons.delta*Cons.kappa_m + 3.0*Cons.kappa_p + 22.0) + Vars.Sigma_ell*(6.0*Cons.delta*Cons.kappa_p - 6.0*Cons.kappa_m)) + 6.0*Vars.Sigma_n*(Vars.S_ell*(Cons.delta*Cons.kappa_p - Cons.kappa_m) + Vars.Sigma_ell*(-Cons.delta*Cons.kappa_m + Cons.kappa_p + 1.0)))/Cons.M**2
+    gamma_PN_3 = (1.66666666666667*Vars.S_ell + Vars.Sigma_ell*Cons.delta)/Cons.M**2
+    a_ell_0 = 7.0*Vars.S_n + 3.0*Vars.Sigma_n*Cons.delta
+    gamma_PN_4 = -5.41666666666667*Cons.nu + 1.0 + (Vars.S_ell**2*(-0.5*Cons.kappa_p - 1.0) + Vars.S_ell*Vars.Sigma_ell*(-0.5*Cons.delta*Cons.kappa_p - Cons.delta + 0.5*Cons.kappa_m) + Vars.Sigma_ell**2*(0.25*Cons.delta*Cons.kappa_m - 0.25*Cons.kappa_p + Cons.nu*(0.5*Cons.kappa_p + 1.0)))/Cons.M**8
+    return Vars.ellHat*Vars.v**3/Cons.M + Vars.nHat*Vars.v**6*(a_ell_0 + Vars.v*(a_ell_1 + Vars.v*(a_ell_2 + Vars.v*(a_ell_3 + a_ell_4*Vars.v))))*(gamma_PN_0 + Vars.v**2*(gamma_PN_2 + Vars.v*(gamma_PN_3 + Vars.v*(gamma_PN_4 + Vars.v*(gamma_PN_5 + Vars.v*(gamma_PN_6 + gamma_PN_7*Vars.v))))))/Cons.M**3
 
 
 @njit(cache=True)

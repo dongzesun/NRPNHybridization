@@ -281,7 +281,7 @@ def get_abd(cce_dir, truncate):
         Psi0 = cce_dir + '/Psi0.h5')
     t0 = -abd.t[np.argmax(np.linalg.norm(abd.sigma.bar, axis=1))]
     abd.t = abd.t + t0
-    
+ 
     if truncate != None:
         abd_prime = scri.asymptotic_bondi_data.AsymptoticBondiData(
             time = abd.t[(abd.t>=truncate[0])&(abd.t<truncate[1])],
@@ -306,6 +306,8 @@ def abd_to_WM(abd):
     if len(W.data[0]) > 77:
         W.data = np.copy(W.data[:,4:])
     W.ells = 2,8
+    W.frameType = scri.Inertial
+    W.dataType = scri.h
     return W
 
 
@@ -343,11 +345,23 @@ def get_length_from_abd(abd, nOrbits, t_end):
     return length
 
 
-def fix_BMS(abd, hyb, PN):
-    W_NR = scri.WaveformModes()
-    if hyb.PNIter == 0:
-        abd_prime, trans = abd.map_to_superrest_frame(t_0=hyb.t_start+hyb.length/2)
-        W_NR = abd_to_WM(abd_prime)
+#@profile
+def fix_BMS(abd, hyb, PN):    
+    if hyb.PNIter == 0: 
+        W_NR = scri.WaveformModes()
+        W_NR.data = 2*abd.sigma.bar
+        W_NR.t = abd.t
+        W_NR.ells = 0,8
+        W_NR.frameType = scri.Inertial
+        W_NR.dataType = scri.h
+
+        trans = abd.map_to_superrest_frame(t_0=hyb.t_start+hyb.length/2)
+        W_NR = W_NR.transform(
+            space_translation=trans["transformations"]["space_translation"],
+            supertranslation=trans["transformations"]["supertranslation"][:81], 
+            frame_rotation=trans["transformations"]["frame_rotation"],
+            boost_velocity=trans["transformations"]["CoM_transformation"]["boost_velocity"])#abd_to_WM(abd_prime)
+        W_NR.ells = 2,8
         W_NR_corot = scri.to_corotating_frame(W_NR.copy())
         ZeroModes = [2,8,16,26,38,52,68]
         W_NR_corot.data[:,ZeroModes] = 0.0*W_NR_corot.data[:,ZeroModes]
@@ -365,7 +379,7 @@ def fix_BMS(abd, hyb, PN):
         
         W_PN_PsiM = PostNewtonian.PNWaveform(
             Phys[0], np.copy(hyb.omega_i)*Phys[1], Phys[2:5], Phys[5:8], PN.frame_i, np.copy(hyb.t_start)/Phys[1],
-            t_PNStart=hyb.t_PNStart, t_PNEnd=hyb.t_PNEnd,datatype="Psi_M"
+            t_PNStart=hyb.t_PNStart, t_PNEnd=hyb.t_PNEnd, datatype="Psi_M"
         )
         W_PN_PsiM.t = W_PN_PsiM.t*Phys[1]
         
@@ -547,30 +561,33 @@ def Stitch(W_PN, W_NR, hyb):
     W_H.data = dataTemp
     W_H.ells = min(W_NR.LM[:, 0]), max(W_NR.LM[:, 0])
     W_H.dataType = scri.h
+    W_H.frameType = scri.Inertial
     return W_H
 
 
 def Output(out_name, W_NR, W_PN, W_H, minima12D, PN, hyb, nOrbits):
-    #outname = 'hybridNR.h5'
-    #scri.SpEC.write_to_h5(W_NR, outname, file_write_mode='w')
-    #outname = 'hybridPN.h5'
-    #scri.SpEC.write_to_h5(W_PN, outname, file_write_mode='w')
-    #outname = 'hybrid.h5'
-    #scri.SpEC.write_to_h5(W_H, outname, file_write_mode='w')
+    outname = 'hybridNR.h5'
+    scri.SpEC.write_to_h5(W_NR, outname, file_write_mode='w')
+    outname = 'hybridPN.h5'
+    scri.SpEC.write_to_h5(W_PN, outname, file_write_mode='w')
+    outname = 'hybrid.h5'
+    scri.SpEC.write_to_h5(W_H, outname, file_write_mode='w')
     
     ErrorMatchingWindow = SquaredError(W_NR, W_PN, hyb.t_start, hyb.t_start + hyb.length)   
     hyb.cost.append(ErrorMatchingWindow)
     
-    checkpoint = [hyb.PNIter, hyb.cost, hyb.omega_i, hyb.t_start, hyb.length, hyb.t_PNStart, hyb.t_PNEnd, PN.frame_i]
-    """
+    checkpoint = np.array([hyb.PNIter, hyb.cost, hyb.omega_i, hyb.t_start, hyb.length, hyb.t_PNStart, hyb.t_PNEnd, PN.frame_i], dtype="object")
+    
     t1 = hyb.t_end - nOrbits_to_length(25+nOrbits/2, hyb.t_end, hyb.omega_NR_mag, W_NR.t)
     length = nOrbits_to_length(10, t1, hyb.omega_NR_mag, W_NR.t)
     ErrorTestWindow = SquaredError(W_NR, W_PN, t1-length, t1)
-    """
+    print('Test Window Error = ', ErrorTestWindow)
+    
     ModeError = []
     for i in range(len(W_NR.data[0,:])):
         ModeError.append(SquaredError(W_NR, W_PN, hyb.t_start, hyb.t_start + length, mode=i))
-    """
+    print(ModeError)
+    
     var = StandardError(minima12D, PN)
     
     change = []
@@ -582,16 +599,17 @@ def Output(out_name, W_NR, W_PN, W_H, minima12D, PN, hyb, nOrbits):
     change.append(np.linalg.norm(PN.PhyParas[2:5])/PN.OptParas[2]*var[2])
     change.append(np.linalg.norm(PN.PhyParas[5:8])/PN.OptParas[3]*var[3])
     change.append(var[7])
-    """
+    change = np.array(change, dtype="object")
+    
     np.savez(
         out_name,
         checkpoint = checkpoint,
         ErrorMatchingWindow = ErrorMatchingWindow,
-        #ErrorTestWindow = ErrorTestWindow,
+        ErrorTestWindow = ErrorTestWindow,
         OptParas = PN.OptParas,
         PhyParas = PN.PhyParas,
-        ModeError = ModeError#,
-        #change = change
+        ModeError = ModeError,
+        change = change
     )
 
 
@@ -611,7 +629,7 @@ def Hybridize(WaveformType,t_end, sim_dir, cce_dir, out_name, length, nOrbits, h
     # BMS tranformations
     if WaveformType == 'cce':
         W_NR, trans = fix_BMS(abd, hyb, PN)
-        PN.rotate(trans)
+        #PN.rotate(trans)
 
     
     # Get matching window
@@ -646,7 +664,7 @@ def Hybridize(WaveformType,t_end, sim_dir, cce_dir, out_name, length, nOrbits, h
         minima12D = least_squares(Optimize12D, PN.OptParas, bounds=(lowbound12D, upbound12D), ftol=3e-15, xtol=3e-15, gtol=3e-15, x_scale='jac', args=(PN, hyb))
         minima12D.jac = approx_fprime(minima12D.x, Optimize12D, np.full_like(minima12D.x, 1.49e-8), PN, hyb)
         if minima12D.success == False:
-            raise ValueError("12-D Optimization doesn't converge.")
+            print("12-D Optimization doesn't converge.")
             
         PN.OptParas = minima12D.x
         PN.Parameterize_to_Physical(hyb)
@@ -663,7 +681,7 @@ def Hybridize(WaveformType,t_end, sim_dir, cce_dir, out_name, length, nOrbits, h
         PN.PhyParas[9:] = logR_delta[1:]
     else:
         PN.PhyParas = np.append(PN.PhyParas, logR_delta)
-    PN.Parameterize_to_Physical(hyb)
+    PN.Physical_to_Parameterize(hyb)
     R_delta = np.exp(quaternion.from_float_array(logR_delta))
     
     W_PN.t = W_PN.t - t_delta
@@ -768,6 +786,8 @@ if os.path.exists(out_name):
     PN.OptParas = Checkpoint['OptParas']
     PN.PhyParas = Checkpoint['PhyParas']
     
+if hyb.PNIter>maxiter:
+    hyb.PNIter = 10
 while hyb.PNIter<=maxiter:
     print("PNIter=: ", hyb.PNIter)
     W_NR, W_PN, W_H, minima12D = Hybridize(WaveformType, t_end, data_dir, cce_dir, out_name, length, nOrbits, hyb, PN, debug=0, OptimizePNParas=OptArg, truncate=truncate)

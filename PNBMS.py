@@ -299,32 +299,43 @@ def write_abd_to_file(abd, write_dir):
 
     return
 
-def PN_BMS_w_time_phase(abd, h_PN, PsiM_PN, t1, t2, include_modes, N=2, write_dir=''):
+def PN_BMS_w_time_phase(abd, h_PN, PsiM_PN, t1, t2, include_modes, N=4, write_dir=''):
     abd_prime = abd.copy()
-    print(N)
+    W_NR = scri.WaveformModes()
+    W_NR.data = 2*abd.sigma.bar
+    W_NR.t = abd.t
+    W_NR.ells = 0,8
+    W_NR.frameType = scri.Inertial
+    W_NR.dataType = scri.h
+    
     errors = []
     h_primes = []
-    abd_primes = []
+    #abd_primes = []
     trans_and_convs = []
     for itr in range(N):
-        print(itr)
-        abd_prime, trans_and_conv = abd_prime.map_to_superrest_frame(t_0=t1 + (t2 - t1)/2,
+        trans = abd_prime.map_to_superrest_frame(t_0=t1 + (t2 - t1)/2,
                                                                      target_h_input=h_PN,
                                                                      target_PsiM_input=PsiM_PN,
                                                                      padding_time=(t2 - t1)/2)
         
-        h_CCE_PN_BMS = MT_to_WM(2.0*abd_prime.sigma.bar, False, scri.h)
-
-        error, h_CCE_PN_BMS_prime, res = align2d(h_CCE_PN_BMS, h_PN, t1, t2, n_brute_force_δt=1000, n_brute_force_δϕ=20, include_modes=include_modes, nprocs=5)
+        #h_CCE_PN_BMS = MT_to_WM(2.0*abd_prime.sigma.bar, False, scri.h)
+        W_NR = W_NR.transform(
+            space_translation=trans["transformations"]["space_translation"],
+            supertranslation=trans["transformations"]["supertranslation"][:81], 
+            frame_rotation=trans["transformations"]["frame_rotation"],
+            boost_velocity=trans["transformations"]["CoM_transformation"]["boost_velocity"])#abd_to_WM(abd_prime)
+        W_NR.ells = 2,8
         
-        abd_prime = time_translation(abd_prime, res.x[0])
+        error, h_CCE_PN_BMS_prime, res = align2d(W_NR, h_PN, t1, t2, n_brute_force_δt=1000, n_brute_force_δϕ=20, include_modes=include_modes, nprocs=5)
+        
+        #abd_prime = time_translation(abd_prime, res.x[0])
 
-        abd_prime = rotation(abd_prime, res.x[1])
+        #abd_prime = rotation(abd_prime, res.x[1])
 
         errors.append(error)
         h_primes.append(h_CCE_PN_BMS_prime)
-        abd_primes.append(abd_prime)
-        trans_and_convs.append(trans_and_conv)
+        #abd_primes.append(abd_prime)
+        trans_and_convs.append(trans)
 
     idx = np.argmin(abs(np.array(errors)))
 
