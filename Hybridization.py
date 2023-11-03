@@ -299,13 +299,15 @@ def get_abd(cce_dir, truncate):
     return abd, t0
 
 
-def abd_to_WM(abd):
+def abd_to_WM(abd, lmin = 2):
     W = scri.WaveformModes()
     W.t = abd.t
     W.data = 2*abd.sigma.bar
-    if len(W.data[0]) > 77:
+    if len(W.data[0]) > 77 and lmin == 2:
         W.data = np.copy(W.data[:,4:])
-    W.ells = 2,8
+        W.ells = 2,8
+    else:
+        W.ells = 0,8
     W.frameType = scri.Inertial
     W.dataType = scri.h
     return W
@@ -348,12 +350,7 @@ def get_length_from_abd(abd, nOrbits, t_end):
 #@profile
 def fix_BMS(abd, hyb, PN):    
     if hyb.PNIter == 0: 
-        W_NR = scri.WaveformModes()
-        W_NR.data = 2*abd.sigma.bar
-        W_NR.t = abd.t
-        W_NR.ells = 0,8
-        W_NR.frameType = scri.Inertial
-        W_NR.dataType = scri.h
+        W_NR = abd_to_WM(abd, lmin=0)
 
         trans = abd.map_to_superrest_frame(t_0=hyb.t_start+hyb.length/2)
         W_NR = W_NR.transform(
@@ -386,6 +383,21 @@ def fix_BMS(abd, hyb, PN):
         tp1, W_NR, trans, idx = PNBMS.PN_BMS_w_time_phase(abd, W_PN, W_PN_PsiM, hyb.t_start, hyb.t_start+hyb.length, None)
         
     return W_NR, trans
+
+
+def fix_BMS_NRNR(abd, abd2, hyb, PN):    
+    trans = abd.map_to_superrest_frame(t_0=hyb.t_start+hyb.length/2)
+    abd = abd.transform(
+        space_translation=trans["transformations"]["space_translation"],
+        supertranslation=trans["transformations"]["supertranslation"][:81], 
+        frame_rotation=trans["transformations"]["frame_rotation"],
+        boost_velocity=trans["transformations"]["CoM_transformation"]["boost_velocity"])#abd_to_WM(abd_prime)
+    W_NR = abd_to_WM(abd, lmin=0)
+
+    Psi_M = PNBMS.MT_to_WM(abd.supermomentum('Moreschi'), False, dataType = scri.psi2)
+    tp1, W_NR2, tp2, idx = PNBMS.PN_BMS_w_time_phase(abd2, W_NR, Psi_M, hyb.t_start, hyb.t_start+hyb.length, None)
+        
+    return abd_to_WM(abd), W_NR2
 
 
 def InitialT(x, hyb):
@@ -440,7 +452,7 @@ def StandardError(minima, PN):
     return var
 
 
-def Align(PN, hyb):
+def Align(PN, hyb, W_NR2=None):
     """
     Generate PN waveform and align it with NR waveform.
     """    
@@ -458,6 +470,9 @@ def Align(PN, hyb):
         W_PN_corot.data[:,ZeroModes] = 0.0*W_PN_corot.data[:,ZeroModes] # Not consider memory effect since NR dosen't have corrrect memory.
     W_PN = scri.to_inertial_frame(W_PN_corot.copy())
     W_PN.t = W_PN.t*Phys[1]
+    
+    if W_NR2 != None:
+        W_PN = W_NR2
     
     # Set up the matching region data for PN, and get the corresponding angular velocity and frame
     hyb.get_window_PN(W_PN)
@@ -614,7 +629,7 @@ def Output(out_name, W_NR, W_PN, W_H, minima12D, PN, hyb, nOrbits):
 
 
 #@profile
-def Hybridize(WaveformType,t_end, sim_dir, cce_dir, out_name, length, nOrbits, hyb, PN, debug = 0, OptimizePNParas = 0, truncate = None):
+def Hybridize(WaveformType, t_end, sim_dir, cce_dir, out_name, length, nOrbits, hyb, PN, debug = 0, OptimizePNParas = 0, truncate = None, cce_dir2 = None):
     """
     Align and hybridize given NR waveform with PN waveform.
     """   
@@ -622,14 +637,20 @@ def Hybridize(WaveformType,t_end, sim_dir, cce_dir, out_name, length, nOrbits, h
     # Get NR waveform
     if WaveformType == 'cce':
         abd, t0 = get_abd(cce_dir, truncate)
+        if cce_dir2 != None:
+            abd2, t02 = get_abd(cce_dir2, truncate)
+            OptimizePNParas = 0
     else:
         W_NR, t0, length = get_extrapolated_NR(data_dir, nOrbits, t_end, length)
               
     
     # BMS tranformations
     if WaveformType == 'cce':
-        W_NR, trans = fix_BMS(abd, hyb, PN)
-        #PN.rotate(trans)
+        if cce_dir2 == None:
+            W_NR, trans = fix_BMS(abd, hyb, PN)
+            #PN.rotate(trans)
+        else:
+            W_NR, W_NR2 = fix_BMS_NRNR(abd, abd2, hyb, PN)
 
     
     # Get matching window
@@ -672,7 +693,10 @@ def Hybridize(WaveformType,t_end, sim_dir, cce_dir, out_name, length, nOrbits, h
     
     # Get aligned NR and PN waveforms
     hyb.t_PNStart, hyb.t_PNEnd = -80000, 1000 - hyb.t_start
-    minima, W_PN, chiA, chiB = Align(PN, hyb)
+    if cce_dir2 != None:
+        minima, W_PN, chiA, chiB = Align(PN, hyb, W_NR2)
+    else:
+        minima, W_PN, chiA, chiB = Align(PN, hyb)
     
     t_delta = minima.x[0]
     logR_delta = np.append(0.0, minima.x[1:] + hyb.omega_mean*minima.x[0]/2)
@@ -690,11 +714,12 @@ def Hybridize(WaveformType,t_end, sim_dir, cce_dir, out_name, length, nOrbits, h
     chiB = R_delta*chiB*R_delta.conjugate()
 
     print("SquaredError over matching window: ",SquaredError(W_NR, W_PN, hyb.t_start, hyb.t_start + hyb.length))
-    print(minima12D)
+    if cce_dir2 == None:
+        print(minima12D)
     
     
     # Stitch PN and NR waveforms
-    W_H = Stitch(W_PN, W_NR, hyb)
+    w_H = Stitch(W_PN, W_NR, hyb)
 
 
     # Plot results
@@ -731,8 +756,11 @@ def Hybridize(WaveformType,t_end, sim_dir, cce_dir, out_name, length, nOrbits, h
         fig.savefig( "hybridCheckResults")
         fig.clf()
     
-    Output(out_name, W_NR, W_PN, W_H, minima12D, PN, hyb, nOrbits)    
-    return W_NR, W_PN, W_H, minima12D
+    if cce_dir2 == None:
+        Output(out_name, W_NR, W_PN, W_H, minima12D, PN, hyb, nOrbits)    
+        return W_NR, W_PN, W_H, minima12D
+    else:
+        return W_NR, W_PN
 
     
 # Run the code
@@ -748,6 +776,7 @@ parser.add_argument('--OutName', default='Output.npz',help='Path in which to out
 parser.add_argument('--length',type=float, default=5000.0,help='Length of matching window')
 parser.add_argument('--nOrbits',type=float, default=None,help='Length of matching window in orbits, will disable "length" option if not None')
 parser.add_argument('--truncate',nargs=2,type=float, default=None,help='--truncate t1 t2. If specified, it will truncate the abd object and keep only data between t1 and t2')
+parser.add_argument('--CCEDir2', default=None,help='Path in which to find the second CCE waveform data')
 args = vars(parser.parse_args())
 
 
@@ -756,6 +785,7 @@ WaveformType = args['WaveformType']
 t_end = args['t']
 data_dir = args['SimDir']
 cce_dir = args['CCEDir']
+cce_dir2 = args['CCEDir2']
 out_name = args['OutName']
 length = np.array(args['length'])
 nOrbits = args['nOrbits']
@@ -769,6 +799,8 @@ if WaveformType == 'cce':
         length = get_length_from_abd(abd, nOrbits, t_end)
 else:
     W_NR, t0, length = get_extrapolated_NR(data_dir, nOrbits, t_end, length)
+    maxiter = 0
+if cce_dir2 != None:
     maxiter = 0
     
 hyb = hyb_quantites(t_end, length)
@@ -790,7 +822,7 @@ if hyb.PNIter>maxiter:
     hyb.PNIter = 10
 while hyb.PNIter<=maxiter:
     print("PNIter=: ", hyb.PNIter)
-    W_NR, W_PN, W_H, minima12D = Hybridize(WaveformType, t_end, data_dir, cce_dir, out_name, length, nOrbits, hyb, PN, debug=0, OptimizePNParas=OptArg, truncate=truncate)
+    W_NR, W_PN, W_H, minima12D = Hybridize(WaveformType, t_end, data_dir, cce_dir, out_name, length, nOrbits, hyb, PN, debug=0, OptimizePNParas=OptArg, truncate=truncate, cce_dir2=cce_dir2)
     
     if hyb.PNIter >= 2 and abs(hyb.cost[-1]-hyb.cost[-2])/hyb.cost[-1]<1e-2 and abs(hyb.cost[-1]-hyb.cost[-3])/hyb.cost[-1]<1e-2:
         hyb.PNIter = maxiter + 1
