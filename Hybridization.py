@@ -350,15 +350,8 @@ def get_length_from_abd(abd, nOrbits, t_end):
 #@profile
 def fix_BMS(abd, hyb, PN):    
     if hyb.PNIter == 0: 
-        W_NR = abd_to_WM(abd, lmin=0)
-
-        trans = abd.map_to_superrest_frame(t_0=hyb.t_start+hyb.length/2)
-        W_NR = W_NR.transform(
-            space_translation=trans["transformations"]["space_translation"],
-            supertranslation=trans["transformations"]["supertranslation"][:81], 
-            frame_rotation=trans["transformations"]["frame_rotation"],
-            boost_velocity=trans["transformations"]["CoM_transformation"]["boost_velocity"])#abd_to_WM(abd_prime)
-        W_NR.ells = 2,8
+        abd_prime, trans, abd_err = abd.map_to_superrest_frame(t_0=hyb.t_start+hyb.length/2)
+        W_NR = abd_to_WM(abd_prime)
         W_NR_corot = scri.to_corotating_frame(W_NR.copy())
         ZeroModes = [2,8,16,26,38,52,68]
         W_NR_corot.data[:,ZeroModes] = 0.0*W_NR_corot.data[:,ZeroModes]
@@ -386,15 +379,10 @@ def fix_BMS(abd, hyb, PN):
 
 
 def fix_BMS_NRNR(abd, abd2, hyb, PN):    
-    trans = abd.map_to_superrest_frame(t_0=hyb.t_start+hyb.length/2)
-    abd = abd.transform(
-        space_translation=trans["transformations"]["space_translation"],
-        supertranslation=trans["transformations"]["supertranslation"][:81], 
-        frame_rotation=trans["transformations"]["frame_rotation"],
-        boost_velocity=trans["transformations"]["CoM_transformation"]["boost_velocity"])#abd_to_WM(abd_prime)
-    W_NR = abd_to_WM(abd, lmin=0)
+    abd_prime, trans, abd_err = abd.map_to_superrest_frame(t_0=hyb.t_start+hyb.length/2)
+    W_NR = abd_to_WM(abd_prime, lmin=0)
 
-    Psi_M = PNBMS.MT_to_WM(abd.supermomentum('Moreschi'), False, dataType = scri.psi2)
+    Psi_M = PNBMS.MT_to_WM(abd_prime.supermomentum('Moreschi'), False, dataType = scri.psi2)
     tp1, W_NR2, tp2, idx = PNBMS.PN_BMS_w_time_phase(abd2, W_NR, Psi_M, hyb.t_start, hyb.t_start+hyb.length, None)
         
     return abd_to_WM(abd), W_NR2
