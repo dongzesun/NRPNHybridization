@@ -313,18 +313,12 @@ def PN_BMS_w_time_phase(abd, h_PN, PsiM_PN, t1, t2, include_modes, N=4, write_di
     #abd_primes = []
     trans_and_convs = []
     for itr in range(N):
-        trans = abd_prime.map_to_superrest_frame(t_0=t1 + (t2 - t1)/2,
+        abd_prime, trans, abd_err = abd_prime.map_to_superrest_frame(t_0=t1 + (t2 - t1)/2,
                                                                      target_h_input=h_PN,
                                                                      target_PsiM_input=PsiM_PN,
                                                                      padding_time=(t2 - t1)/2)
         
-        #h_CCE_PN_BMS = MT_to_WM(2.0*abd_prime.sigma.bar, False, scri.h)
-        W_NR = W_NR.transform(
-            space_translation=trans["transformations"]["space_translation"],
-            supertranslation=trans["transformations"]["supertranslation"][:81], 
-            frame_rotation=trans["transformations"]["frame_rotation"],
-            boost_velocity=trans["transformations"]["CoM_transformation"]["boost_velocity"])#abd_to_WM(abd_prime)
-        W_NR.ells = 2,8
+        W_NR = MT_to_WM(2.0*abd_prime.sigma.bar, False, scri.h)
         
         error, h_CCE_PN_BMS_prime, res = align2d(W_NR, h_PN, t1, t2, n_brute_force_δt=1000, n_brute_force_δϕ=20, include_modes=include_modes, nprocs=5)
         

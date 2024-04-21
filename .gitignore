@@ -1,4 +1,5 @@
 *.swp
+.panfs*
 __pycache__
 
 /data_q8_7d
