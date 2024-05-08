@@ -663,12 +663,6 @@ def Hybridize(WaveformType, t_end, sim_dir, cce_dir, out_name, length, nOrbits, 
         PN.Physical_to_Parameterize(hyb)
         
         scale = np.array([0.05,0.02,0.1,0.1,np.pi*2,np.pi*2,np.pi,np.pi/4,np.pi/hyb.omega_i/2.0,np.pi/4,np.pi/4,np.pi/4])
-        if np.linalg.norm(PN.chi1_i)<1e-4 or np.linalg.norm(PN.chi2_i)<1e-4:
-            scale[7] = 1e-5
-            if np.linalg.norm(PN.chi1_i)<1e-4:
-                scale[2] = 1e-5
-            if np.linalg.norm(PN.chi2_i)<1e-4:
-                scale[3] = 1e-5
         lowbound12D = PN.OptParas - scale
         upbound12D = PN.OptParas + scale
 
