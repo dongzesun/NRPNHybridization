@@ -314,7 +314,7 @@ def PN_BMS_w_time_phase(abd, h_PN, PsiM_PN, t1, t2, include_modes, N=4, write_di
     trans_and_convs = []
     for itr in range(N):
         abd_prime, trans, abd_err = abd_prime.map_to_superrest_frame(t_0=t1 + (t2 - t1)/2,
-                                                                     target_h_input=h_PN,
+                                                                     target_strain_input=h_PN,
                                                                      target_PsiM_input=PsiM_PN,
                                                                      padding_time=(t2 - t1)/2)
         

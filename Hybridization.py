@@ -16,7 +16,7 @@ from scipy.integrate import simpson
 from scipy.interpolate import InterpolatedUnivariateSpline as Spline
 from scipy.interpolate import CubicSpline
 import copy
-from memory_profiler import profile
+#from memory_profiler import profile
 
 class SplineArray:
     def __init__(self, x, y):
@@ -363,8 +363,8 @@ def fix_BMS(abd, hyb, PN):
             t_PNStart=hyb.t_PNStart, t_PNEnd=hyb.t_PNEnd
         )
         W_PN.t = W_PN.t*Phys[1]
-        W_PN.data = np.append(0.0*W_PN.data[:,0:4], np.copy(W_PN.data), axis=1)
-        W_PN.ells = 0,8
+        #W_PN.data = np.append(0.0*W_PN.data[:,0:4], np.copy(W_PN.data), axis=1)
+        W_PN.ells = 2,8
         W_PN.dataType = scri.h
         
         W_PN_PsiM = PostNewtonian.PNWaveform(
@@ -373,7 +373,9 @@ def fix_BMS(abd, hyb, PN):
         )
         W_PN_PsiM.t = W_PN_PsiM.t*Phys[1]
         
+        temp = time.time()
         tp1, W_NR, trans, idx = PNBMS.PN_BMS_w_time_phase(abd, W_PN, W_PN_PsiM, hyb.t_start, hyb.t_start+hyb.length, None)
+        print('BMS frame mapping time used:',time.time()-temp)
         
     return W_NR, trans
 
@@ -503,8 +505,8 @@ def Align(PN, hyb, W_NR2=None):
     upbound1 = Initial1 + scale
     lowbound2 = Initial2 - scale
     upbound2 = Initial2 + scale
-    minima1 = least_squares(Optimize4D, Initial1, bounds=(lowbound1,upbound1), ftol=1e-16, xtol=1e-16, gtol=1e-14, x_scale='jac', args=([hyb]))
-    minima2 = least_squares(Optimize4D, Initial2, bounds=(lowbound2,upbound2), ftol=1e-16, xtol=1e-16, gtol=1e-14, x_scale='jac', args=([hyb]))
+    minima1 = least_squares(Optimize4D, Initial1, bounds=(lowbound1,upbound1), ftol=3e-15, xtol=3e-15, gtol=1e-8, x_scale='jac', args=([hyb]))
+    minima2 = least_squares(Optimize4D, Initial2, bounds=(lowbound2,upbound2), ftol=3e-15, xtol=3e-15, gtol=1e-8, x_scale='jac', args=([hyb]))
     if minima1.cost > minima2.cost:
         minima1.x = minima2.x
         minima1.cost = minima2.cost
@@ -581,16 +583,16 @@ def Output(out_name, W_NR, W_PN, W_H, minima12D, PN, hyb, nOrbits):
     
     checkpoint = np.array([hyb.PNIter, hyb.cost, hyb.omega_i, hyb.t_start, hyb.length, hyb.t_PNStart, hyb.t_PNEnd, PN.frame_i], dtype="object")
     
-    t1 = hyb.t_end - nOrbits_to_length(25+nOrbits/2, hyb.t_end, hyb.omega_NR_mag, W_NR.t)
-    length = nOrbits_to_length(10, t1, hyb.omega_NR_mag, W_NR.t)
-    ErrorTestWindow = SquaredError(W_NR, W_PN, t1-length, t1)
-    print('Test Window Error = ', ErrorTestWindow)
+    #t1 = hyb.t_end - nOrbits_to_length(25+nOrbits/2, hyb.t_end, hyb.omega_NR_mag, W_NR.t)
+    #length = nOrbits_to_length(10, t1, hyb.omega_NR_mag, W_NR.t)
+    #ErrorTestWindow = SquaredError(W_NR, W_PN, t1-length, t1)
+    #print('Test Window Error = ', ErrorTestWindow)
     
     ModeError = []
     for i in range(len(W_NR.data[0,:])):
         ModeError.append(SquaredError(W_NR, W_PN, hyb.t_start, hyb.t_start + length, mode=i))
     print(ModeError)
-    
+    """
     var = StandardError(minima12D, PN)
     
     change = []
@@ -603,16 +605,16 @@ def Output(out_name, W_NR, W_PN, W_H, minima12D, PN, hyb, nOrbits):
     change.append(np.linalg.norm(PN.PhyParas[5:8])/PN.OptParas[3]*var[3])
     change.append(var[7])
     change = np.array(change, dtype="object")
-    
+    """
     np.savez(
         out_name,
         checkpoint = checkpoint,
         ErrorMatchingWindow = ErrorMatchingWindow,
-        ErrorTestWindow = ErrorTestWindow,
+        #ErrorTestWindow = ErrorTestWindow,
         OptParas = PN.OptParas,
         PhyParas = PN.PhyParas,
-        ModeError = ModeError,
-        change = change
+        ModeError = ModeError#,
+        #change = change
     )
 
 
@@ -670,7 +672,9 @@ def Hybridize(WaveformType, t_end, sim_dir, cce_dir, out_name, length, nOrbits, 
         lowbound12D = PN.OptParas - scale
         upbound12D = PN.OptParas + scale
 
-        minima12D = least_squares(Optimize12D, PN.OptParas, bounds=(lowbound12D, upbound12D), ftol=3e-15, xtol=3e-15, gtol=3e-15, x_scale='jac', args=(PN, hyb))
+        temp = time.time()
+        minima12D = least_squares(Optimize12D, PN.OptParas, bounds=(lowbound12D, upbound12D), ftol=3e-15, xtol=3e-15, gtol=1e-8, x_scale='jac', args=(PN, hyb))
+        print('Optimization time used:',time.time()-temp)
         minima12D.jac = approx_fprime(minima12D.x, Optimize12D, np.full_like(minima12D.x, 1.49e-8), PN, hyb)
         if minima12D.success == False:
             print("12-D Optimization doesn't converge.")
@@ -707,7 +711,7 @@ def Hybridize(WaveformType, t_end, sim_dir, cce_dir, out_name, length, nOrbits, 
     
     
     # Stitch PN and NR waveforms
-    w_H = Stitch(W_PN, W_NR, hyb)
+    W_H = Stitch(W_PN, W_NR, hyb)
 
 
     # Plot results

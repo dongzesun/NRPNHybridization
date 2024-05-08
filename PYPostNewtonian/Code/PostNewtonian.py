@@ -79,7 +79,7 @@ def PNWaveform(q,omega_0,chi1_0,chi2_0, frame_0=np.array([1,0,0,0]),t_0=0.0, ome
     if chi2Mag>1e-12:
         S_chi2_0=np.sqrt(chi2Mag)*np.sqrt(
             -quaternionic.array([0,chi2_0[0],chi2_0[1],chi2_0[2]]).normalized*zHat).normalized
-  
+
     PN=PNEvolution.PNEv.Evolution(wHat, xHat, yHat, zHat, m1, m2, v_0,S_chi1_0, S_chi2_0, frame_0, omega_start, omega_end, t_PNStart, t_PNEnd,
         PNEvolutionOrder, TaylorTn, StepsPerOrbit, dt, tol, MinStep)# Evolve PN parameters, PN.t is PN time, PN.y=[v, chi1_x, chi1_y
                                                         # chi2_x, chi2_y, frame_w, frame_x, frame_y, frame_z]
@@ -88,7 +88,7 @@ def PNWaveform(q,omega_0,chi1_0,chi2_0, frame_0=np.array([1,0,0,0]),t_0=0.0, ome
     W_PN_corot.frame=quaternion.from_float_array(np.column_stack((PN.y[5],PN.y[6],PN.y[7],PN.y[8])))
     for i in range(len(W_PN_corot.frame)):
         W_PN_corot.frame[i]=W_PN_corot.frame[i].normalized()
-        
+    
     if datatype=="h":
         data, ells = PNWaveformModes.Modes(wHat, xHat, yHat, zHat, m1, m2, v_0,S_chi1_0, S_chi2_0, frame_0, PN.y, PNWaveformModeOrder)
         W_PN_corot.data = data[:,:ell_max**2+2*ell_max-3]
