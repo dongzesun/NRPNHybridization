@@ -382,7 +382,7 @@ def fix_BMS(abd, hyb, PN):
 
 def fix_BMS_NRNR(abd, abd2, hyb, PN):    
     abd_prime, trans, abd_err = abd.map_to_superrest_frame(t_0=hyb.t_start+hyb.length/2)
-    W_NR = abd_to_WM(abd_prime, lmin=0)
+    W_NR = abd_to_WM(abd_prime)
 
     Psi_M = PNBMS.MT_to_WM(abd_prime.supermomentum('Moreschi'), False, dataType = scri.psi2)
     tp1, W_NR2, tp2, idx = PNBMS.PN_BMS_w_time_phase(abd2, W_NR, Psi_M, hyb.t_start, hyb.t_start+hyb.length, None)
