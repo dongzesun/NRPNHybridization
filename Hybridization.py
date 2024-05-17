@@ -570,7 +570,7 @@ def Stitch(W_PN, W_NR, hyb):
     return W_H
 
 
-def Output(out_name, W_NR, W_PN, W_H, minima12D, PN, hyb, nOrbits):
+def Output(out_name, W_NR, W_PN, W_H, minima12D, PN, hyb, nOrbitsi, TestWindowError, Uncertainty):
     outname = 'hybridNR.h5'
     scri.SpEC.write_to_h5(W_NR, outname, file_write_mode='w')
     outname = 'hybridPN.h5'
@@ -583,43 +583,45 @@ def Output(out_name, W_NR, W_PN, W_H, minima12D, PN, hyb, nOrbits):
     
     checkpoint = np.array([hyb.PNIter, hyb.cost, hyb.omega_i, hyb.t_start, hyb.length, hyb.t_PNStart, hyb.t_PNEnd, PN.frame_i], dtype="object")
     
-    #t1 = hyb.t_end - nOrbits_to_length(25+nOrbits/2, hyb.t_end, hyb.omega_NR_mag, W_NR.t)
-    #length = nOrbits_to_length(10, t1, hyb.omega_NR_mag, W_NR.t)
-    #ErrorTestWindow = SquaredError(W_NR, W_PN, t1-length, t1)
-    #print('Test Window Error = ', ErrorTestWindow)
+    ErrorTestWindow = []
+    if TestWindowError:
+        t1 = hyb.t_end - nOrbits_to_length(25+nOrbits/2, hyb.t_end, hyb.omega_NR_mag, W_NR.t)
+        length = nOrbits_to_length(10, t1, hyb.omega_NR_mag, W_NR.t)
+        ErrorTestWindow = SquaredError(W_NR, W_PN, t1-length, t1)
+        print('Test Window Error = ', ErrorTestWindow)
     
     ModeError = []
     for i in range(len(W_NR.data[0,:])):
         ModeError.append(SquaredError(W_NR, W_PN, hyb.t_start, hyb.t_start + length, mode=i))
     print(ModeError)
-    """
-    var = StandardError(minima12D, PN)
     
     change = []
-    change.append(PN.PhyParas[:2]*(1 - 1/PN.OptParas[:2]))
-    change.append(np.linalg.norm(PN.PhyParas[2:5])*(1 - 1/PN.OptParas[2]))
-    change.append(np.linalg.norm(PN.PhyParas[5:8])*(1 - 1/PN.OptParas[3]))
-    change.append(PN.OptParas[7])
-    change.append(PN.PhyParas[:2]/PN.OptParas[:2]*var[:2])
-    change.append(np.linalg.norm(PN.PhyParas[2:5])/PN.OptParas[2]*var[2])
-    change.append(np.linalg.norm(PN.PhyParas[5:8])/PN.OptParas[3]*var[3])
-    change.append(var[7])
-    change = np.array(change, dtype="object")
-    """
+    if Uncertainty:
+        var = StandardError(minima12D, PN)
+        change.append(PN.PhyParas[:2]*(1 - 1/PN.OptParas[:2]))
+        change.append(np.linalg.norm(PN.PhyParas[2:5])*(1 - 1/PN.OptParas[2]))
+        change.append(np.linalg.norm(PN.PhyParas[5:8])*(1 - 1/PN.OptParas[3]))
+        change.append(PN.OptParas[7])
+        change.append(PN.PhyParas[:2]/PN.OptParas[:2]*var[:2])
+        change.append(np.linalg.norm(PN.PhyParas[2:5])/PN.OptParas[2]*var[2])
+        change.append(np.linalg.norm(PN.PhyParas[5:8])/PN.OptParas[3]*var[3])
+        change.append(var[7])
+        change = np.array(change, dtype="object")
+    
     np.savez(
         out_name,
         checkpoint = checkpoint,
         ErrorMatchingWindow = ErrorMatchingWindow,
-        #ErrorTestWindow = ErrorTestWindow,
+        ErrorTestWindow = ErrorTestWindow,
         OptParas = PN.OptParas,
         PhyParas = PN.PhyParas,
-        ModeError = ModeError#,
-        #change = change
+        ModeError = ModeError,
+        change = change
     )
 
 
 #@profile
-def Hybridize(WaveformType, t_end, sim_dir, cce_dir, out_name, length, nOrbits, hyb, PN, debug = 0, OptimizePNParas = 0, truncate = None, cce_dir2 = None):
+def Hybridize(WaveformType, t_end, sim_dir, cce_dir, out_name, length, nOrbits, hyb, PN, debug = 0, OptimizePNParas = 0, truncate = None, cce_dir2 = Nonei, TestWindowError=False, Uncertainty=False):
     """
     Align and hybridize given NR waveform with PN waveform.
     """   
@@ -763,6 +765,8 @@ parser.add_argument('--length',type=float, default=5000.0,help='Length of matchi
 parser.add_argument('--nOrbits',type=float, default=None,help='Length of matching window in orbits, will disable "length" option if not None')
 parser.add_argument('--truncate',nargs=2,type=float, default=None,help='--truncate t1 t2. If specified, it will truncate the abd object and keep only data between t1 and t2')
 parser.add_argument('--CCEDir2', default=None,help='Path in which to find the second CCE waveform data')
+parser.add_argument('--TestWindowError',type=bool, default=False,help='Whether to return the test window error. The test window is 30 orbits earlier than the matching window, so the waveform should be long enough if this is set as true.')
+parser.add_argument('--Uncertainty',type=bool, default=False,help='Whether to return the uncertainty of the optimization.')
 args = vars(parser.parse_args())
 
 
@@ -808,7 +812,7 @@ if hyb.PNIter>maxiter:
     hyb.PNIter = 10
 while hyb.PNIter<=maxiter:
     print("PNIter=: ", hyb.PNIter)
-    W_NR, W_PN, W_H, minima12D = Hybridize(WaveformType, t_end, data_dir, cce_dir, out_name, length, nOrbits, hyb, PN, debug=0, OptimizePNParas=OptArg, truncate=truncate, cce_dir2=cce_dir2)
+    W_NR, W_PN, W_H, minima12D = Hybridize(WaveformType, t_end, data_dir, cce_dir, out_name, length, nOrbits, hyb, PN, debug=0, OptimizePNParas=OptArg, truncate=truncate, cce_dir2=cce_dir2,TestWindoeError=TestWindowError,Uncertainty=Uncertainty)
     
     if hyb.PNIter >= 2 and abs(hyb.cost[-1]-hyb.cost[-2])/hyb.cost[-1]<1e-2 and abs(hyb.cost[-1]-hyb.cost[-3])/hyb.cost[-1]<1e-2:
         hyb.PNIter = maxiter + 1
