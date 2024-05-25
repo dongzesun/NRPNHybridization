@@ -570,7 +570,7 @@ def Stitch(W_PN, W_NR, hyb):
     return W_H
 
 
-def Output(out_name, W_NR, W_PN, W_H, minima12D, PN, hyb, nOrbitsi, TestWindowError, Uncertainty):
+def Output(out_name, W_NR, W_PN, W_H, trans, minima12D, PN, hyb, nOrbitsi, TestWindowError, Uncertainty):
     outname = 'hybridNR.h5'
     scri.SpEC.write_to_h5(W_NR, outname, file_write_mode='w')
     outname = 'hybridPN.h5'
@@ -613,6 +613,7 @@ def Output(out_name, W_NR, W_PN, W_H, minima12D, PN, hyb, nOrbitsi, TestWindowEr
         checkpoint = checkpoint,
         ErrorMatchingWindow = ErrorMatchingWindow,
         ErrorTestWindow = ErrorTestWindow,
+        BMSTrans = trans,
         OptParas = PN.OptParas,
         PhyParas = PN.PhyParas,
         ModeError = ModeError,
@@ -637,6 +638,7 @@ def Hybridize(WaveformType, t_end, sim_dir, cce_dir, out_name, length, nOrbits, 
               
     
     # BMS tranformations
+    trans = []
     if WaveformType == 'cce':
         if cce_dir2 == None:
             W_NR, trans = fix_BMS(abd, hyb, PN)
@@ -745,8 +747,8 @@ def Hybridize(WaveformType, t_end, sim_dir, cce_dir, out_name, length, nOrbits, 
         fig.clf()
     
     if cce_dir2 == None:
-        Output(out_name, W_NR, W_PN, W_H, minima12D, PN, hyb, nOrbits)    
-        return W_NR, W_PN, W_H, minima12D
+        Output(out_name, W_NR, W_PN, W_H, trans, minima12D, PN, hyb, nOrbits)    
+        return W_NR, W_PN, W_H, minima12D, trans
     else:
         return W_NR, W_PN
 
@@ -812,7 +814,7 @@ if hyb.PNIter>maxiter:
     hyb.PNIter = 10
 while hyb.PNIter<=maxiter:
     print("PNIter=: ", hyb.PNIter)
-    W_NR, W_PN, W_H, minima12D = Hybridize(WaveformType, t_end, data_dir, cce_dir, out_name, length, nOrbits, hyb, PN, debug=0, OptimizePNParas=OptArg, truncate=truncate, cce_dir2=cce_dir2,TestWindoeError=TestWindowError,Uncertainty=Uncertainty)
+    W_NR, W_PN, W_H, minima12D, BMSTrans = Hybridize(WaveformType, t_end, data_dir, cce_dir, out_name, length, nOrbits, hyb, PN, debug=0, OptimizePNParas=OptArg, truncate=truncate, cce_dir2=cce_dir2,TestWindoeError=TestWindowError,Uncertainty=Uncertainty)
     
     if hyb.PNIter >= 2 and abs(hyb.cost[-1]-hyb.cost[-2])/hyb.cost[-1]<1e-2 and abs(hyb.cost[-1]-hyb.cost[-3])/hyb.cost[-1]<1e-2:
         hyb.PNIter = maxiter + 1
@@ -820,5 +822,5 @@ while hyb.PNIter<=maxiter:
         hyb.PNIter += 1
     
 # Output results 
-Output(out_name, W_NR, W_PN, W_H, minima12D, PN, hyb, nOrbits)
+Output(out_name, W_NR, W_PN, W_H, BMSTrans, minima12D, PN, hyb, nOrbits)
 print("All done, total time:", time.time()-clock_start)
