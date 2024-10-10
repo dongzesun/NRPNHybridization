@@ -578,7 +578,7 @@ def Output(out_name, W_NR, W_PN, W_H, trans, minima12D, PN, hyb, nOrbits, TestWi
     
     ModeError = []
     for i in range(len(W_NR.data[0,:])):
-        ModeError.append(SquaredError(W_NR, W_PN, hyb.t_start, hyb.t_start + length, mode=i))
+        ModeError.append(SquaredError(W_NR, W_PN, hyb.t_start, hyb.t_start + hyb.length, mode=i))
     print(ModeError)
 
     change = []
