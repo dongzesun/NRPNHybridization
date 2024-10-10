@@ -70,7 +70,7 @@ class hyb_quantites:
         if W_NR.t[0]>=self.t_start-2.0*np.pi/self.omega_i or W_NR.t[-1]<=self.t_start+2.0*np.pi/self.omega_i:
             message = ("t_start {0} should be at least {1} larger than the start time of NR waveform {2}"
                 +" and smaller than the ending time of NR waveform {3}.")
-            raise ValueError(message.format(self.omega_it_start, 2.0*np.pi/self.omega_i, W_NR.t[0], W_NR.t[-1]))
+            raise ValueError(message.format(self.t_start, 2.0*np.pi/self.omega_i, W_NR.t[0], W_NR.t[-1]))
         
         self.matchingt = W_NR.t[(W_NR.t>=self.t_start)&(W_NR.t<=self.t_end)]
         self.omega_NR_mag_matching = omega_NR_mag[(W_NR.t>=self.t_start)&(W_NR.t<=self.t_end)]
@@ -168,20 +168,10 @@ class PNParameters:
         x_2 = np.linalg.norm(x[2:5])/np.linalg.norm(self.chi1_i)
         x_3 = np.linalg.norm(x[5:8])/np.linalg.norm(self.chi2_i)
         
-        if len(x) == 12:
-            R_frame = np.exp(quaternion.quaternion(0.0,x[9],x[10],x[11]))
-            rotation = quaternion.optimal_alignment_in_Euclidean_metric(
-                x[2:5],
-                (x_2*R_frame*quaternion.quaternion(0,self.chi1_i[0],self.chi1_i[1],self.chi1_i[2])*R_frame.conjugate()).vec
-            )
-        else:
-            rotation = quaternion.optimal_alignment_in_Euclidean_metric(x[2:5],x_2*self.chi1_i)            
+        rotation = quaternion.optimal_alignment_in_Euclidean_metric(x[2:5],x_2*self.chi1_i)            
         axis = quaternion.from_float_array(np.append(0,x[2:5])).normalized()
         chi1_hat = x[2:5]/np.linalg.norm(x[2:5])
-        if len(x) == 12:
-            chi2_i_proj = x_3*(rotation*R_frame*quaternion.quaternion(0,self.chi2_i[0],self.chi2_i[1],self.chi2_i[2])*R_frame.conjugate()*rotation.conjugate()).vec
-        else:
-            chi2_i_proj = x_3*(rotation*quaternion.quaternion(0,self.chi2_i[0],self.chi2_i[1],self.chi2_i[2])*rotation.conjugate()).vec
+        chi2_i_proj = x_3*(rotation*quaternion.quaternion(0,self.chi2_i[0],self.chi2_i[1],self.chi2_i[2])*rotation.conjugate()).vec
         chi2_i_proj = chi2_i_proj - np.dot(chi2_i_proj, chi1_hat)*chi1_hat
         chi2_0_proj = x[5:8] - np.dot(x[5:8], chi1_hat)*chi1_hat
         angle = np.arccos(np.dot(chi2_i_proj, chi2_0_proj)/(np.linalg.norm(chi2_i_proj)*np.linalg.norm(chi2_0_proj)))
@@ -191,17 +181,11 @@ class PNParameters:
             angle = np.pi
         sign = np.sign(np.dot(chi1_hat,np.cross(chi2_i_proj, chi2_0_proj)))
         rotation = np.exp(sign*axis*angle/2)*rotation
-        
-        if len(x) == 12:
-            x_47 = (quaternion.as_float_array(np.log(rotation)))[1:]
-        else:
-            x_47 = (quaternion.as_float_array(np.log(rotation)))[1:]
+
+        x_47 = (quaternion.as_float_array(np.log(rotation)))[1:]
         x_47[x_47>np.pi] = x_47[x_47>np.pi] - np.pi
-        
-        if len(x) == 12:
-            chi2_0 = x_3*(rotation*R_frame*quaternion.quaternion(0,self.chi2_i[0],self.chi2_i[1],self.chi2_i[2])*R_frame.conjugate()*rotation.conjugate()).vec
-        else:
-            chi2_0 = x_3*(rotation*quaternion.quaternion(0,self.chi2_i[0],self.chi2_i[1],self.chi2_i[2])*rotation.conjugate()).vec
+
+        chi2_0 = x_3*(rotation*quaternion.quaternion(0,self.chi2_i[0],self.chi2_i[1],self.chi2_i[2])*rotation.conjugate()).vec
         sign = np.sign(np.dot(np.cross(chi2_0, chi1_hat), np.cross(chi2_0, x[5:8])))
         x_7 = sign*np.arccos(np.dot(chi2_0, x[5:8])/(np.linalg.norm(x[5:8])*np.linalg.norm(chi2_0)))
         if np.dot(chi2_0,x[5:8])/(np.linalg.norm(x[5:8])*np.linalg.norm(chi2_0)) > 1:
@@ -234,11 +218,6 @@ class PNParameters:
         chi1_0 = quaternion.quaternion(0,self.chi1_i[0],self.chi1_i[1],self.chi1_i[2])
         chi2_0 = quaternion.quaternion(0,self.chi2_i[0],self.chi2_i[1],self.chi2_i[2])
         rotation = np.exp(self.xHat*x[4] + self.yHat*x[5] + self.zHat*x[6])
-        if len(x) == 12:
-            phase = quaternion.quaternion(0.0, hyb.omega_mean[0]*x[8]/2, hyb.omega_mean[1]*x[8]/2, hyb.omega_mean[2]*x[8]/2)
-            R_frame = np.exp(quaternion.quaternion(0.0,x[9],x[10],x[11]) + phase)
-            chi1_0 = R_frame*chi1_0*R_frame.conjugate()
-            chi2_0 = R_frame*chi2_0*R_frame.conjugate()
         chi1_0 = x[2]*(rotation*chi1_0*rotation.conjugate()).vec
         chi2_0 = x[3]*rotation*chi2_0*rotation.conjugate()
         axis = quaternion.from_float_array(np.append(0, np.cross(chi2_0.vec, chi1_0))).normalized()
@@ -272,7 +251,7 @@ def get_abd(cce_dir, truncate):
     Create AsymptoticBondiData from CCE data and apply truncation if required.
     """
     abd = scri.SpEC.create_abd_from_h5(
-        "CCE",
+        "RPDMB",
         h = cce_dir + '/Strain.h5',
         Psi4 = cce_dir + '/Psi4.h5',
         Psi3 = cce_dir + '/Psi3.h5',
@@ -281,6 +260,7 @@ def get_abd(cce_dir, truncate):
         Psi0 = cce_dir + '/Psi0.h5')
     t0 = -abd.t[np.argmax(np.linalg.norm(abd.sigma.bar, axis=1))]
     abd.t = abd.t + t0
+    #abd = abd.interpolate(np.arange(abd.t[0],abd.t[-1],1.0))
  
     if truncate != None:
         abd_prime = scri.asymptotic_bondi_data.AsymptoticBondiData(
@@ -350,12 +330,15 @@ def get_length_from_abd(abd, nOrbits, t_end):
 #@profile
 def fix_BMS(abd, hyb, PN):    
     if hyb.PNIter == 0: 
+        temp = time.time()
         abd_prime, trans, abd_err = abd.map_to_superrest_frame(t_0=hyb.t_start+hyb.length/2)
         W_NR = abd_to_WM(abd_prime)
         W_NR_corot = scri.to_corotating_frame(W_NR.copy())
         ZeroModes = [2,8,16,26,38,52,68]
         W_NR_corot.data[:,ZeroModes] = 0.0*W_NR_corot.data[:,ZeroModes]
         W_NR = scri.to_inertial_frame(W_NR_corot.copy())
+        W_NR = scri.rotate_physical_system(W_NR, trans.frame_rotation.conjugate())
+        print('BMS frame mapping time used:',time.time()-temp)
     else:
         Phys = PN.PhyParas
         W_PN = PostNewtonian.PNWaveform(
@@ -375,7 +358,10 @@ def fix_BMS(abd, hyb, PN):
         
         temp = time.time()
         tp1, W_NR, trans, idx = PNBMS.PN_BMS_w_time_phase(abd, W_PN, W_PN_PsiM, hyb.t_start, hyb.t_start+hyb.length, None)
+        W_NR = scri.rotate_physical_system(W_NR, trans.frame_rotation.conjugate())
+        W_NR.frame = np.array([])
         print('BMS frame mapping time used:',time.time()-temp)
+        print('BMS mapping error is: ', tp1)
         
     return W_NR, trans
 
@@ -387,7 +373,7 @@ def fix_BMS_NRNR(abd, abd2, hyb, PN):
     Psi_M = PNBMS.MT_to_WM(abd_prime.supermomentum('Moreschi'), False, dataType = scri.psi2)
     tp1, W_NR2, tp2, idx = PNBMS.PN_BMS_w_time_phase(abd2, W_NR, Psi_M, hyb.t_start, hyb.t_start+hyb.length, None)
         
-    return abd_to_WM(abd), W_NR2
+    return W_NR, W_NR2
 
 
 def InitialT(x, hyb):
@@ -447,7 +433,7 @@ def Align(PN, hyb, W_NR2=None):
     Generate PN waveform and align it with NR waveform.
     """    
     Phys = PN.PhyParas
-    
+
     print(("Generating PN with parameters q={0}, M={4}, omega_0={1}, chi1_0={2}, chi2_0={3}.").format(
         Phys[0], hyb.omega_i, Phys[2:5], Phys[5:8], Phys[1]))
     W_PN_corot, chi1, chi2 = PostNewtonian.PNWaveform(
@@ -500,7 +486,7 @@ def Align(PN, hyb, W_NR2=None):
         Initial2[1:] = logR_delta2[0][1:]
 
     # Alignment of time and frame
-    scale = [np.pi/hyb.omega_i/2, np.pi/4, np.pi/4, np.pi/4]
+    scale = [np.pi/hyb.omega_i/2, np.pi, np.pi, np.pi]
     lowbound1 = Initial1 - scale
     upbound1 = Initial1 + scale
     lowbound2 = Initial2 - scale
@@ -570,7 +556,7 @@ def Stitch(W_PN, W_NR, hyb):
     return W_H
 
 
-def Output(out_name, W_NR, W_PN, W_H, trans, minima12D, PN, hyb, nOrbitsi, TestWindowError, Uncertainty):
+def Output(out_name, W_NR, W_PN, W_H, trans, minima12D, PN, hyb, nOrbits, TestWindowError=False, Uncertainty=False):   
     outname = 'hybridNR.h5'
     scri.SpEC.write_to_h5(W_NR, outname, file_write_mode='w')
     outname = 'hybridPN.h5'
@@ -582,7 +568,7 @@ def Output(out_name, W_NR, W_PN, W_H, trans, minima12D, PN, hyb, nOrbitsi, TestW
     hyb.cost.append(ErrorMatchingWindow)
     
     checkpoint = np.array([hyb.PNIter, hyb.cost, hyb.omega_i, hyb.t_start, hyb.length, hyb.t_PNStart, hyb.t_PNEnd, PN.frame_i], dtype="object")
-    
+
     ErrorTestWindow = []
     if TestWindowError:
         t1 = hyb.t_end - nOrbits_to_length(25+nOrbits/2, hyb.t_end, hyb.omega_NR_mag, W_NR.t)
@@ -594,7 +580,7 @@ def Output(out_name, W_NR, W_PN, W_H, trans, minima12D, PN, hyb, nOrbitsi, TestW
     for i in range(len(W_NR.data[0,:])):
         ModeError.append(SquaredError(W_NR, W_PN, hyb.t_start, hyb.t_start + length, mode=i))
     print(ModeError)
-    
+
     change = []
     if Uncertainty:
         var = StandardError(minima12D, PN)
@@ -607,7 +593,7 @@ def Output(out_name, W_NR, W_PN, W_H, trans, minima12D, PN, hyb, nOrbitsi, TestW
         change.append(np.linalg.norm(PN.PhyParas[5:8])/PN.OptParas[3]*var[3])
         change.append(var[7])
         change = np.array(change, dtype="object")
-    
+
     np.savez(
         out_name,
         checkpoint = checkpoint,
@@ -622,7 +608,7 @@ def Output(out_name, W_NR, W_PN, W_H, trans, minima12D, PN, hyb, nOrbitsi, TestW
 
 
 #@profile
-def Hybridize(WaveformType, t_end, sim_dir, cce_dir, out_name, length, nOrbits, hyb, PN, debug = 0, OptimizePNParas = 0, truncate = None, cce_dir2 = Nonei, TestWindowError=False, Uncertainty=False):
+def Hybridize(WaveformType, t_end, sim_dir, cce_dir, out_name, length, nOrbits, hyb, PN, debug = 0, OptimizePNParas = 0, truncate = None, cce_dir2 = None):
     """
     Align and hybridize given NR waveform with PN waveform.
     """   
@@ -657,6 +643,7 @@ def Hybridize(WaveformType, t_end, sim_dir, cce_dir, out_name, length, nOrbits, 
     else:
         PN.Physical_to_Parameterize(hyb)
 
+    minima12D=[]
     if OptimizePNParas:
         minima, W_PN, chiA, chiB = Align(PN, hyb)
         logR_delta = np.append(minima.x[0], minima.x[1:] + hyb.omega_mean*minima.x[0]/2)
@@ -682,7 +669,7 @@ def Hybridize(WaveformType, t_end, sim_dir, cce_dir, out_name, length, nOrbits, 
     
     
     # Get aligned NR and PN waveforms
-    hyb.t_PNStart, hyb.t_PNEnd = -80000, 1000 - hyb.t_start
+    hyb.t_PNStart, hyb.t_PNEnd = -90000, 1000 - hyb.t_start
     if cce_dir2 != None:
         minima, W_PN, chiA, chiB = Align(PN, hyb, W_NR2)
     else:
@@ -767,8 +754,6 @@ parser.add_argument('--length',type=float, default=5000.0,help='Length of matchi
 parser.add_argument('--nOrbits',type=float, default=None,help='Length of matching window in orbits, will disable "length" option if not None')
 parser.add_argument('--truncate',nargs=2,type=float, default=None,help='--truncate t1 t2. If specified, it will truncate the abd object and keep only data between t1 and t2')
 parser.add_argument('--CCEDir2', default=None,help='Path in which to find the second CCE waveform data')
-parser.add_argument('--TestWindowError',type=bool, default=False,help='Whether to return the test window error. The test window is 30 orbits earlier than the matching window, so the waveform should be long enough if this is set as true.')
-parser.add_argument('--Uncertainty',type=bool, default=False,help='Whether to return the uncertainty of the optimization.')
 args = vars(parser.parse_args())
 
 
@@ -814,9 +799,9 @@ if hyb.PNIter>maxiter:
     hyb.PNIter = 10
 while hyb.PNIter<=maxiter:
     print("PNIter=: ", hyb.PNIter)
-    W_NR, W_PN, W_H, minima12D, BMSTrans = Hybridize(WaveformType, t_end, data_dir, cce_dir, out_name, length, nOrbits, hyb, PN, debug=0, OptimizePNParas=OptArg, truncate=truncate, cce_dir2=cce_dir2,TestWindoeError=TestWindowError,Uncertainty=Uncertainty)
+    W_NR, W_PN, W_H, minima12D, BMSTrans = Hybridize(WaveformType, t_end, data_dir, cce_dir, out_name, length, nOrbits, hyb, PN, debug=0, OptimizePNParas=OptArg, truncate=truncate, cce_dir2=cce_dir2)
     
-    if hyb.PNIter >= 2 and abs(hyb.cost[-1]-hyb.cost[-2])/hyb.cost[-1]<1e-2 and abs(hyb.cost[-1]-hyb.cost[-3])/hyb.cost[-1]<1e-2:
+    if hyb.PNIter >= 1 and abs(hyb.cost[-1]-hyb.cost[-2])/hyb.cost[-1]<1e-2:
         hyb.PNIter = maxiter + 1
     else:
         hyb.PNIter += 1
