@@ -7,7 +7,7 @@ import quaternionic
 import quaternion
 import sxs
 
-def PNWaveform(q,omega_0,chi1_0,chi2_0, frame_0=np.array([1,0,0,0]),t_0=0.0, omega_start=None, omega_end=None,t_PNStart=False, t_PNEnd=False, datatype="h", frametype="inertial", return_chi=False, PNEvolutionOrder=6.0, PNWaveformModeOrder=6.0, TaylorTn='TaylorT1', StepsPerOrbit=None, dt=None, ell_max = 8, tol=1e-10, MinStep=1e-7):
+def PNWaveform(q,omega_0,chi1_0,chi2_0, frame_0=np.array([1,0,0,0]),t_0=0.0, omega_start=None, omega_end=None,t_PNStart=False, t_PNEnd=False, datatype="h", frametype="inertial", return_chi=False, return_energy_flux=False, PNEvolutionOrder=6.0, PNWaveformModeOrder=6.0, TaylorTn='TaylorT1', StepsPerOrbit=None, dt=None, ell_max = 8, tol=1e-10, MinStep=1e-7):
     """
     q = m1/m2, float number,
     omega_0: orbital frequency at t_0, float number,
@@ -21,6 +21,7 @@ def PNWaveform(q,omega_0,chi1_0,chi2_0, frame_0=np.array([1,0,0,0]),t_0=0.0, ome
     datatype: "h" for strain and "Psi_M" for Moreschi supermomentum,
     frametype: "inertial" for inetrial frame, "corotating" for coratating frame, and "coprecessing" for coprecessing frame,
     return_chi: whether to return chi as quaternion array of time, bool number,
+    return_energy_flux: whether to return energy flux and v as two arrays, bool number,
     PNEvolutionOrder: float number in [0,0.5,1,1.5,2,2.5,3,3.5,4], default is 3.5,
     PNWaveformModeOrder: float number in [0,0.5,1,1.5,2,2.5,3,3.5,4], default is 3.5,
     TaylorTn: now only TaylorT1 is working, so it's string in ['TaylorT1'], default is 'TaylorT1',
@@ -79,7 +80,7 @@ def PNWaveform(q,omega_0,chi1_0,chi2_0, frame_0=np.array([1,0,0,0]),t_0=0.0, ome
     if chi2Mag>1e-12:
         S_chi2_0=np.sqrt(chi2Mag)*np.sqrt(
             -quaternionic.array([0,chi2_0[0],chi2_0[1],chi2_0[2]]).normalized*zHat).normalized
-
+  
     PN=PNEvolution.PNEv.Evolution(wHat, xHat, yHat, zHat, m1, m2, v_0,S_chi1_0, S_chi2_0, frame_0, omega_start, omega_end, t_PNStart, t_PNEnd,
         PNEvolutionOrder, TaylorTn, StepsPerOrbit, dt, tol, MinStep)# Evolve PN parameters, PN.t is PN time, PN.y=[v, chi1_x, chi1_y
                                                         # chi2_x, chi2_y, frame_w, frame_x, frame_y, frame_z]
@@ -88,7 +89,7 @@ def PNWaveform(q,omega_0,chi1_0,chi2_0, frame_0=np.array([1,0,0,0]),t_0=0.0, ome
     W_PN_corot.frame=quaternion.from_float_array(np.column_stack((PN.y[5],PN.y[6],PN.y[7],PN.y[8])))
     for i in range(len(W_PN_corot.frame)):
         W_PN_corot.frame[i]=W_PN_corot.frame[i].normalized()
-    
+        
     if datatype=="h":
         data, ells = PNWaveformModes.Modes(wHat, xHat, yHat, zHat, m1, m2, v_0,S_chi1_0, S_chi2_0, frame_0, PN.y, PNWaveformModeOrder)
         W_PN_corot.data = data[:,:ell_max**2+2*ell_max-3]
@@ -111,6 +112,10 @@ def PNWaveform(q,omega_0,chi1_0,chi2_0, frame_0=np.array([1,0,0,0]),t_0=0.0, ome
         R_S2=np.exp(PN.y[3]*xHat + PN.y[4]*yHat)
         chiVec1=quaternion.from_float_array(S_chi1_0*R_S1*zHat*R_S1.conjugate()*S_chi1_0.conjugate())
         chiVec2=quaternion.from_float_array(S_chi2_0*R_S2*zHat*R_S2.conjugate()*S_chi2_0.conjugate())
-        return W_PN_corot, quaternion.as_float_array(chiVec1)[:,1:], quaternion.as_float_array(chiVec2)[:,1:]
+        return W_PN_corot, chiVec1, chiVec2
+    elif return_energy_flux:
+        flux = PNEvolution.PNEv.energy_flux(PN.y, wHat, xHat, yHat, zHat, m1, m2, v_0,S_chi1_0, S_chi2_0, frame_0, omega_start, omega_end,
+                                                   t_PNStart, t_PNEnd, PNEvolutionOrder, TaylorTn, StepsPerOrbit, dt, tol, MinStep)
+        return flux, PN.y[0]
     else:
         return W_PN_corot

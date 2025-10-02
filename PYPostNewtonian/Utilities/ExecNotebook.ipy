@@ -11,7 +11,7 @@ def execnotebook(nbfile):
     """
     import os, os.path
     from io import open
-    from IPython.nbformat import current
+    from nbformat import current
     dir1 = os.getcwd()
     dir2 = os.path.dirname(nbfile)
     if(dir2) :

@@ -260,7 +260,7 @@ def get_abd(cce_dir, truncate):
         Psi0 = cce_dir + '/Psi0.h5')
     t0 = -abd.t[np.argmax(np.linalg.norm(abd.sigma.bar, axis=1))]
     abd.t = abd.t + t0
-    #abd = abd.interpolate(np.arange(abd.t[0],abd.t[-1],1.0))
+    abd = abd.interpolate(np.arange(abd.t[0],abd.t[-1],1.0))
  
     if truncate != None:
         abd_prime = scri.asymptotic_bondi_data.AsymptoticBondiData(
@@ -346,6 +346,7 @@ def fix_BMS(abd, hyb, PN):
             t_PNStart=hyb.t_PNStart, t_PNEnd=hyb.t_PNEnd
         )
         W_PN.t = W_PN.t*Phys[1]
+        W_PN.data = W_PN.data*Phys[1]#DQ
         #W_PN.data = np.append(0.0*W_PN.data[:,0:4], np.copy(W_PN.data), axis=1)
         W_PN.ells = 2,8
         W_PN.dataType = scri.h
@@ -355,6 +356,7 @@ def fix_BMS(abd, hyb, PN):
             t_PNStart=hyb.t_PNStart, t_PNEnd=hyb.t_PNEnd, datatype="Psi_M"
         )
         W_PN_PsiM.t = W_PN_PsiM.t*Phys[1]
+        W_PN_PsiM.data = W_PN_PsiM.data*Phys[1]#DQ
         
         temp = time.time()
         tp1, W_NR, trans, idx = PNBMS.PN_BMS_w_time_phase(abd, W_PN, W_PN_PsiM, hyb.t_start, hyb.t_start+hyb.length, None)
@@ -446,6 +448,7 @@ def Align(PN, hyb, W_NR2=None):
         W_PN_corot.data[:,ZeroModes] = 0.0*W_PN_corot.data[:,ZeroModes] # Not consider memory effect since NR dosen't have corrrect memory.
     W_PN = scri.to_inertial_frame(W_PN_corot.copy())
     W_PN.t = W_PN.t*Phys[1]
+    W_PN.data = W_PN.data*Phys[1]#DQ
     
     if W_NR2 != None:
         W_PN = W_NR2
@@ -516,6 +519,7 @@ def Optimize12D(x, PN, hyb):
         W_PN_corot.data[:,ZeroModes] = 0.0*W_PN_corot.data[:,ZeroModes] # Not cosider memory effect since NR dosen't have corrrect memory.
     W_PN = scri.to_inertial_frame(W_PN_corot.copy())
     W_PN.t = W_PN.t*Phys[1]
+    W_PN.data = W_PN.data*Phys[1]
 
     hyb.get_window_PN(W_PN)
 
@@ -556,7 +560,7 @@ def Stitch(W_PN, W_NR, hyb):
     return W_H
 
 
-def Output(out_name, W_NR, W_PN, W_H, trans, minima12D, PN, hyb, nOrbits, TestWindowError=False, Uncertainty=False):   
+def Output(out_name, W_NR, W_PN, W_H, trans, minima12D, PN, hyb, nOrbits, TestWindowError=False, Uncertainty=True):   
     outname = 'hybridNR.h5'
     scri.SpEC.write_to_h5(W_NR, outname, file_write_mode='w')
     outname = 'hybridPN.h5'
@@ -583,15 +587,15 @@ def Output(out_name, W_NR, W_PN, W_H, trans, minima12D, PN, hyb, nOrbits, TestWi
 
     change = []
     if Uncertainty:
-        var = StandardError(minima12D, PN)
+        #var = StandardError(minima12D, PN)
         change.append(PN.PhyParas[:2]*(1 - 1/PN.OptParas[:2]))
         change.append(np.linalg.norm(PN.PhyParas[2:5])*(1 - 1/PN.OptParas[2]))
         change.append(np.linalg.norm(PN.PhyParas[5:8])*(1 - 1/PN.OptParas[3]))
         change.append(PN.OptParas[7])
-        change.append(PN.PhyParas[:2]/PN.OptParas[:2]*var[:2])
-        change.append(np.linalg.norm(PN.PhyParas[2:5])/PN.OptParas[2]*var[2])
-        change.append(np.linalg.norm(PN.PhyParas[5:8])/PN.OptParas[3]*var[3])
-        change.append(var[7])
+        #change.append(PN.PhyParas[:2]/PN.OptParas[:2]*var[:2])
+        #change.append(np.linalg.norm(PN.PhyParas[2:5])/PN.OptParas[2]*var[2])
+        #change.append(np.linalg.norm(PN.PhyParas[5:8])/PN.OptParas[3]*var[3])
+        #change.append(var[7])
         change = np.array(change, dtype="object")
 
     np.savez(
