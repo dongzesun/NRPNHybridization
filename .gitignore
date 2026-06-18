@@ -6,3 +6,13 @@ __pycache__
 /data_HybTest
 /test*.png
 /test*.pdf
+
+# Python and notebook cache files
+.ipynb_checkpoints/
+*.py[cod]
+
+# Hybridization run outputs
+*.h5
+Out*.npz
+Out*
+slurm-*.out

@@ -1,4 +1,5 @@
 import copy
+import os
 import warnings
 import numpy as np
 
@@ -213,13 +214,14 @@ def align2d(h_A, h_B, t1, t2, n_brute_force_δt=None, n_brute_force_δϕ=None, i
         # Optimize by brute force with multiprocessing
         cost_wrapper = partial(cost, args = [modes_A, modes_B, t_reference, δϕ_factor, δΨ_factor, normalization])
 
-        if nprocs == None:
-            nprocs = mp.cpu_count()
-    
-        pool = mp.Pool(processes=nprocs)
-        cost_brute_force = pool.map(cost_wrapper, δt_δϕ_brute_force)
-        pool.close()
-        pool.join()
+        if nprocs is None:
+            nprocs = int(os.environ.get("SLURM_CPUS_PER_TASK", mp.cpu_count()))
+
+        if nprocs > 1:
+            with mp.Pool(processes=nprocs) as pool:
+                cost_brute_force = pool.map(cost_wrapper, δt_δϕ_brute_force)
+        else:
+            cost_brute_force = list(map(cost_wrapper, δt_δϕ_brute_force))
     
         δt_δϕ = δt_δϕ_brute_force[np.argmin(cost_brute_force)]
 
@@ -299,7 +301,19 @@ def write_abd_to_file(abd, write_dir):
 
     return
 
-def PN_BMS_w_time_phase(abd, h_PN, PsiM_PN, t1, t2, include_modes, N=4, write_dir=''):
+def PN_BMS_w_time_phase(
+    abd,
+    h_PN,
+    PsiM_PN,
+    t1,
+    t2,
+    include_modes,
+    N=4,
+    write_dir='',
+    nprocs=None,
+    n_brute_force_δt=1000,
+    n_brute_force_δϕ=20,
+):
     abd_prime = abd.copy()
     W_NR = scri.WaveformModes()
     W_NR.data = 2*abd.sigma.bar
@@ -320,7 +334,16 @@ def PN_BMS_w_time_phase(abd, h_PN, PsiM_PN, t1, t2, include_modes, N=4, write_di
         
         W_NR = MT_to_WM(2.0*abd_prime.sigma.bar, False, scri.h)
         
-        error, h_CCE_PN_BMS_prime, res = align2d(W_NR, h_PN, t1, t2, n_brute_force_δt=1000, n_brute_force_δϕ=20, include_modes=include_modes, nprocs=5)
+        error, h_CCE_PN_BMS_prime, res = align2d(
+            W_NR,
+            h_PN,
+            t1,
+            t2,
+            n_brute_force_δt=n_brute_force_δt,
+            n_brute_force_δϕ=n_brute_force_δϕ,
+            include_modes=include_modes,
+            nprocs=nprocs,
+        )
         
         #abd_prime = time_translation(abd_prime, res.x[0])
 

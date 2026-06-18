@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nrpn-hybridization"
+version = "0.1.0"
+description = "NR/PN waveform hybridization and post-Newtonian code generation tools"
+readme = "README.md"
+requires-python = ">=3.9"
+
+[tool.setuptools]
+py-modules = ["Hybridization", "PNBMS"]
+
+[tool.setuptools.packages.find]
+include = ["PYPostNewtonian*"]
+
+[tool.setuptools.package-data]
+"PYPostNewtonian.PNTerms" = ["*.ipynb", "PolynomialRatios/*.dat"]
+"PYPostNewtonian.Code" = ["*.ipynb"]

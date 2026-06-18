@@ -500,32 +500,22 @@ class CodeConstructor:
         will be output.
 
         """
+        import re
         from textwrap import TextWrapper
         #wrapper = TextWrapper(width=120)
         #wrapper.initial_indent = ' '*Indent
         #wrapper.subsequent_indent = wrapper.initial_indent+'  '
         def Express(atom):
             A=str(atom)
-            while (A.find('Num')!=-1):
-                j=A.find('Num')
-                Subs=str(NumTerms.get(str(A[j:j+4])))
-                k=Subs.find('0*')
-                B=''
-                if k!=0 and(A[k-1].isalnum() or A[k-1]=='_' or A[k-1]!='.' or k==-1):
-                    B=A[0:j]+Subs+A[j+4:]
-                else:
-                    B=A[0:j]+'0'+A[j+4:]
-                A=B
-            while (A.find('Den')!=-1):
-                j=A.find('Den')
-                Subs=str(DenTerms.get(str(A[j:j+4])))
-                k=Subs.find('0*')
-                B=''
-                if k!=0 and(A[k-1].isalnum() or A[k-1]=='_' or A[k-1]!='.' or k==-1):
-                    B=A[0:j]+Subs+A[j+4:]
-                else:
-                    B=A[0:j]+'0'+A[j+4:]
-                A=B
+            def substitute_polynomial_term(match):
+                token = match.group(0)
+                terms = NumTerms if token.startswith('Num') else DenTerms
+                Subs = str(terms.get(token, 0))
+                k = Subs.find('0*')
+                if k != 0 and (k == -1 or A[k-1].isalnum() or A[k-1] == '_' or A[k-1] != '.'):
+                    return Subs
+                return '0'
+            A = re.sub(r'\b(?:Num|Den)\d+\b', substitute_polynomial_term, A)
             while (A.find('PolynomialVariable')!=-1):
                 j=A.find('PolynomialVariable')
                 B=A[0:j]+'v'+A[j+18:]
