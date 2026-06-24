@@ -1873,6 +1873,98 @@ def TaylorT5_6p0(Cons,Vars):
         dydt[3], dydt[4] = 0.0, 0.0
     return dydt
 
+def energy_flux_0(Cons,Vars):
+    Flux = Cons.Fcal_0*Vars.Fcal_coeff
+    dEdV = -Cons.E_0*Cons.M*Cons.nu*Vars.v
+    Absorption = 0
+    dvdt_T1 = (-Absorption - Flux)/dEdV
+    return Flux
+
+def energy_flux_0p50(Cons,Vars):
+    Flux = Cons.Fcal_0*Vars.Fcal_coeff
+    dEdV = -Cons.E_0*Cons.M*Cons.nu*Vars.v
+    Absorption = 0
+    dvdt_T1 = (-Absorption - Flux)/dEdV
+    return Flux
+
+def energy_flux_1p0(Cons,Vars):
+    Flux = Vars.Fcal_coeff*(Cons.Fcal_0 + Cons.Fcal_2*Vars.v**2)
+    dEdV = -Cons.M*Cons.nu*Vars.v*(Cons.E_0 + 2.0*Cons.E_2*Vars.v**2)
+    Absorption = 0
+    dvdt_T1 = (-Absorption - Flux)/dEdV
+    return Flux
+
+def energy_flux_1p5(Cons,Vars):
+    Flux = Vars.Fcal_coeff*(Cons.Fcal_0 + Vars.v**2*(Cons.Fcal_2 + Vars.v*(Cons.Fcal_3 + Vars.Fcal_SO_3)))
+    dEdV = -0.5*Cons.M*Cons.nu*Vars.v*(2.0*Cons.E_0 + Vars.v**2*(4.0*Cons.E_2 + 5.0*Vars.E_SO_3*Vars.v))
+    Absorption = 0
+    dvdt_T1 = (-Absorption - Flux)/dEdV
+    return Flux
+
+def energy_flux_2p0(Cons,Vars):
+    Flux = Vars.Fcal_coeff*(Cons.Fcal_0 + Vars.v**2*(Cons.Fcal_2 + Vars.v*(Cons.Fcal_3 + Vars.Fcal_SO_3 + Vars.v*(Cons.Fcal_4 + Vars.Fcal_SQ_4))))
+    dEdV = -0.5*Cons.M*Cons.nu*Vars.v*(2.0*Cons.E_0 + Vars.v**2*(4.0*Cons.E_2 + Vars.v*(5.0*Vars.E_SO_3 + 6.0*Vars.v*(Cons.E_4 + Vars.E_SQ_4))))
+    Absorption = 0
+    dvdt_T1 = (-Absorption - Flux)/dEdV
+    return Flux
+
+def energy_flux_2p5(Cons,Vars):
+    Flux = Vars.Fcal_coeff*(Cons.Fcal_0 + Vars.v**2*(Cons.Fcal_2 + Vars.v*(Cons.Fcal_3 + Vars.Fcal_SO_3 + Vars.v*(Cons.Fcal_4 + Vars.Fcal_SQ_4 + Vars.v*(Cons.Fcal_5 + Vars.Fcal_SO_5)))))
+    dEdV = -0.5*Cons.M*Cons.nu*Vars.v*(2.0*Cons.E_0 + Vars.v**2*(4.0*Cons.E_2 + Vars.v*(5.0*Vars.E_SO_3 + Vars.v*(6.0*Cons.E_4 + 7.0*Vars.E_SO_5*Vars.v + 6.0*Vars.E_SQ_4))))
+    Absorption = Vars.Fcal_coeff*Vars.MDot_Alvi_5*Vars.v**5
+    dvdt_T1 = (-Absorption - Flux)/dEdV
+    return Flux
+
+def energy_flux_3p0(Cons,Vars):
+    Flux = Vars.Fcal_coeff*(Cons.Fcal_0 + Vars.v**2*(Cons.Fcal_2 + Vars.v*(Cons.Fcal_3 + Vars.Fcal_SO_3 + Vars.v*(Cons.Fcal_4 + Vars.Fcal_SQ_4 + Vars.v*(Cons.Fcal_5 + Vars.Fcal_SO_5 + Vars.v*(Cons.Fcal_6 + Vars.Fcal_SO_6 + Vars.Fcal_SQ_6 + Cons.Fcal_lnv_6*Vars.logv))))))
+    dEdV = -0.5*Cons.M*Cons.nu*Vars.v*(2.0*Cons.E_0 + Vars.v**2*(4.0*Cons.E_2 + Vars.v*(5.0*Vars.E_SO_3 + Vars.v*(6.0*Cons.E_4 + 6.0*Vars.E_SQ_4 + Vars.v*(7.0*Vars.E_SO_5 + 8.0*Vars.v*(Cons.E_6 + Vars.E_SQ_6))))))
+    Absorption = Vars.Fcal_coeff*Vars.MDot_Alvi_5*Vars.v**5
+    dvdt_T1 = (-Absorption - Flux)/dEdV
+    return Flux
+
+def energy_flux_3p5(Cons,Vars):
+    Flux = Vars.Fcal_coeff*(Cons.Fcal_0 + Vars.v**2*(Cons.Fcal_2 + Vars.v*(Cons.Fcal_3 + Vars.Fcal_SO_3 + Vars.v*(Cons.Fcal_4 + Vars.Fcal_SQ_4 + Vars.v*(Cons.Fcal_5 + Vars.Fcal_SO_5 + Vars.v*(Cons.Fcal_6 + Vars.Fcal_SO_6 + Vars.Fcal_SQ_6 + Cons.Fcal_lnv_6*Vars.logv + Vars.v*(Cons.Fcal_7 + Vars.Fcal_SO_7 + Vars.Fcal_SQ_7)))))))
+    dEdV = -0.5*Cons.M*Cons.nu*Vars.v*(2.0*Cons.E_0 + Vars.v**2*(4.0*Cons.E_2 + Vars.v*(5.0*Vars.E_SO_3 + Vars.v*(6.0*Cons.E_4 + 6.0*Vars.E_SQ_4 + Vars.v*(7.0*Vars.E_SO_5 + Vars.v*(8.0*Cons.E_6 + 8.0*Vars.E_SQ_6 + 9.0*Vars.v*(Vars.E_SO_7 + Vars.E_SQ_7)))))))
+    Absorption = Vars.Fcal_coeff*Vars.MDot_Alvi_5*Vars.v**5
+    dvdt_T1 = (-Absorption - Flux)/dEdV
+    return Flux
+
+def energy_flux_4p0(Cons,Vars):
+    Flux = Vars.Fcal_coeff*(Cons.Fcal_0 + Vars.v**2*(Cons.Fcal_2 + Vars.v*(Cons.Fcal_3 + Vars.Fcal_SO_3 + Vars.v*(Cons.Fcal_4 + Vars.Fcal_SQ_4 + Vars.v*(Cons.Fcal_5 + Vars.Fcal_SO_5 + Vars.v*(Cons.Fcal_6 + Vars.Fcal_SO_6 + Vars.Fcal_SQ_6 + Cons.Fcal_lnv_6*Vars.logv + Vars.v*(Cons.Fcal_7 + Vars.Fcal_SO_7 + Vars.Fcal_SQ_7 + Vars.v*(Cons.Fcal_8 + Vars.Fcal_SO_8 + Cons.Fcal_lnv_8*Vars.logv))))))))
+    dEdV = -0.5*Cons.M*Cons.nu*Vars.v*(2.0*Cons.E_0 + Vars.v**2*(4.0*Cons.E_2 + Vars.v*(5.0*Vars.E_SO_3 + Vars.v*(6.0*Cons.E_4 + 6.0*Vars.E_SQ_4 + Vars.v*(7.0*Vars.E_SO_5 + Vars.v*(8.0*Cons.E_6 + 8.0*Vars.E_SQ_6 + Vars.v*(9.0*Vars.E_SO_7 + 9.0*Vars.E_SQ_7 + Vars.v*(10.0*Cons.E_8 + Cons.E_lnv_8*(10.0*Vars.logv + 1.0)))))))))
+    Absorption = Vars.Fcal_coeff*Vars.v**5*(Vars.MDot_Alvi_5 + Cons.MDot_Alvi_8*Vars.v**3)
+    dvdt_T1 = (-Absorption - Flux)/dEdV
+    return Flux
+
+def energy_flux_4p5(Cons,Vars):
+    Flux = Vars.Fcal_coeff*(Cons.Fcal_0 + Vars.v**2*(Cons.Fcal_2 + Vars.v*(Cons.Fcal_3 + Vars.Fcal_SO_3 + Vars.v*(Cons.Fcal_4 + Vars.Fcal_SQ_4 + Vars.v*(Cons.Fcal_5 + Vars.Fcal_SO_5 + Vars.v*(Cons.Fcal_6 + Vars.Fcal_SO_6 + Vars.Fcal_SQ_6 + Cons.Fcal_lnv_6*Vars.logv + Vars.v*(Cons.Fcal_7 + Vars.Fcal_SO_7 + Vars.Fcal_SQ_7 + Vars.v*(Cons.Fcal_8 + Vars.Fcal_SO_8 + Cons.Fcal_lnv_8*Vars.logv + Vars.v*(Cons.Fcal_9 + Cons.Fcal_lnv_9*Vars.logv)))))))))
+    dEdV = -0.5*Cons.M*Cons.nu*Vars.v*(2.0*Cons.E_0 + Vars.v**2*(4.0*Cons.E_2 + Vars.v*(5.0*Vars.E_SO_3 + Vars.v*(6.0*Cons.E_4 + 6.0*Vars.E_SQ_4 + Vars.v*(7.0*Vars.E_SO_5 + Vars.v*(8.0*Cons.E_6 + 8.0*Vars.E_SQ_6 + Vars.v*(9.0*Vars.E_SO_7 + 9.0*Vars.E_SQ_7 + Vars.v*(10.0*Cons.E_8 + Cons.E_lnv_8*(10.0*Vars.logv + 1.0)))))))))
+    Absorption = Vars.Fcal_coeff*Vars.v**5*(Vars.MDot_Alvi_5 + Cons.MDot_Alvi_8*Vars.v**3)
+    dvdt_T1 = (-Absorption - Flux)/dEdV
+    return Flux
+
+def energy_flux_5p0(Cons,Vars):
+    Flux = Vars.Fcal_coeff*(Cons.Fcal_0 + Vars.v**2*(Cons.Fcal_2 + Vars.v*(Cons.Fcal_3 + Vars.Fcal_SO_3 + Vars.v*(Cons.Fcal_4 + Vars.Fcal_SQ_4 + Vars.v*(Cons.Fcal_5 + Vars.Fcal_SO_5 + Vars.v*(Cons.Fcal_6 + Vars.Fcal_SO_6 + Vars.Fcal_SQ_6 + Cons.Fcal_lnv_6*Vars.logv + Vars.v*(Cons.Fcal_7 + Vars.Fcal_SO_7 + Vars.Fcal_SQ_7 + Vars.v*(Cons.Fcal_8 + Vars.Fcal_SO_8 + Cons.Fcal_lnv_8*Vars.logv + Vars.v*(Cons.Fcal_9 + Cons.Fcal_lnv_9*Vars.logv + Vars.v*(Cons.Fcal_10 + Cons.Fcal_lnv_10*Vars.logv))))))))))
+    dEdV = -0.5*Cons.M*Cons.nu*Vars.v*(2.0*Cons.E_0 + Vars.v**2*(4.0*Cons.E_2 + Vars.v*(5.0*Vars.E_SO_3 + Vars.v*(6.0*Cons.E_4 + 6.0*Vars.E_SQ_4 + Vars.v*(7.0*Vars.E_SO_5 + Vars.v*(8.0*Cons.E_6 + 8.0*Vars.E_SQ_6 + Vars.v*(9.0*Vars.E_SO_7 + 9.0*Vars.E_SQ_7 + Vars.v*(10.0*Cons.E_8 + Cons.E_lnv_8*(10.0*Vars.logv + 1.0) + Vars.v**2*(12.0*Cons.E_10 + Cons.E_lnv_10*(12.0*Vars.logv + 1.0))))))))))
+    Absorption = Vars.Fcal_coeff*Vars.v**5*(Vars.MDot_Alvi_5 + Cons.MDot_Alvi_8*Vars.v**3)
+    dvdt_T1 = (-Absorption - Flux)/dEdV
+    return Flux
+
+def energy_flux_5p5(Cons,Vars):
+    Flux = Vars.Fcal_coeff*(Cons.Fcal_0 + Vars.v**2*(Cons.Fcal_2 + Vars.v*(Cons.Fcal_3 + Vars.Fcal_SO_3 + Vars.v*(Cons.Fcal_4 + Vars.Fcal_SQ_4 + Vars.v*(Cons.Fcal_5 + Vars.Fcal_SO_5 + Vars.v*(Cons.Fcal_6 + Vars.Fcal_SO_6 + Vars.Fcal_SQ_6 + Cons.Fcal_lnv_6*Vars.logv + Vars.v*(Cons.Fcal_7 + Vars.Fcal_SO_7 + Vars.Fcal_SQ_7 + Vars.v*(Cons.Fcal_8 + Vars.Fcal_SO_8 + Cons.Fcal_lnv_8*Vars.logv + Vars.v*(Cons.Fcal_9 + Cons.Fcal_lnv_9*Vars.logv + Vars.v*(Cons.Fcal_10 + Cons.Fcal_lnv_10*Vars.logv + Vars.v*(Cons.Fcal_11 + Cons.Fcal_lnv_11*Vars.logv)))))))))))
+    dEdV = -0.5*Cons.M*Cons.nu*Vars.v*(2.0*Cons.E_0 + Vars.v**2*(4.0*Cons.E_2 + Vars.v*(5.0*Vars.E_SO_3 + Vars.v*(6.0*Cons.E_4 + 6.0*Vars.E_SQ_4 + Vars.v*(7.0*Vars.E_SO_5 + Vars.v*(8.0*Cons.E_6 + 8.0*Vars.E_SQ_6 + Vars.v*(9.0*Vars.E_SO_7 + 9.0*Vars.E_SQ_7 + Vars.v*(10.0*Cons.E_8 + Cons.E_lnv_8*(10.0*Vars.logv + 1.0) + Vars.v**2*(12.0*Cons.E_10 + 13.0*Cons.E_11*Vars.v + Cons.E_lnv_10*(12.0*Vars.logv + 1.0))))))))))
+    Absorption = Vars.Fcal_coeff*Vars.v**5*(Vars.MDot_Alvi_5 + Cons.MDot_Alvi_8*Vars.v**3)
+    dvdt_T1 = (-Absorption - Flux)/dEdV
+    return Flux
+
+def energy_flux_6p0(Cons,Vars):
+    Flux = Vars.Fcal_coeff*(Cons.Fcal_0 + Vars.v**2*(Cons.Fcal_2 + Vars.v*(Cons.Fcal_3 + Vars.Fcal_SO_3 + Vars.v*(Cons.Fcal_4 + Vars.Fcal_SQ_4 + Vars.v*(Cons.Fcal_5 + Vars.Fcal_SO_5 + Vars.v*(Cons.Fcal_6 + Vars.Fcal_SO_6 + Vars.Fcal_SQ_6 + Cons.Fcal_lnv_6*Vars.logv + Vars.v*(Cons.Fcal_7 + Vars.Fcal_SO_7 + Vars.Fcal_SQ_7 + Vars.v*(Cons.Fcal_8 + Vars.Fcal_SO_8 + Cons.Fcal_lnv_8*Vars.logv + Vars.v*(Cons.Fcal_9 + Cons.Fcal_lnv_9*Vars.logv + Vars.v*(Cons.Fcal_10 + Cons.Fcal_lnv_10*Vars.logv + Vars.v*(Cons.Fcal_11 + Cons.Fcal_lnv_11*Vars.logv + Vars.v*(Cons.Fcal_12 + Cons.Fcal_lnv2_12*Vars.logv**2 + Cons.Fcal_lnv_12*Vars.logv))))))))))))
+    dEdV = -0.5*Cons.M*Cons.nu*Vars.v*(2.0*Cons.E_0 + Vars.v**2*(4.0*Cons.E_2 + Vars.v*(5.0*Vars.E_SO_3 + Vars.v*(6.0*Cons.E_4 + 6.0*Vars.E_SQ_4 + Vars.v*(7.0*Vars.E_SO_5 + Vars.v*(8.0*Cons.E_6 + 8.0*Vars.E_SQ_6 + Vars.v*(9.0*Vars.E_SO_7 + 9.0*Vars.E_SQ_7 + Vars.v*(10.0*Cons.E_8 + Cons.E_lnv_8*(10.0*Vars.logv + 1.0) + Vars.v**2*(12.0*Cons.E_10 + Cons.E_lnv_10*(12.0*Vars.logv + 1.0) + Vars.v*(13.0*Cons.E_11 + Vars.v*(14.0*Cons.E_12 + Cons.E_lnv_12*(14.0*Vars.logv + 1.0))))))))))))
+    Absorption = Vars.Fcal_coeff*Vars.v**5*(Vars.MDot_Alvi_5 + Cons.MDot_Alvi_8*Vars.v**3)
+    dvdt_T1 = (-Absorption - Flux)/dEdV
+    return Flux
+
+
 class PNEv:
     def Integrand(t,y):
         PNEv.Recalculate.get(2*PNEv.PNEvolutionOrder)(PNEv.Cons,PNEv.Vars,y)
@@ -2030,3 +2122,97 @@ class PNEv:
             yy.y=data
 
         return yy
+
+    def energy_flux(y,wHat_i, xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, R_i,
+        omega_start=None, omega_end=None, t_PNStart=False, t_PNEnd=False, PNEvolutionOrder=3.5, TaylorTn=1, StepsPerOrbit=32, dt=None, tol=1e-8, MinStep=1e-7):
+        # Initialization of constants
+        PNEv.terminal1=True
+        PNEv.terminal2=True
+        PNEv.NotBackward=True
+        PNEv.PNEvolutionOrder=PNEvolutionOrder
+        PNEv.TaylorTn=TaylorTn
+        PNEv.Recalculate={            0:Recalculate_0,
+            1:Recalculate_0p50,
+            2:Recalculate_1p0,
+            3:Recalculate_1p5,
+            4:Recalculate_2p0,
+            5:Recalculate_2p5,
+            6:Recalculate_3p0,
+            7:Recalculate_3p5,
+            8:Recalculate_4p0,
+            9:Recalculate_4p5,
+            10:Recalculate_5p0,
+            11:Recalculate_5p5,
+            12:Recalculate_6p0}
+        PNEv.Taylor={
+            1:TaylorT1_0,
+            11:TaylorT1_0p50,
+            21:TaylorT1_1p0,
+            31:TaylorT1_1p5,
+            41:TaylorT1_2p0,
+            51:TaylorT1_2p5,
+            61:TaylorT1_3p0,
+            71:TaylorT1_3p5,
+            81:TaylorT1_4p0,
+            91:TaylorT1_4p5,
+            101:TaylorT1_5p0,
+            111:TaylorT1_5p5,
+            121:TaylorT1_6p0,
+            4:TaylorT4_0,
+            14:TaylorT4_0p50,
+            24:TaylorT4_1p0,
+            34:TaylorT4_1p5,
+            44:TaylorT4_2p0,
+            54:TaylorT4_2p5,
+            64:TaylorT4_3p0,
+            74:TaylorT4_3p5,
+            84:TaylorT4_4p0,
+            94:TaylorT4_4p5,
+            104:TaylorT4_5p0,
+            114:TaylorT4_5p5,
+            124:TaylorT4_6p0,
+            5:TaylorT5_0,
+            15:TaylorT5_0p50,
+            25:TaylorT5_1p0,
+            35:TaylorT5_1p5,
+            45:TaylorT5_2p0,
+            55:TaylorT5_2p5,
+            65:TaylorT5_3p0,
+            75:TaylorT5_3p5,
+            85:TaylorT5_4p0,
+            95:TaylorT5_4p5,
+            105:TaylorT5_5p0,
+            115:TaylorT5_5p5,
+            125:TaylorT5_6p0}
+        PNEv.energyflux={            0:energy_flux_0,
+            1:energy_flux_0p50,
+            2:energy_flux_1p0,
+            3:energy_flux_1p5,
+            4:energy_flux_2p0,
+            5:energy_flux_2p5,
+            6:energy_flux_3p0,
+            7:energy_flux_3p5,
+            8:energy_flux_4p0,
+            9:energy_flux_4p5,
+            10:energy_flux_5p0,
+            11:energy_flux_5p5,
+            12:energy_flux_6p0}
+        if omega_start is None:
+            omega_start=0.0
+        if omega_end is None:
+            omega_end=1.0/(M1_i+M2_i)
+        PNEv.v_start=(omega_start*(M1_i+M2_i))**(1/3)
+        PNEv.v_end=(omega_end*(M1_i+M2_i))**(1/3)
+        z=np.array([0.0])
+        kappa = 1.0
+        PNEv.Cons=Cons(z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,True,True)
+        PNEv.Vars=Vars(z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z,z)
+        Initialization(PNEv.Cons, wHat_i, xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, kappa, kappa, kappa, kappa)
+
+        # Get energy flux
+        flux = np.zeros((len(y[0])))
+        for i in range(len(y[0])):
+            PNEv.Recalculate.get(2*PNEvolutionOrder)(PNEv.Cons,PNEv.Vars,y[:,i])
+            flux[i] = PNEv.energyflux.get(2*PNEvolutionOrder)(PNEv.Cons,PNEv.Vars)
+
+        return flux

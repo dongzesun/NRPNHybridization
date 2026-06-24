@@ -337,7 +337,17 @@ def get_length_from_abd(abd, nOrbits, t_end):
 
 
 #@profile
-def fix_BMS(abd, hyb, PN, bms_iterations=4, bms_align_nprocs=None, bms_bruteforce_dt=1000, bms_bruteforce_phi=20):
+def fix_BMS(
+    abd,
+    hyb,
+    PN,
+    bms_iterations=4,
+    bms_align_nprocs=None,
+    bms_bruteforce_dt=1000,
+    bms_bruteforce_phi=20,
+    pn_evolution_order=6.0,
+    pn_waveform_mode_order=6.0,
+):
     if hyb.PNIter == 0:
         temp = time.time()
         abd_prime, trans, abd_err = abd.map_to_superrest_frame(t_0=hyb.t_start+hyb.length/2)
@@ -352,7 +362,8 @@ def fix_BMS(abd, hyb, PN, bms_iterations=4, bms_align_nprocs=None, bms_bruteforc
         Phys = PN.PhyParas
         W_PN = PostNewtonian.PNWaveform(
             Phys[0], np.copy(hyb.omega_i)*Phys[1], Phys[2:5], Phys[5:8], PN.frame_i, np.copy(hyb.t_start)/Phys[1],
-            t_PNStart=hyb.t_PNStart, t_PNEnd=hyb.t_PNEnd
+            t_PNStart=hyb.t_PNStart, t_PNEnd=hyb.t_PNEnd,
+            PNEvolutionOrder=pn_evolution_order, PNWaveformModeOrder=pn_waveform_mode_order,
         )
         W_PN.t = W_PN.t*Phys[1]
         W_PN.data = W_PN.data*Phys[1]#DQ
@@ -362,7 +373,8 @@ def fix_BMS(abd, hyb, PN, bms_iterations=4, bms_align_nprocs=None, bms_bruteforc
 
         W_PN_PsiM = PostNewtonian.PNWaveform(
             Phys[0], np.copy(hyb.omega_i)*Phys[1], Phys[2:5], Phys[5:8], PN.frame_i, np.copy(hyb.t_start)/Phys[1],
-            t_PNStart=hyb.t_PNStart, t_PNEnd=hyb.t_PNEnd, datatype="Psi_M"
+            t_PNStart=hyb.t_PNStart, t_PNEnd=hyb.t_PNEnd, datatype="Psi_M",
+            PNEvolutionOrder=pn_evolution_order, PNWaveformModeOrder=pn_waveform_mode_order,
         )
         W_PN_PsiM.t = W_PN_PsiM.t*Phys[1]
         W_PN_PsiM.data = W_PN_PsiM.data*Phys[1]#DQ
@@ -470,7 +482,7 @@ def StandardError(minima, PN):
     return var
 
 
-def Align(PN, hyb, W_NR2=None):
+def Align(PN, hyb, W_NR2=None, pn_evolution_order=6.0, pn_waveform_mode_order=6.0):
     """
     Generate PN waveform and align it with NR waveform.
     """
@@ -480,7 +492,8 @@ def Align(PN, hyb, W_NR2=None):
         Phys[0], hyb.omega_i, Phys[2:5], Phys[5:8], Phys[1]))
     W_PN_corot, chi1, chi2 = PostNewtonian.PNWaveform(
         Phys[0], np.copy(hyb.omega_i)*Phys[1], Phys[2:5], Phys[5:8], PN.frame_i, np.copy(hyb.t_start)/Phys[1],
-        t_PNStart=hyb.t_PNStart, t_PNEnd=hyb.t_PNEnd, frametype="corotating", return_chi=True
+        t_PNStart=hyb.t_PNStart, t_PNEnd=hyb.t_PNEnd, frametype="corotating", return_chi=True,
+        PNEvolutionOrder=pn_evolution_order, PNWaveformModeOrder=pn_waveform_mode_order,
     )
 
     if hyb.PNIter == 0:
@@ -542,7 +555,7 @@ def Align(PN, hyb, W_NR2=None):
     return minima1, W_PN, chi1, chi2
 
 
-def Optimize12D(x, PN, hyb):
+def Optimize12D(x, PN, hyb, pn_evolution_order=6.0, pn_waveform_mode_order=6.0):
     """
     Generate PN waveform and align it with NR waveform.
     """
@@ -551,7 +564,8 @@ def Optimize12D(x, PN, hyb):
     Phys = PN.PhyParas
     W_PN_corot = PostNewtonian.PNWaveform(
         Phys[0], np.copy(hyb.omega_i)*Phys[1], Phys[2:5], Phys[5:8], PN.frame_i, np.copy(hyb.t_start)/Phys[1],
-        t_PNStart=hyb.t_PNStart, t_PNEnd=hyb.t_PNEnd, frametype="corotating"
+        t_PNStart=hyb.t_PNStart, t_PNEnd=hyb.t_PNEnd, frametype="corotating",
+        PNEvolutionOrder=pn_evolution_order, PNWaveformModeOrder=pn_waveform_mode_order,
     )
 
     if hyb.PNIter == 0:
@@ -669,6 +683,7 @@ def Hybridize(
     bms_align_nprocs=None,
     bms_bruteforce_dt=1000,
     bms_bruteforce_phi=20,
+    pn_order=6.0,
 ):
     """
     Align and hybridize given NR waveform with PN waveform.
@@ -696,6 +711,8 @@ def Hybridize(
                 bms_align_nprocs=bms_align_nprocs,
                 bms_bruteforce_dt=bms_bruteforce_dt,
                 bms_bruteforce_phi=bms_bruteforce_phi,
+                pn_evolution_order=pn_order,
+                pn_waveform_mode_order=pn_order,
             )
             #PN.rotate(trans)
         else:
@@ -723,7 +740,7 @@ def Hybridize(
 
     minima12D=[]
     if OptimizePNParas:
-        minima, W_PN, chiA, chiB = Align(PN, hyb)
+        minima, W_PN, chiA, chiB = Align(PN, hyb, pn_evolution_order=pn_order, pn_waveform_mode_order=pn_order)
         logR_delta = np.append(minima.x[0], minima.x[1:] + hyb.omega_mean*minima.x[0]/2)
         if len(PN.PhyParas) == 12:
             PN.PhyParas[8:] = logR_delta
@@ -736,9 +753,18 @@ def Hybridize(
         upbound12D = PN.OptParas + scale
 
         temp = time.time()
-        minima12D = least_squares(Optimize12D, PN.OptParas, bounds=(lowbound12D, upbound12D), ftol=3e-15, xtol=3e-15, gtol=1e-8, x_scale='jac', args=(PN, hyb))
+        minima12D = least_squares(
+            Optimize12D,
+            PN.OptParas,
+            bounds=(lowbound12D, upbound12D),
+            ftol=3e-15,
+            xtol=3e-15,
+            gtol=1e-8,
+            x_scale='jac',
+            args=(PN, hyb, pn_order, pn_order),
+        )
         print('Optimization time used:',time.time()-temp)
-        minima12D.jac = approx_fprime(minima12D.x, Optimize12D, np.full_like(minima12D.x, 1.49e-8), PN, hyb)
+        minima12D.jac = approx_fprime(minima12D.x, Optimize12D, np.full_like(minima12D.x, 1.49e-8), PN, hyb, pn_order, pn_order)
         if minima12D.success == False:
             print("12-D Optimization doesn't converge.")
 
@@ -749,9 +775,9 @@ def Hybridize(
     # Get aligned NR and PN waveforms
     hyb.t_PNStart, hyb.t_PNEnd = -90000, 1000 - hyb.t_start
     if cce_dir2 != None:
-        minima, W_PN, chiA, chiB = Align(PN, hyb, W_NR2)
+        minima, W_PN, chiA, chiB = Align(PN, hyb, W_NR2, pn_evolution_order=pn_order, pn_waveform_mode_order=pn_order)
     else:
-        minima, W_PN, chiA, chiB = Align(PN, hyb)
+        minima, W_PN, chiA, chiB = Align(PN, hyb, pn_evolution_order=pn_order, pn_waveform_mode_order=pn_order)
 
     t_delta = minima.x[0]
     logR_delta = np.append(0.0, minima.x[1:] + hyb.omega_mean*minima.x[0]/2)
@@ -836,6 +862,7 @@ def build_arg_parser():
     parser.add_argument('--BMSAlignNProcs', type=int, default=None, help='Worker count for the BMS 2D brute-force alignment; defaults to SLURM_CPUS_PER_TASK')
     parser.add_argument('--BMSBruteForceDt', type=int, default=1000, help='Number of time-shift samples in the BMS 2D brute-force alignment')
     parser.add_argument('--BMSBruteForcePhi', type=int, default=20, help='Number of phase samples in the BMS 2D brute-force alignment')
+    parser.add_argument('--PNOrder', type=float, default=6.0, help='PN truncation order used for both orbital evolution and waveform modes')
     return parser
 
 
@@ -855,6 +882,7 @@ def run(args):
     bms_align_nprocs = args.BMSAlignNProcs
     bms_bruteforce_dt = args.BMSBruteForceDt
     bms_bruteforce_phi = args.BMSBruteForcePhi
+    pn_order = args.PNOrder
     OptArg = 1
     maxiter = 30
 
@@ -906,6 +934,7 @@ def run(args):
             bms_align_nprocs=bms_align_nprocs,
             bms_bruteforce_dt=bms_bruteforce_dt,
             bms_bruteforce_phi=bms_bruteforce_phi,
+            pn_order=pn_order,
         )
 
         if hyb.PNIter >= 1 and abs(hyb.cost[-1]-hyb.cost[-2])/hyb.cost[-1]<1e-2:
