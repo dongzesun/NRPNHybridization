@@ -17,6 +17,13 @@ from scipy.integrate import simpson, trapezoid
 from scipy.interpolate import CubicSpline
 from functools import partial
 
+from Provenance import (
+    abd_fingerprint,
+    optimizer_summary,
+    transform_summary,
+    waveform_fingerprint,
+)
+
 def WM_to_MT(h_wm):
     h_mts = scri.ModesTimeSeries(
         sf.SWSH_modes.Modes(
@@ -237,7 +244,12 @@ def align2d(h_A, h_B, t1, t2, n_brute_force_δt=None, n_brute_force_δϕ=None, i
         h_A_primes.append(h_A_prime)
 
     idx = np.argmin(abs(np.array([optimum.cost for optimum in optimums])))
-        
+
+    # OptimizeResult supports metadata without changing the historical return API.
+    optimums[idx].polarization_factor = int([-1, +1][idx])
+    optimums[idx].polarization_candidate_costs = [
+        float(optimum.cost) for optimum in optimums
+    ]
     return optimums[idx].cost, h_A_primes[idx], optimums[idx]
 
 def time_translation(abd, t_0=0):
@@ -313,6 +325,8 @@ def PN_BMS_w_time_phase(
     nprocs=None,
     n_brute_force_δt=1000,
     n_brute_force_δϕ=20,
+    provenance_recorder=None,
+    outer_iteration=None,
 ):
     abd_prime = abd.copy()
     W_NR = scri.WaveformModes()
@@ -326,13 +340,24 @@ def PN_BMS_w_time_phase(
     h_primes = []
     #abd_primes = []
     trans_and_convs = []
+    cumulative_transforms = []
+    cumulative_transformation = None
     for itr in range(N):
+        abd_before = abd_fingerprint(abd_prime) if provenance_recorder else None
         abd_prime, trans, abd_err = abd_prime.map_to_superrest_frame(t_0=t1 + (t2 - t1)/2,
                                                                      target_strain_input=h_PN,
                                                                      target_PsiM_input=PsiM_PN,
                                                                      padding_time=(t2 - t1)/2)
+        if cumulative_transformation is None:
+            cumulative_transformation = trans
+        else:
+            # scri's passive-coordinate convention composes a newly applied
+            # local map on the left: cumulative_new = local * cumulative_old.
+            cumulative_transformation = trans * cumulative_transformation
+        cumulative_transforms.append(cumulative_transformation)
         
         W_NR = MT_to_WM(2.0*abd_prime.sigma.bar, False, scri.h)
+        waveform_before_align = waveform_fingerprint(W_NR) if provenance_recorder else None
         
         error, h_CCE_PN_BMS_prime, res = align2d(
             W_NR,
@@ -353,8 +378,48 @@ def PN_BMS_w_time_phase(
         h_primes.append(h_CCE_PN_BMS_prime)
         #abd_primes.append(abd_prime)
         trans_and_convs.append(trans)
+        if provenance_recorder:
+            provenance_recorder.record(
+                "inner_bms_candidate",
+                objects={
+                    "local_transform": trans,
+                    "cumulative_transform": cumulative_transformation,
+                },
+                outer_iteration=outer_iteration,
+                inner_iteration=itr,
+                map_center_time=float(t1 + (t2 - t1) / 2),
+                padding_time=float((t2 - t1) / 2),
+                local_transform=transform_summary(trans),
+                cumulative_transform=transform_summary(cumulative_transformation),
+                abd_error=np.asarray(abd_err),
+                strain_error=float(error),
+                align2d=optimizer_summary(res),
+                align2d_time_shift=float(res.x[0]),
+                align2d_phase=float(res.x[1]),
+                align2d_polarization_factor=int(res.polarization_factor),
+                align2d_candidate_costs=res.polarization_candidate_costs,
+                abd_before=abd_before,
+                abd_after=abd_fingerprint(abd_prime),
+                waveform_before_align=waveform_before_align,
+                waveform_after_align=waveform_fingerprint(h_CCE_PN_BMS_prime),
+            )
 
     idx = np.argmin(abs(np.array(errors)))
+
+    if provenance_recorder:
+        provenance_recorder.record(
+            "select_inner_bms_candidate",
+            objects={
+                "selected_local_transform": trans_and_convs[idx],
+                "selected_cumulative_transform": cumulative_transforms[idx],
+            },
+            outer_iteration=outer_iteration,
+            selected_inner_index=int(idx),
+            all_inner_strain_errors=np.asarray(errors, dtype=float),
+            selected_local_transform=transform_summary(trans_and_convs[idx]),
+            selected_cumulative_transform=transform_summary(cumulative_transforms[idx]),
+            selected_waveform=waveform_fingerprint(h_primes[idx]),
+        )
 
     #write_abd_to_file(abd_primes[idx], write_dir)
 

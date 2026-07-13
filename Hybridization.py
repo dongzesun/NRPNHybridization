@@ -5,6 +5,8 @@ the command-line workflow through an import-safe ``main`` function.
 """
 
 import argparse
+import hashlib
+import json
 import os
 
 import scri
@@ -25,6 +27,13 @@ from scipy.integrate import simpson
 from scipy.interpolate import InterpolatedUnivariateSpline as Spline
 from scipy.interpolate import CubicSpline
 import copy
+from Provenance import (
+    BMSProvenanceRecorder,
+    abd_fingerprint,
+    optimizer_summary,
+    transform_summary,
+    waveform_fingerprint,
+)
 #from memory_profiler import profile
 
 class SplineArray:
@@ -255,7 +264,7 @@ def get_extrapolated_NR(data_dir, nOrbits, t_end, length):
     return W, t0, length
 
 
-def get_abd(cce_dir, truncate, abd_format="RPDMB"):
+def get_abd(cce_dir, truncate, abd_format="RPDMB", provenance_recorder=None, outer_iteration=None):
     """
     Create AsymptoticBondiData from CCE data and apply truncation if required.
     """
@@ -267,9 +276,35 @@ def get_abd(cce_dir, truncate, abd_format="RPDMB"):
         Psi2 = cce_dir + '/Psi2.h5',
         Psi1 = cce_dir + '/Psi1.h5',
         Psi0 = cce_dir + '/Psi0.h5')
+    if provenance_recorder:
+        input_files = []
+        for filename in ("Strain.h5", "Psi4.h5", "Psi3.h5", "Psi2.h5", "Psi1.h5", "Psi0.h5"):
+            path = os.path.realpath(os.path.join(cce_dir, filename))
+            stat = os.stat(path)
+            input_files.append({"path": path, "size_bytes": int(stat.st_size), "mtime_ns": int(stat.st_mtime_ns)})
+        provenance_recorder.record(
+            "load_raw_cce_bondi_data", outer_iteration=outer_iteration,
+            abd_format=abd_format, input_files=input_files, output_abd=abd_fingerprint(abd),
+        )
     t0 = -abd.t[np.argmax(np.linalg.norm(abd.sigma.bar, axis=1))]
+    before_time_shift = abd_fingerprint(abd) if provenance_recorder else None
     abd.t = abd.t + t0
-    abd = abd.interpolate(np.arange(abd.t[0],abd.t[-1],1.0))
+    if provenance_recorder:
+        provenance_recorder.record(
+            "shift_abd_time_origin", outer_iteration=outer_iteration, time_shift=float(t0),
+            definition="negative time of maximum strain norm", input_abd=before_time_shift,
+            output_abd=abd_fingerprint(abd),
+        )
+    interpolation_input = abd_fingerprint(abd) if provenance_recorder else None
+    interpolation_grid = np.arange(abd.t[0],abd.t[-1],1.0)
+    abd = abd.interpolate(interpolation_grid)
+    if provenance_recorder:
+        provenance_recorder.record(
+            "interpolate_abd", outer_iteration=outer_iteration, input_abd=interpolation_input,
+            output_abd=abd_fingerprint(abd), grid_start=float(interpolation_grid[0]),
+            grid_stop_exclusive=float(interpolation_grid[-1] + 1.0), grid_step=1.0,
+            grid_size=int(len(interpolation_grid)),
+        )
 
     if truncate != None:
         abd_prime = scri.asymptotic_bondi_data.AsymptoticBondiData(
@@ -284,6 +319,11 @@ def get_abd(cce_dir, truncate, abd_format="RPDMB"):
         abd_prime.psi3 = abd.psi3[(abd.t>=truncate[0])&(abd.t<truncate[1])]
         abd_prime.psi4 = abd.psi4[(abd.t>=truncate[0])&(abd.t<truncate[1])]
         abd = abd_prime
+        if provenance_recorder:
+            provenance_recorder.record(
+                "truncate_abd", outer_iteration=outer_iteration,
+                interval=[float(truncate[0]), float(truncate[1])], output_abd=abd_fingerprint(abd),
+            )
 
     return abd, t0
 
@@ -347,16 +387,41 @@ def fix_BMS(
     bms_bruteforce_phi=20,
     pn_evolution_order=6.0,
     pn_waveform_mode_order=6.0,
+    provenance_recorder=None,
 ):
     if hyb.PNIter == 0:
         temp = time.time()
+        abd_before = abd_fingerprint(abd) if provenance_recorder else None
         abd_prime, trans, abd_err = abd.map_to_superrest_frame(t_0=hyb.t_start+hyb.length/2)
+        if provenance_recorder:
+            provenance_recorder.record(
+                "initial_superrest_map", objects={"local_transform": trans, "cumulative_transform": trans},
+                outer_iteration=int(hyb.PNIter), map_center_time=float(hyb.t_start + hyb.length / 2),
+                local_transform=transform_summary(trans), cumulative_transform=transform_summary(trans),
+                abd_error=np.asarray(abd_err), abd_before=abd_before, abd_after=abd_fingerprint(abd_prime),
+                selected_inner_index=0,
+            )
         W_NR = abd_to_WM(abd_prime)
+        waveform_before_zeroing = waveform_fingerprint(W_NR) if provenance_recorder else None
         W_NR_corot = scri.to_corotating_frame(W_NR.copy())
         ZeroModes = [2,8,16,26,38,52,68]
         W_NR_corot.data[:,ZeroModes] = 0.0*W_NR_corot.data[:,ZeroModes]
         W_NR = scri.to_inertial_frame(W_NR_corot.copy())
+        if provenance_recorder:
+            provenance_recorder.record(
+                "zero_corotating_m0_modes", outer_iteration=int(hyb.PNIter),
+                zero_mode_indices=ZeroModes, waveform_before=waveform_before_zeroing,
+                waveform_after=waveform_fingerprint(W_NR),
+            )
+        waveform_before_rotation = waveform_fingerprint(W_NR) if provenance_recorder else None
         W_NR = scri.rotate_physical_system(W_NR, trans.frame_rotation.conjugate())
+        if provenance_recorder:
+            provenance_recorder.record(
+                "apply_conjugate_selected_bms_rotation", outer_iteration=int(hyb.PNIter),
+                rotation_wxyz=quaternion.as_float_array(trans.frame_rotation.conjugate()),
+                source_transform="selected local initial superrest transform",
+                waveform_before=waveform_before_rotation, waveform_after=waveform_fingerprint(W_NR),
+            )
         print('BMS frame mapping time used:',time.time()-temp)
     else:
         Phys = PN.PhyParas
@@ -379,6 +444,16 @@ def fix_BMS(
         W_PN_PsiM.t = W_PN_PsiM.t*Phys[1]
         W_PN_PsiM.data = W_PN_PsiM.data*Phys[1]#DQ
 
+        if provenance_recorder:
+            provenance_recorder.record(
+                "construct_pn_bms_target", outer_iteration=int(hyb.PNIter),
+                physical_parameters=np.asarray(Phys), omega_i=float(hyb.omega_i),
+                frame_i_wxyz=quaternion.as_float_array(PN.frame_i),
+                pn_evolution_order=float(pn_evolution_order),
+                pn_waveform_mode_order=float(pn_waveform_mode_order),
+                strain_target=waveform_fingerprint(W_PN), moreschi_target=waveform_fingerprint(W_PN_PsiM),
+            )
+
         temp = time.time()
         tp1, W_NR, trans, idx = PNBMS.PN_BMS_w_time_phase(
             abd,
@@ -391,9 +466,19 @@ def fix_BMS(
             nprocs=bms_align_nprocs,
             n_brute_force_δt=bms_bruteforce_dt,
             n_brute_force_δϕ=bms_bruteforce_phi,
+            provenance_recorder=provenance_recorder,
+            outer_iteration=int(hyb.PNIter),
         )
+        waveform_before_rotation = waveform_fingerprint(W_NR) if provenance_recorder else None
         W_NR = scri.rotate_physical_system(W_NR, trans.frame_rotation.conjugate())
         W_NR.frame = np.array([])
+        if provenance_recorder:
+            provenance_recorder.record(
+                "apply_conjugate_selected_bms_rotation", outer_iteration=int(hyb.PNIter),
+                rotation_wxyz=quaternion.as_float_array(trans.frame_rotation.conjugate()),
+                source_transform="selected local inner transform",
+                waveform_before=waveform_before_rotation, waveform_after=waveform_fingerprint(W_NR),
+            )
         print('BMS frame mapping time used:',time.time()-temp)
         print('BMS mapping error is: ', tp1)
 
@@ -684,6 +769,9 @@ def Hybridize(
     bms_bruteforce_dt=1000,
     bms_bruteforce_phi=20,
     pn_order=6.0,
+    provenance_recorder=None,
+    fixed_intrinsic_parameters=None,
+    fixed_omega_i=None,
 ):
     """
     Align and hybridize given NR waveform with PN waveform.
@@ -691,7 +779,7 @@ def Hybridize(
 
     # Get NR waveform
     if WaveformType == 'cce':
-        abd, t0 = get_abd(cce_dir, truncate, abd_format)
+        abd, t0 = get_abd(cce_dir, truncate, abd_format, provenance_recorder, int(hyb.PNIter))
         if cce_dir2 != None:
             abd2, t02 = get_abd(cce_dir2, truncate, abd_format)
             OptimizePNParas = 0
@@ -713,6 +801,7 @@ def Hybridize(
                 bms_bruteforce_phi=bms_bruteforce_phi,
                 pn_evolution_order=pn_order,
                 pn_waveform_mode_order=pn_order,
+                provenance_recorder=provenance_recorder,
             )
             #PN.rotate(trans)
         else:
@@ -730,16 +819,37 @@ def Hybridize(
 
     # Get matching window
     hyb.get_window_NR(W_NR)
+    if fixed_omega_i is not None:
+        hyb.omega_i = float(fixed_omega_i)
 
 
     # Optimize parameters
-    if hyb.PNIter == 0:
+    if fixed_intrinsic_parameters is not None:
+        if len(PN.PhyParas) == 12:
+            PN.PhyParas[:8] = fixed_intrinsic_parameters
+        else:
+            PN.PhyParas = np.asarray(fixed_intrinsic_parameters, dtype=float).copy()
+        PN.Physical_to_Parameterize(hyb)
+        if provenance_recorder:
+            provenance_recorder.record(
+                "enforce_fixed_intrinsic_parameters",
+                outer_iteration=int(hyb.PNIter),
+                fixed_physical_parameters=np.asarray(PN.PhyParas[:8]),
+                fixed_omega_i=float(hyb.omega_i),
+            )
+    elif hyb.PNIter == 0:
         PN.Parameterize_to_Physical(hyb)
     else:
         PN.Physical_to_Parameterize(hyb)
 
     minima12D=[]
     if OptimizePNParas:
+        if provenance_recorder:
+            provenance_recorder.record(
+                "begin_12d_optimization", outer_iteration=int(hyb.PNIter),
+                initial_opt_parameters=np.asarray(PN.OptParas),
+                initial_physical_parameters=np.asarray(PN.PhyParas),
+            )
         minima, W_PN, chiA, chiB = Align(PN, hyb, pn_evolution_order=pn_order, pn_waveform_mode_order=pn_order)
         logR_delta = np.append(minima.x[0], minima.x[1:] + hyb.omega_mean*minima.x[0]/2)
         if len(PN.PhyParas) == 12:
@@ -770,6 +880,12 @@ def Hybridize(
 
         PN.OptParas = minima12D.x
         PN.Parameterize_to_Physical(hyb)
+        if provenance_recorder:
+            provenance_recorder.record(
+                "complete_12d_optimization", outer_iteration=int(hyb.PNIter),
+                optimizer=optimizer_summary(minima12D), optimized_parameters=np.asarray(PN.OptParas),
+                physical_parameters=np.asarray(PN.PhyParas),
+            )
 
 
     # Get aligned NR and PN waveforms
@@ -789,10 +905,23 @@ def Hybridize(
     PN.Physical_to_Parameterize(hyb)
     R_delta = np.exp(quaternion.from_float_array(logR_delta))
 
+    pn_before_time_shift = waveform_fingerprint(W_PN) if provenance_recorder else None
     W_PN.t = W_PN.t - t_delta
+    nr_before_rotation = waveform_fingerprint(W_NR) if provenance_recorder else None
     W_NR = scri.rotate_physical_system(W_NR, R_delta)
     chiA = R_delta*chiA*R_delta.conjugate()
     chiB = R_delta*chiB*R_delta.conjugate()
+
+    if provenance_recorder:
+        provenance_recorder.record(
+            "apply_final_residual_alignment", outer_iteration=int(hyb.PNIter),
+            align_result=optimizer_summary(minima), pn_time_shift=float(-t_delta),
+            pn_time_action="W_PN.t = W_PN.t - t_delta; NR time is unchanged",
+            residual_log_rotation_wxyz=quaternion.as_float_array(quaternion.from_float_array(logR_delta)),
+            residual_rotation_wxyz=quaternion.as_float_array(R_delta),
+            pn_before=pn_before_time_shift, pn_after=waveform_fingerprint(W_PN),
+            nr_before=nr_before_rotation, nr_after=waveform_fingerprint(W_NR),
+        )
 
     print("SquaredError over matching window: ",SquaredError(W_NR, W_PN, hyb.t_start, hyb.t_start + hyb.length))
     if cce_dir2 == None:
@@ -839,6 +968,15 @@ def Hybridize(
 
     if cce_dir2 == None:
         Output(out_name, W_NR, W_PN, W_H, trans, minima12D, PN, hyb, nOrbits)
+        if provenance_recorder:
+            provenance_recorder.record(
+                "serialize_iteration_outputs", outer_iteration=int(hyb.PNIter),
+                output_npz=os.path.realpath(out_name), nr_waveform_file=os.path.realpath("hybridNR.h5"),
+                pn_waveform_file=os.path.realpath("hybridPN.h5"), hybrid_waveform_file=os.path.realpath("hybrid.h5"),
+                nr_waveform=waveform_fingerprint(W_NR), pn_waveform=waveform_fingerprint(W_PN),
+                hybrid_waveform=waveform_fingerprint(W_H), physical_parameters=np.asarray(PN.PhyParas),
+                optimized_parameters=np.asarray(PN.OptParas),
+            )
         return W_NR, W_PN, W_H, minima12D, trans
     else:
         return W_NR, W_PN
@@ -863,6 +1001,10 @@ def build_arg_parser():
     parser.add_argument('--BMSBruteForceDt', type=int, default=1000, help='Number of time-shift samples in the BMS 2D brute-force alignment')
     parser.add_argument('--BMSBruteForcePhi', type=int, default=20, help='Number of phase samples in the BMS 2D brute-force alignment')
     parser.add_argument('--PNOrder', type=float, default=6.0, help='PN truncation order used for both orbital evolution and waveform modes')
+    parser.add_argument('--RecordBMSProvenance', action='store_true', help='Enable default-off diagnostic BMS provenance recording')
+    parser.add_argument('--BMSProvenanceDir', default=None, help='Diagnostic output directory used only with --RecordBMSProvenance')
+    parser.add_argument('--BMSProvenanceLabel', default='bms_framefix_diagnostic', help='Run label stored in the diagnostic provenance ledger')
+    parser.add_argument('--FixedParameterConfig', default=None, help='Optional JSON config that fixes intrinsic parameters and disables 12-D optimization')
     return parser
 
 
@@ -883,11 +1025,45 @@ def run(args):
     bms_bruteforce_dt = args.BMSBruteForceDt
     bms_bruteforce_phi = args.BMSBruteForcePhi
     pn_order = args.PNOrder
+    provenance_recorder = None
+    fixed_parameter_config = None
+    fixed_intrinsic_parameters = None
+    fixed_omega_i = None
     OptArg = 1
+    if args.FixedParameterConfig is not None:
+        fixed_parameter_path = os.path.realpath(args.FixedParameterConfig)
+        with open(fixed_parameter_path, "rb") as stream:
+            fixed_parameter_bytes = stream.read()
+        fixed_parameter_config = json.loads(fixed_parameter_bytes)
+        fixed_intrinsic_parameters = np.asarray([
+            fixed_parameter_config["q"], fixed_parameter_config["M"],
+            *fixed_parameter_config["chi1"], *fixed_parameter_config["chi2"],
+        ], dtype=float)
+        fixed_omega_i = float(fixed_parameter_config["initial_orbital_frequency"])
+        OptArg = 0
+    if args.RecordBMSProvenance:
+        if args.BMSProvenanceDir is None:
+            raise ValueError("--BMSProvenanceDir is required with --RecordBMSProvenance")
+        provenance_recorder = BMSProvenanceRecorder(args.BMSProvenanceDir, args.BMSProvenanceLabel)
+        provenance_recorder.record(
+            "run_configuration", command_line_arguments=vars(args), working_directory=os.getcwd(),
+            source_file=os.path.realpath(__file__),
+        )
+        if fixed_parameter_config is not None:
+            provenance_recorder.record(
+                "fixed_parameter_policy",
+                fixed_parameter_file=fixed_parameter_path,
+                fixed_parameter_sha256=hashlib.sha256(fixed_parameter_bytes).hexdigest(),
+                parameter_status=fixed_parameter_config["parameter_status"],
+                fixed_intrinsic_parameters=fixed_intrinsic_parameters,
+                fixed_omega_i=fixed_omega_i,
+                fixed_frame_quaternion_wxyz=fixed_parameter_config["frame_quaternion_wxyz"],
+                allowed_variable_policy=fixed_parameter_config["allowed_variable_policy"],
+            )
     maxiter = 30
 
     if WaveformType == 'cce':
-        abd, t0 = get_abd(cce_dir, truncate, abd_format)
+        abd, t0 = get_abd(cce_dir, truncate, abd_format, provenance_recorder, "initial_length_probe")
         if nOrbits != None:
             length = get_length_from_abd(abd, nOrbits, t_end)
     else:
@@ -898,6 +1074,9 @@ def run(args):
 
     hyb = hyb_quantites(t_end, length)
     PN = PNParameters(data_dir, hyb, t0)
+    if fixed_parameter_config is not None:
+        PN.frame_i = np.asarray(fixed_parameter_config["frame_quaternion_wxyz"], dtype=float)
+        PN.PhyParas = fixed_intrinsic_parameters.copy()
     if os.path.exists(out_name):
         Checkpoint = np.load(out_name, allow_pickle=True)
         hyb.PNIter = Checkpoint['checkpoint'][0]
@@ -915,6 +1094,19 @@ def run(args):
         hyb.PNIter = 10
     while hyb.PNIter<=maxiter:
         print("PNIter=: ", hyb.PNIter)
+        if provenance_recorder:
+            provenance_recorder.record(
+                "begin_outer_iteration", outer_iteration=int(hyb.PNIter),
+                physical_parameters=np.asarray(PN.PhyParas), optimized_parameters=np.asarray(PN.OptParas),
+                matching_window=[float(hyb.t_start), float(hyb.t_start + hyb.length)],
+            )
+        if fixed_intrinsic_parameters is not None:
+            if len(PN.PhyParas) == 12:
+                PN.PhyParas[:8] = fixed_intrinsic_parameters
+            else:
+                PN.PhyParas = fixed_intrinsic_parameters.copy()
+            PN.frame_i = np.asarray(fixed_parameter_config["frame_quaternion_wxyz"], dtype=float)
+            hyb.omega_i = fixed_omega_i
         W_NR, W_PN, W_H, minima12D, BMSTrans = Hybridize(
             WaveformType,
             t_end,
@@ -935,6 +1127,9 @@ def run(args):
             bms_bruteforce_dt=bms_bruteforce_dt,
             bms_bruteforce_phi=bms_bruteforce_phi,
             pn_order=pn_order,
+            provenance_recorder=provenance_recorder,
+            fixed_intrinsic_parameters=fixed_intrinsic_parameters,
+            fixed_omega_i=fixed_omega_i,
         )
 
         if hyb.PNIter >= 1 and abs(hyb.cost[-1]-hyb.cost[-2])/hyb.cost[-1]<1e-2:
@@ -944,6 +1139,12 @@ def run(args):
 
     # Output results
     Output(out_name, W_NR, W_PN, W_H, BMSTrans, minima12D, PN, hyb, nOrbits)
+    if provenance_recorder:
+        provenance_recorder.record(
+            "run_complete", final_nr_waveform=waveform_fingerprint(W_NR),
+            final_pn_waveform=waveform_fingerprint(W_PN), final_hybrid_waveform=waveform_fingerprint(W_H),
+            final_physical_parameters=np.asarray(PN.PhyParas), final_optimized_parameters=np.asarray(PN.OptParas),
+        )
     print("All done, total time:", time.time()-clock_start)
 
 
