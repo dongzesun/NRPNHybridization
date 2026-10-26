@@ -16,5 +16,5 @@ py-modules = ["Hybridization", "PNBMS"]
 include = ["PYPostNewtonian*"]
 
 [tool.setuptools.package-data]
-"PYPostNewtonian.PNTerms" = ["*.ipynb", "PolynomialRatios/*.dat"]
-"PYPostNewtonian.Code" = ["*.ipynb"]
+"PYPostNewtonian.PNTerms" = ["*.ipynb", "PolynomialRatios/*.dat", "EMR22/*"]
+"PYPostNewtonian.Code" = ["*.ipynb", "*.ipy"]

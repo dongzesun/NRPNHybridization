@@ -17,6 +17,8 @@ OUTPUTS = [
     CODE_DIR / "PNEvolution.py",
     CODE_DIR / "PNWaveformModes.py",
     CODE_DIR / "PNPsiMModes.py",
+    CODE_DIR / "EMR22Coefficients.py",
+    CODE_DIR / "PNBalance6.py",
 ]
 
 
@@ -29,13 +31,8 @@ def run_notebook(notebook: str) -> None:
     env["PYTHONPATH"] = f"{ROOT}:{ROOT / 'PYPostNewtonian'}:{env.get('PYTHONPATH', '')}"
     cmd = [
         sys.executable,
-        "-m",
-        "jupyter",
-        "nbconvert",
-        "--to",
-        "notebook",
-        "--execute",
-        "--inplace",
+        "-u",
+        str(ROOT / "scripts" / "execute_pn_notebook.py"),
         notebook,
     ]
     subprocess.run(cmd, cwd=CODE_DIR, env=env, check=True)

@@ -1,5 +1,6 @@
 import scri
 from PYPostNewtonian.Code import PNEvolution
+from PYPostNewtonian.Code import EMR22
 from PYPostNewtonian.Code import PNWaveformModes
 from PYPostNewtonian.Code import PNPsiMModes
 import numpy as np
@@ -24,8 +25,10 @@ def PNWaveform(q,omega_0,chi1_0,chi2_0, frame_0=np.array([1,0,0,0]),t_0=0.0, ome
     return_energy_flux: whether to return energy flux and v as two arrays, bool number,
     y: optional PN state array on which to evaluate energy flux. If supplied with
         return_energy_flux=True, the function returns only the flux array.
-    PNEvolutionOrder: float number in [0,0.5,1,1.5,2,2.5,3,3.5,4], default is 3.5,
-    PNWaveformModeOrder: float number in [0,0.5,1,1.5,2,2.5,3,3.5,4], default is 3.5,
+    PNEvolutionOrder: half-integer from 0 through 22, default 6. Above 6,
+        supplement flux and binding energy with Schwarzschild test-particle terms.
+        Spin, absorption, and waveform-amplitude orders are not extended.
+    PNWaveformModeOrder: half-integer from 0 through 6, default 6; independent of evolution.
     TaylorTn: now only TaylorT1 is working, so it's string in ['TaylorT1'], default is 'TaylorT1',
     StepsPerOrbit: output time steps per orbit, float number,
     dt: output time interval, float number or None, shouldn't be specify together with StepsPerOrbit,
@@ -42,11 +45,9 @@ def PNWaveform(q,omega_0,chi1_0,chi2_0, frame_0=np.array([1,0,0,0]),t_0=0.0, ome
         raise Exception('omega_start cannot be larger than omega_0, and t_PNStart should be smaller than 0.')
     if omega_end != None and omega_end < omega_0:
         raise Exception('omega_end cannot be smaller than omega_0.')
-    if not PNEvolutionOrder in [0,0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6]:
-        message=("PNEvolutionOrder must be a float number in [0,0.5,1,1.5,2,2.5,3,3.5,4].")
-        raise ValueError(message)
+    EMR22.validate_order(PNEvolutionOrder)
     if not PNWaveformModeOrder in [0,0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6]:
-        message=("PNWaveformModeOrder must be a float number in [0,0.5,1,1.5,2,2.5,3,3.5,4].")
+        message=("PNWaveformModeOrder must be a half-integer from 0 through 6; high-order evolution does not extend waveform amplitudes.")
         raise ValueError(message)
     if not TaylorTn in ['TaylorT1']:
         message=("TaylorTn must be a string in ['TaylorT1'].")
@@ -61,6 +62,8 @@ def PNWaveform(q,omega_0,chi1_0,chi2_0, frame_0=np.array([1,0,0,0]),t_0=0.0, ome
     if ell_max > 8 or ell_max < 2:
         message=("ell_max shoule between 2 and 8.")
         raise ValueError(message)
+
+    evolution = EMR22 if PNEvolutionOrder > 6 else PNEvolution.PNEv
 
     M=1.0
     wHat=quaternionic.one
@@ -84,13 +87,13 @@ def PNWaveform(q,omega_0,chi1_0,chi2_0, frame_0=np.array([1,0,0,0]),t_0=0.0, ome
             -quaternionic.array([0,chi2_0[0],chi2_0[1],chi2_0[2]]).normalized*zHat).normalized
 
     if return_energy_flux and y is not None:
-        return PNEvolution.PNEv.energy_flux(
+        return evolution.energy_flux(
             y, wHat, xHat, yHat, zHat, m1, m2, v_0, S_chi1_0, S_chi2_0, frame_0,
             omega_start, omega_end, t_PNStart, t_PNEnd, PNEvolutionOrder, TaylorTn,
             StepsPerOrbit, dt, tol, MinStep,
         )
   
-    PN=PNEvolution.PNEv.Evolution(wHat, xHat, yHat, zHat, m1, m2, v_0,S_chi1_0, S_chi2_0, frame_0, omega_start, omega_end, t_PNStart, t_PNEnd,
+    PN=evolution.Evolution(wHat, xHat, yHat, zHat, m1, m2, v_0,S_chi1_0, S_chi2_0, frame_0, omega_start, omega_end, t_PNStart, t_PNEnd,
         PNEvolutionOrder, TaylorTn, StepsPerOrbit, dt, tol, MinStep)# Evolve PN parameters, PN.t is PN time, PN.y=[v, chi1_x, chi1_y
                                                         # chi2_x, chi2_y, frame_w, frame_x, frame_y, frame_z]
     W_PN_corot=scri.WaveformModes()
@@ -123,7 +126,7 @@ def PNWaveform(q,omega_0,chi1_0,chi2_0, frame_0=np.array([1,0,0,0]),t_0=0.0, ome
         chiVec2=quaternion.from_float_array(S_chi2_0*R_S2*zHat*R_S2.conjugate()*S_chi2_0.conjugate())
         return W_PN_corot, chiVec1, chiVec2
     elif return_energy_flux:
-        flux = PNEvolution.PNEv.energy_flux(PN.y, wHat, xHat, yHat, zHat, m1, m2, v_0,S_chi1_0, S_chi2_0, frame_0, omega_start, omega_end,
+        flux = evolution.energy_flux(PN.y, wHat, xHat, yHat, zHat, m1, m2, v_0,S_chi1_0, S_chi2_0, frame_0, omega_start, omega_end,
                                                    t_PNStart, t_PNEnd, PNEvolutionOrder, TaylorTn, StepsPerOrbit, dt, tol, MinStep)
         return flux, PN.y[0]
     else:

@@ -1,0 +1,368 @@
+import os
+HighestOrder=frac(12,2)
+with open('PNEvolution.py', 'w') as f :
+    f.write("""# File produced automatically by PNCodeGen.ipynb
+from scipy.integrate import solve_ivp
+import numpy as np
+from numpy import dot, cross, log, sqrt, pi
+from numpy import euler_gamma as EulerGamma
+from numba import jit, njit, float64, boolean
+from numba.experimental import jitclass
+from scipy.interpolate import InterpolatedUnivariateSpline as Spline
+from scipy.special import zeta
+import quaternionic
+
+qmul = njit(quaternionic.algebra.multiply)
+qexp=njit(quaternionic.algebra.exp)
+qconj=njit(quaternionic.algebra.conj)
+qinverse=njit(quaternionic.algebra.reciprocal)
+
+@njit(cache=True)
+def mul(A,B):
+    C=np.empty(4)
+    qmul(A,B,C)
+    return C
+    
+@njit(cache=True)
+def exp(A):
+    B=np.empty(4)
+    qexp(A,B)
+    return B
+    
+@njit(cache=True)
+def conjugate(A):
+    B=np.empty(4)
+    qconj(A,B)
+    return B
+    
+@njit(cache=True)
+def inverse(A):
+    B=np.empty(4)
+    qinverse(A,B)
+    return B
+    
+@njit(cache=True)
+def normalized(A):
+    return A/np.linalg.norm(A)
+
+@njit(cache=True)
+def FrameFromAngularVelocity_2D_Integrand(rfrak_x, rfrak_y, Omega):
+    rfrakMag = np.sqrt(rfrak_x*rfrak_x+rfrak_y*rfrak_y)
+    rfrakDot_x = Omega[0]/2.0
+    rfrakDot_y = Omega[1]/2.0
+    if np.abs(np.sin(rfrakMag)) > 1e-12 and np.abs(np.cos(rfrakMag)) > 1e-12:
+        omega_v = (Omega[0]*(-rfrak_y/rfrakMag)+Omega[1]*(rfrak_x/rfrakMag))*np.tan(rfrakMag)-Omega[2]
+        Omega[0] += -omega_v*np.sin(2*rfrakMag)*(-rfrak_y/rfrakMag)
+        Omega[1] += -omega_v*np.sin(2*rfrakMag)*(rfrak_x/rfrakMag)
+        Omega[2] +=  omega_v*np.cos(2*rfrakMag)
+        dotTerm = (rfrak_x*Omega[0]+rfrak_y*Omega[1])/(rfrakMag*rfrakMag)
+        cotTerm = rfrakMag/(2*np.tan(rfrakMag))
+        rfrakDot_x = (Omega[0] - rfrak_x*dotTerm)*cotTerm + rfrak_x*dotTerm/2. - 0.5*Omega[2]*rfrak_y
+        rfrakDot_y = (Omega[1] - rfrak_y*dotTerm)*cotTerm + rfrak_y*dotTerm/2. + 0.5*Omega[2]*rfrak_x
+    return rfrakDot_x, rfrakDot_y
+
+@njit(cache=True)
+def FrameFromAngularVelocityIntegrand(R, Omega):
+    return 0.5*mul(np.append(0.0,Omega),R)  
+""")
+    PNOrbitalEvolutionOrder=HighestOrder
+    PNOrbitalEvolutionOrderString=str(N(PNOrbitalEvolutionOrder, 2)).replace('.','p')
+    _pn_codegen_previous_directory = os.getcwd()
+    os.chdir('../PNTerms')
+    execnotebook('OrbitalEvolution.ipynb')
+    ExpressionsForMemberFunctions = CodeOutput.CodeConstructor(PNVariables, PrecessionVelocities)
+    execnotebook('AngularMomentum.ipynb')
+    os.chdir(_pn_codegen_previous_directory)
+    PrecessionVelocities.AddDerivedVariable('OrbitalAngularMomentum',
+        AngularMomentumExpression(PNOrder=PNOrbitalEvolutionOrder),
+        datatype=ellHat.datatype)
+    CodeConstructor.AddDependencies(PrecessionVelocities)
+    f.write("""
+ConsSpec=[{ConsSpec},('EvolveSpin1',boolean),('EvolveSpin2',boolean)]
+@jitclass(ConsSpec)
+class Cons:
+    def __init__(self,{ConsArgu},EvolveSpin1,EvolveSpin2):
+{ConsInit}
+        self.EvolveSpin1=EvolveSpin1
+        self.EvolveSpin2=EvolveSpin2
+
+VarsSpec=[{VarsSpec}]
+@jitclass(VarsSpec)
+class Vars:
+    def __init__(self,{VarsArgu}):
+{VarsInit}
+
+@njit(cache=True)
+def Initialization(Cons, {InputArguments}): 
+{Initializations}
+    Cons.EvolveSpin1=np.linalg.norm(mul(Cons.S_chi1,conjugate(Cons.S_chi1)))>1e-8
+    Cons.EvolveSpin2=np.linalg.norm(mul(Cons.S_chi2,conjugate(Cons.S_chi2)))>1e-8
+""".format(ConsSpec=CodeConstructor.ConsSpec(),
+           ConsArgu=CodeConstructor.ConsArgu(),
+           ConsInit=CodeConstructor.ConsInit(),
+           VarsSpec=CodeConstructor.VarsSpec(),
+           VarsArgu=CodeConstructor.VarsArgu(),
+           VarsInit=CodeConstructor.VarsInit(),
+           InputArguments=CodeConstructor.CppInputArguments(11),
+           Initializations=CodeConstructor.CppInitializations(4)))
+    lenCons=0
+    lenVars=0
+    for atom in CodeConstructor.Atoms:
+        if atom.constant:
+            lenCons+=1
+        elif not atom.constant:
+            lenVars+=1
+    Constructor=CodeConstructor
+
+    for PNOrbitalEvolutionOrder in [frac(n,2) for n in range(0,2*int(HighestOrder)+1)]:
+        print("Working on {0} PN...".format(PNOrbitalEvolutionOrder))
+        PNOrbitalEvolutionOrderString = str(N(PNOrbitalEvolutionOrder, 2)).replace('.','p')
+        _pn_codegen_previous_directory = os.getcwd()
+        os.chdir('../PNTerms')
+        execnotebook('OrbitalEvolution.ipynb')
+        ExpressionsForMemberFunctions = CodeOutput.CodeConstructor(PNVariables, PrecessionVelocities)
+        execnotebook('AngularMomentum.ipynb')
+        os.chdir(_pn_codegen_previous_directory)
+        PrecessionVelocities.AddDerivedVariable('OrbitalAngularMomentum',
+            AngularMomentumExpression(PNOrder=PNOrbitalEvolutionOrder),
+            datatype=ellHat.datatype)
+        CodeConstructor.AddDependencies(PrecessionVelocities)
+        # Start the class, write the declarations, initializations, etc.
+        f.write("""
+@njit(cache=True)
+def Recalculate_{PNOrbitalEvolutionOrderString}(Cons,Vars,y):
+    Vars.v = np.array([y[0]])
+    Vars.rfrak_chi1 = np.array([y[1],y[2]])
+    Vars.rfrak_chi2 = np.array([y[3],y[4]])
+{Evaluations}
+
+{MemberFunctions}
+""".format(InputArguments=CodeConstructor.CppInputArguments(11),
+           PNOrbitalEvolutionOrderString=PNOrbitalEvolutionOrderString,
+           Initializations=CodeConstructor.CppInitializations(4),
+           Declarations=CodeConstructor.CppDeclarations(2),
+           Evaluations=CodeConstructor.CppEvaluations(4),
+           MemberFunctions=CodeOutput.CodeConstructor(PNVariables, PrecessionVelocities).CppExpressionsAsFunctions(2,PNOrbitalEvolutionOrderString)))
+        for n,Expressions in zip([1], [T1Expressions]):
+            f.write("""
+@njit(cache=True)
+def TaylorT{n}_{PNOrbitalEvolutionOrderString}(Cons,Vars):
+{Computations}
+    dydt=np.zeros(9)
+    [dydt[5],dydt[6],dydt[7],dydt[8]] = FrameFromAngularVelocityIntegrand(Vars.R, OmegaVec_{PNOrbitalEvolutionOrderString}(Cons,Vars)[1:])
+    dydt[0] = dvdt_T{n}[0] 
+    if(Cons.EvolveSpin1):
+        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1[0], Vars.rfrak_chi1[1],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_{PNOrbitalEvolutionOrderString}(Cons,Vars)),Cons.S_chi1))[1:])
+    else:
+        dydt[1], dydt[2] = 0.0, 0.0
+    if(Cons.EvolveSpin2):
+        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2[0], Vars.rfrak_chi2[1],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_{PNOrbitalEvolutionOrderString}(Cons,Vars)),Cons.S_chi2))[1:])
+    else:
+        dydt[3], dydt[4] = 0.0, 0.0
+    return dydt
+
+@njit(cache=True)
+def energy_flux_{PNOrbitalEvolutionOrderString}(Cons,Vars):
+{Computations}
+    return Flux
+""".format(n=n,
+           PNOrbitalEvolutionOrderString=PNOrbitalEvolutionOrderString,
+           Computations=CodeConstructor.CppEvaluateExpressions()))
+        
+        for n,Expressions in zip([4], [T1Expressions]):
+            f.write("""
+@njit(cache=True)
+def TaylorT{n}_{PNOrbitalEvolutionOrderString}(Cons,Vars):
+{Computations}
+    dydt=np.zeros(9)
+    [dydt[5],dydt[6],dydt[7],dydt[8]] = FrameFromAngularVelocityIntegrand(Vars.R, OmegaVec_{PNOrbitalEvolutionOrderString}(Cons,Vars)[1:])
+    dydt[0] = dvdt_T{n}[0]
+    if(Cons.EvolveSpin1):
+        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1[0], Vars.rfrak_chi1[1],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_{PNOrbitalEvolutionOrderString}(Cons,Vars)),Cons.S_chi1))[1:])
+    else:
+        dydt[1], dydt[2] = 0.0, 0.0
+    if(Cons.EvolveSpin2):
+        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2[0], Vars.rfrak_chi2[1],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_{PNOrbitalEvolutionOrderString}(Cons,Vars)),Cons.S_chi2))[1:])
+    else:
+        dydt[3], dydt[4] = 0.0, 0.0
+    return dydt      
+""".format(n=n,
+           PNOrbitalEvolutionOrderString=PNOrbitalEvolutionOrderString,
+           Computations=CodeOutput.CodeConstructor(PNVariables, Expressions).CppEvaluateT45(NumTerms4, DenTerms4, Constructor)))
+        for n,Expressions in zip([5], [T1Expressions]):
+            f.write("""
+@njit(cache=True)
+def TaylorT{n}_{PNOrbitalEvolutionOrderString}(Cons,Vars):
+{Computations}
+    dydt=np.zeros(8)
+    [dydt[5],dydt[6],dydt[7],dydt[8]] = FrameFromAngularVelocityIntegrand(Vars.R, OmegaVec_{PNOrbitalEvolutionOrderString}(Cons,Vars)[1:])
+    dydt[0] = dvdt_T{n}[0]
+    if(Cons.EvolveSpin1):
+        dydt[1], dydt[2]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi1[0], Vars.rfrak_chi1[1],(mul(mul(inverse(Cons.S_chi1),OmegaVec_chiVec_1_{PNOrbitalEvolutionOrderString}(Cons,Vars)),Cons.S_chi1))[1:])
+    else:
+        dydt[1], dydt[2] = 0.0, 0.0
+    if(Cons.EvolveSpin2):
+        dydt[3], dydt[4]=FrameFromAngularVelocity_2D_Integrand(Vars.rfrak_chi2[0], Vars.rfrak_chi2[1],(mul(mul(inverse(Cons.S_chi2),OmegaVec_chiVec_2_{PNOrbitalEvolutionOrderString}(Cons,Vars)),Cons.S_chi2))[1:])
+    else:
+        dydt[3], dydt[4] = 0.0, 0.0
+    return dydt      
+""".format(n=n,
+           PNOrbitalEvolutionOrderString=PNOrbitalEvolutionOrderString,
+           Computations=CodeOutput.CodeConstructor(PNVariables, Expressions).CppEvaluateT45(NumTerms5, DenTerms5, Constructor)))
+        
+        # Write the external interfaces to the ODE stepper
+    Ty=''
+    for n,Expressions in zip([1,4,5], [T1Expressions,T4Expressions,T5Expressions]):
+        if len(Ty)!=0:
+            Ty+=','
+        Ty+='\n'+',\n'.join(['            {0}:TaylorT{1}_{2}'.format(i*10+n,n,str(N(i/2, 2)).replace('.','p')) for i in range(1+2*int(HighestOrder))])
+    f.write("""
+class PNEv:
+    def Integrand(t,y):
+        PNEv.Recalculate.get(2*PNEv.PNEvolutionOrder)(PNEv.Cons,PNEv.Vars,y)
+        dydt=PNEv.Taylor.get(PNEv.TaylorTn+20*PNEv.PNEvolutionOrder)(PNEv.Cons,PNEv.Vars)
+        if PNEv.Vars.v>=1.0 and PNEv.NotBackward:
+        #    print("Beyond domain of PN validity, this is a good way to terminate.")
+            PNEv.terminal1=False
+        if y[0]>=PNEv.v_end or y[0]<=PNEv.v_start:
+        #    print("Integration finished.")
+            PNEv.terminal1=False
+        #if dydt[0]<1.0e-12 and PNEv.NotBackward:
+        #    print("v is decreasing, which is not an uncommon way to stop.")
+        #    PNEv.terminal2=False
+        return dydt
+        
+    def Evolution(wHat_i, xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, R_i,
+        omega_start=None, omega_end=None, t_PNStart=False, t_PNEnd=False, PNEvolutionOrder=3.5, TaylorTn=1, StepsPerOrbit=32, dt=None, tol=1e-8, MinStep=1e-7): 
+        # Initialization of constants
+        PNEv.terminal1=True
+        PNEv.terminal2=True
+        PNEv.NotBackward=True
+        PNEv.PNEvolutionOrder=PNEvolutionOrder
+        PNEv.TaylorTn=TaylorTn
+        PNEv.Recalculate={{{ReCal}}}
+        PNEv.Taylor={{{Ty}}}
+        if omega_start is None:
+            omega_start=0.0
+        if omega_end is None:
+            omega_end=1.0/(M1_i+M2_i)
+        PNEv.v_start=(omega_start*(M1_i+M2_i))**(1/3)
+        PNEv.v_end=(omega_end*(M1_i+M2_i))**(1/3)
+        z=np.array([0.0])
+        kappa = 1.0
+        PNEv.Cons=Cons({ConsInput},True,True)
+        PNEv.Vars=Vars({VarsInput})
+        Initialization(PNEv.Cons, wHat_i, xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, kappa, kappa, kappa, kappa)
+    
+        def terminate(t,y):
+            return 1.0*PNEv.terminal1*PNEv.terminal2
+        terminate.terminal=True
+        TMerger=5.0/(256.0*PNEv.Cons.nu*v_i**8)
+        TEnd=TMerger
+        if t_PNEnd:
+            TEnd=t_PNEnd
+        time=[0.0]
+        if dt is None:
+            while time[-1]<TEnd and 2*PNEv.Cons.M*(256*PNEv.Cons.nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit>MinStep:
+                time.append(time[-1]+(2*PNEv.Cons.M*(256*PNEv.Cons.nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit)[0])
+        else:
+            while time[-1]<TEnd:
+                time.append(time[-1]+dt)
+        time=np.delete(time, -1)
+       
+        # Integrate
+        R_components = np.asarray(R_i, dtype=float)
+        initial_state = [v_i, 0.0, 0.0, 0.0, 0.0, *R_components]
+        try:
+            yy=solve_ivp(PNEv.Integrand, [time[0],time[-1]], initial_state, method='DOP853',
+                t_eval=time, dense_output=True, events=terminate, rtol=tol, atol=tol)
+        except:
+            PNEv.terminal1=True
+            PNEv.terminal2=True
+            yy=solve_ivp(PNEv.Integrand, [time[0],time[-1]], initial_state, method='DOP853',
+                events=terminate, rtol=tol, atol=tol)
+            PNEv.terminal1=True
+            PNEv.terminal2=True
+            time=time[time<yy.t[-1]]
+            yy=solve_ivp(PNEv.Integrand, [time[0],time[-1]], initial_state, method='DOP853',
+                t_eval=time, dense_output=True, events=terminate, rtol=tol, atol=tol)
+        if omega_start!=0.0 or t_PNStart:
+            PNEv.terminal1=True
+            PNEv.terminal2=True
+            PNEv.NotBackward=False
+            time=[0.0]
+            TStart=-3*TMerger
+            if t_PNStart:
+                TStart=t_PNStart
+            if omega_start!=0.0:
+                TStart=TMerger-10.0/(256*PNEv.Cons.nu)*(np.pi/(omega_start*PNEv.Cons.M))**(8/3)
+            if dt is None:
+                while time[-1]>TStart:
+                    time.append(time[-1]-(2*PNEv.Cons.M*(256*PNEv.Cons.nu*(TMerger-time[-1])/5)**(3/8)/StepsPerOrbit)[0])
+            else:
+                while time[-1]>TStart:
+                    time.append(time[-1]-dt)
+            time=np.array(time)
+            try:
+                yyForward=solve_ivp(PNEv.Integrand, [time[0],time[-1]], initial_state, method='DOP853',
+                    t_eval=time, dense_output=True, events=terminate, rtol=tol, atol=tol)
+            except:
+                PNEv.terminal1=True
+                PNEv.terminal2=True
+                yyForward=solve_ivp(PNEv.Integrand, [time[0],time[-1]], initial_state, method='DOP853',
+                    events=terminate, rtol=tol, atol=tol)
+                PNEv.terminal1=True
+                PNEv.terminal2=True
+                time=time[time>yyForward.t[-1]]
+                yyForward=solve_ivp(PNEv.Integrand, [time[0],time[-1]], initial_state, method='DOP853',
+                    t_eval=time, dense_output=True, events=terminate, rtol=tol, atol=tol)
+            yy.t=np.append(yyForward.t[1:][::-1],yy.t)
+            data=np.empty((9,len(yy.t)))
+            for i in range(9):
+                data[i]=np.append(yyForward.y[i][1:][::-1],yy.y[i])
+            yy.y=data
+             
+        return yy
+
+    def energy_flux(y,wHat_i, xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, R_i,
+        omega_start=None, omega_end=None, t_PNStart=False, t_PNEnd=False, PNEvolutionOrder=3.5, TaylorTn=1, StepsPerOrbit=32, dt=None, tol=1e-8, MinStep=1e-7): 
+        # Initialization of constants
+        PNEv.terminal1=True
+        PNEv.terminal2=True
+        PNEv.NotBackward=True
+        PNEv.PNEvolutionOrder=PNEvolutionOrder
+        PNEv.TaylorTn=TaylorTn
+        PNEv.Recalculate={{{ReCal}}}
+        PNEv.Taylor={{{Ty}}}
+        PNEv.energyflux={{{energy_flux}}}
+        if omega_start is None:
+            omega_start=0.0
+        if omega_end is None:
+            omega_end=1.0/(M1_i+M2_i)
+        PNEv.v_start=(omega_start*(M1_i+M2_i))**(1/3)
+        PNEv.v_end=(omega_end*(M1_i+M2_i))**(1/3)
+        z=np.array([0.0])
+        kappa = 1.0
+        PNEv.Cons=Cons({ConsInput},True,True)
+        PNEv.Vars=Vars({VarsInput})
+        Initialization(PNEv.Cons, wHat_i, xHat_i, yHat_i, zHat_i, M1_i, M2_i, v_i, S_chi1_i, S_chi2_i, kappa, kappa, kappa, kappa)
+       
+        # Get ebergy flux
+        flux = np.zeros((len(y[0])))
+        for i in range(len(y[0])):
+            PNEv.Recalculate.get(2*PNEvolutionOrder)(PNEv.Cons,PNEv.Vars,y[:,i])
+            flux[i] = PNEv.energyflux.get(2*PNEvolutionOrder)(PNEv.Cons,PNEv.Vars)
+             
+        return flux
+""".format(ConsInput=','.join(['z' for i in range(lenCons)]),
+           VarsInput=','.join(['z' for i in range(lenVars)]),
+           InputArguments=CodeConstructor.CppInputArguments(11),
+           ReCal=',\n'.join(['            {0}:Recalculate_{1}'.format(i,str(N(i/2, 2)).replace('.','p')) for i in range(1+2*int(HighestOrder))]),
+           Ty=Ty,
+           energy_flux=',\n'.join(['            {0}:energy_flux_{1}'.format(i,str(N(i/2, 2)).replace('.','p')) for i in range(1+2*int(HighestOrder))]),
+           PNOrbitalEvolutionOrderString=PNOrbitalEvolutionOrderString))  
+
+
+        
+        
+        

@@ -772,10 +772,15 @@ def Hybridize(
     provenance_recorder=None,
     fixed_intrinsic_parameters=None,
     fixed_omega_i=None,
+    pn_evolution_order=None,
+    pn_waveform_mode_order=None,
 ):
     """
     Align and hybridize given NR waveform with PN waveform.
     """
+
+    pn_evolution_order = pn_order if pn_evolution_order is None else pn_evolution_order
+    pn_waveform_mode_order = pn_order if pn_waveform_mode_order is None else pn_waveform_mode_order
 
     # Get NR waveform
     if WaveformType == 'cce':
@@ -799,8 +804,8 @@ def Hybridize(
                 bms_align_nprocs=bms_align_nprocs,
                 bms_bruteforce_dt=bms_bruteforce_dt,
                 bms_bruteforce_phi=bms_bruteforce_phi,
-                pn_evolution_order=pn_order,
-                pn_waveform_mode_order=pn_order,
+                pn_evolution_order=pn_evolution_order,
+                pn_waveform_mode_order=pn_waveform_mode_order,
                 provenance_recorder=provenance_recorder,
             )
             #PN.rotate(trans)
@@ -850,7 +855,7 @@ def Hybridize(
                 initial_opt_parameters=np.asarray(PN.OptParas),
                 initial_physical_parameters=np.asarray(PN.PhyParas),
             )
-        minima, W_PN, chiA, chiB = Align(PN, hyb, pn_evolution_order=pn_order, pn_waveform_mode_order=pn_order)
+        minima, W_PN, chiA, chiB = Align(PN, hyb, pn_evolution_order=pn_evolution_order, pn_waveform_mode_order=pn_waveform_mode_order)
         logR_delta = np.append(minima.x[0], minima.x[1:] + hyb.omega_mean*minima.x[0]/2)
         if len(PN.PhyParas) == 12:
             PN.PhyParas[8:] = logR_delta
@@ -871,10 +876,10 @@ def Hybridize(
             xtol=3e-15,
             gtol=1e-8,
             x_scale='jac',
-            args=(PN, hyb, pn_order, pn_order),
+            args=(PN, hyb, pn_evolution_order, pn_waveform_mode_order),
         )
         print('Optimization time used:',time.time()-temp)
-        minima12D.jac = approx_fprime(minima12D.x, Optimize12D, np.full_like(minima12D.x, 1.49e-8), PN, hyb, pn_order, pn_order)
+        minima12D.jac = approx_fprime(minima12D.x, Optimize12D, np.full_like(minima12D.x, 1.49e-8), PN, hyb, pn_evolution_order, pn_waveform_mode_order)
         if minima12D.success == False:
             print("12-D Optimization doesn't converge.")
 
@@ -891,9 +896,9 @@ def Hybridize(
     # Get aligned NR and PN waveforms
     hyb.t_PNStart, hyb.t_PNEnd = -90000, 1000 - hyb.t_start
     if cce_dir2 != None:
-        minima, W_PN, chiA, chiB = Align(PN, hyb, W_NR2, pn_evolution_order=pn_order, pn_waveform_mode_order=pn_order)
+        minima, W_PN, chiA, chiB = Align(PN, hyb, W_NR2, pn_evolution_order=pn_evolution_order, pn_waveform_mode_order=pn_waveform_mode_order)
     else:
-        minima, W_PN, chiA, chiB = Align(PN, hyb, pn_evolution_order=pn_order, pn_waveform_mode_order=pn_order)
+        minima, W_PN, chiA, chiB = Align(PN, hyb, pn_evolution_order=pn_evolution_order, pn_waveform_mode_order=pn_waveform_mode_order)
 
     t_delta = minima.x[0]
     logR_delta = np.append(0.0, minima.x[1:] + hyb.omega_mean*minima.x[0]/2)
@@ -1001,6 +1006,8 @@ def build_arg_parser():
     parser.add_argument('--BMSBruteForceDt', type=int, default=1000, help='Number of time-shift samples in the BMS 2D brute-force alignment')
     parser.add_argument('--BMSBruteForcePhi', type=int, default=20, help='Number of phase samples in the BMS 2D brute-force alignment')
     parser.add_argument('--PNOrder', type=float, default=6.0, help='PN truncation order used for both orbital evolution and waveform modes')
+    parser.add_argument('--PNEvolutionOrder', type=float, default=None, help='Override evolution order, up to 22 with Schwarzschild supplementation')
+    parser.add_argument('--PNWaveformModeOrder', type=float, default=None, help='Override waveform-mode order independently (0 through 6)')
     parser.add_argument('--RecordBMSProvenance', action='store_true', help='Enable default-off diagnostic BMS provenance recording')
     parser.add_argument('--BMSProvenanceDir', default=None, help='Diagnostic output directory used only with --RecordBMSProvenance')
     parser.add_argument('--BMSProvenanceLabel', default='bms_framefix_diagnostic', help='Run label stored in the diagnostic provenance ledger')
@@ -1025,6 +1032,8 @@ def run(args):
     bms_bruteforce_dt = args.BMSBruteForceDt
     bms_bruteforce_phi = args.BMSBruteForcePhi
     pn_order = args.PNOrder
+    pn_evolution_order = getattr(args, "PNEvolutionOrder", None)
+    pn_waveform_mode_order = getattr(args, "PNWaveformModeOrder", None)
     provenance_recorder = None
     fixed_parameter_config = None
     fixed_intrinsic_parameters = None
@@ -1127,6 +1136,8 @@ def run(args):
             bms_bruteforce_dt=bms_bruteforce_dt,
             bms_bruteforce_phi=bms_bruteforce_phi,
             pn_order=pn_order,
+            pn_evolution_order=pn_evolution_order,
+            pn_waveform_mode_order=pn_waveform_mode_order,
             provenance_recorder=provenance_recorder,
             fixed_intrinsic_parameters=fixed_intrinsic_parameters,
             fixed_omega_i=fixed_omega_i,

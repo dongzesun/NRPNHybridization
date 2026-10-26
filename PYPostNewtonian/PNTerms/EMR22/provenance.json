@@ -1,0 +1,6 @@
+{
+  "reference": "https://arxiv.org/abs/1211.5535",
+  "archive_sha256": "dd950526fe0398885cbfac3a64006708eb0fcd7a9b4cb3555ce7a88d7a1f1b83",
+  "flux_sha256": "59d17c26edc40000c6a4e5f08dc16c44a25ab31e975cba2342c4b7795cf6cbbf",
+  "normalization": "F_N = (32/5) nu^2 v^10; source is the dimensionless normalized series"
+}

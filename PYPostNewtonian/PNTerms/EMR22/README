@@ -1,0 +1,98 @@
+=================================
+ 22PN data files for Mathematica 
+=================================
+
+This directory holds the supplementary data files for Ref.[1], in which 
+gravitational waves radiated from a particle of mass mu in circular 
+orbits around a Schwarzschild black hole of mass M to the 22nd 
+post-Newtonian (PN) order have been derived. It has been checked that 
+the data files can be used in Mathematica 8.0. 
+To use data files, it is recommended to follow "Usage" below in order to 
+suppress large expressions of the PN expansions.
+
+Files
+-----
+
+The following data files contain the PN expressions for the total energy 
+flux to infinity, the modal energy flux and the waveforms as a function of 
+v=(M/r_0)^(1/2) where r_0 is the orbital radius of the particle. 
+The expressions also contain the mathematical constant Pi=3.14159..., 
+the Euler's constant EulerGamma=0.57721... and the Zeta function Zeta[n], 
+where n is the positive integer.
+
+* dEdt_inf_22PN.nb  
+
+  This Mathematica file contains the 22PN expression for the gravitational wave 
+energy flux to infinity dEdt8, which is normalized by the quadrupole formula 
+(32/5)*(\mu/M)*v^(10). One can compare dEdt8 with the 5.5PN expression 
+in Ref.[2]. 
+
+* etalm_22PN.nb  
+
+  This Mathematica file contains the 22PN expressions for the modal energy flux 
+eta[l,m], which are normalized by the quadrupole formula, where 2<=l<=24 
+and 1<=m<=l. One can compare eta[l,m] with the 5.5PN expressions in Ref.[2]. 
+
+* rholm_22PN.nb
+
+  This Mathematica file contains the 22PN expressions for the factorized waveforms 
+proposed in Ref.[3]. One will find the amplitude rho[l,m] and the phase 
+delta[l,m] of the waveforms, where 2<=l<=46 and 1<=m<=l, in this file. 
+One can compare rho[l,m] and delta[l,m] with the 5.5PN expressions in Ref.[4]. 
+
+Usage
+-----
+
+* dEdt_inf_22PN.nb  
+
+  To use the data in the file "dEdt_inf_22PN.nb", type the commands 
+in a new Mathematica session as:
+
+  << "dEdt_inf_22PN.nb";
+  Series[dEdt8,{v,0,4}]
+                  2                    4
+            1247 v          3   44711 v        5
+        1 - ------- + 4 Pi v  - -------- + O[v]
+              336                 9072
+
+* etalm_22PN.nb
+
+  To use the data in the file "etalm_22PN.nb", type the commands 
+in a new Mathematica session as:
+
+  << "etalm_22PN.nb";
+  Series[eta[2,2],{v,0,4}]
+                 2                   4
+            107 v          3   4784 v        5
+        1 - ------ + 4 Pi v  + ------- + O[v]
+              21                1323
+
+* rholm_22PN.nb
+
+  To use the data in the file "rholm_22PN.nb", type the commands 
+in a new Mathematica session as:
+
+  << "rholm_22PN.nb";
+  Series[rho[2,2],{v,0,4}]
+                2          4
+            43 v    20555 v        5
+        1 - ----- - -------- + O[v]
+             42      10584
+
+  Series[delta[2,2],{v,0,4}]
+           3
+        7 v        5
+        ---- + O[v]
+         3
+
+References
+----------
+
+[1] R. Fujita, Prog. Theor. Phys. 128 (2012), 971.
+
+[2] T. Tanaka, H. Tagoshi and M. Sasaki, Prog. Theor. Phys. 96 (1996), 1087. 
+
+[3] T. Damour, B. R. Iyer and A. Nagar, Phys. Rev. D 79 (2009), 064004.  
+
+[4] R. Fujita and B. R. Iyer, Phys. Rev. D 82 (2010), 044051. 
+

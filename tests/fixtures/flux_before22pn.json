@@ -1,0 +1,16 @@
+{
+  "source_sha256": "5a85d0916e8fa6a0a9a9d8341498b81a560d238be8959800289bbceabc23414d",
+  "q": 3.0,
+  "omega": 0.01,
+  "chi1": [
+    4e-06,
+    0,
+    1e-05
+  ],
+  "chi2": [
+    0,
+    4e-06,
+    6e-06
+  ],
+  "description": "Computed using the saved pre-extension public API and unchanged generated runtime."
+}
