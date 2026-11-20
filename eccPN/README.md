@@ -168,7 +168,7 @@ under angular refinement for boosts and angle-dependent time shifts.
 6. Blanchet et al. (2023). Gravitational-wave flux and quadrupole modes at 4PN. Sec. II gives the radiative quadrupole and Sec. VI A the general-orbit luminosity. [arXiv:2304.11186](https://arxiv.org/abs/2304.11186v4)
 7. Favata (2009). Post-Newtonian corrections to gravitational-wave memory. Eqs. (2.26) and (2.31) relate angular energy flux to displacement memory. [arXiv:0812.0069](https://arxiv.org/abs/0812.0069v2)
 
-<details>
+<details open>
 <summary>Where each term comes from, including coefficients derived for eccPN</summary>
 
 ### Orbit and initial state
