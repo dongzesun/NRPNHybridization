@@ -55,7 +55,7 @@ within tolerance, it saves the source as a polynomial on each accepted half
 step. Later tail integrals use those polynomials. For a physical incoming
 orbit the code integrates over the distant past by parts.
 
-## What reaches the observer
+## Extracting the waveforms
 
 At leading order the strain follows the second time derivative of $Q_{ij}$.
 The code computes higher mass and current multipoles, adds the propagation
