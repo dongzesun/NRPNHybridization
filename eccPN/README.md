@@ -23,7 +23,7 @@ momentum [3]. Three additional 5PN terms describe the failed tail, orbital
 memory and radiation reaction squared. Their starting expressions come
 from [4]. We transform them to the same coordinates and time as the orbit.
 
-## Choosing the initial state and its past
+## Choosing the initial state and past history
 
 Earlier waves scatter off the binary's gravity and act back on the orbit.
 This *tail* contributes a history integral to the 4PN acceleration [1]
