@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "eccpn"
+version = "0.1.0"
+description = "Direct unaveraged post-Newtonian binary dynamics and radiation"
+requires-python = ">=3.10"
+dependencies = ["numpy", "scipy"]
+
+[tool.setuptools.package-data]
+eccpn = ["generated/*.npz"]

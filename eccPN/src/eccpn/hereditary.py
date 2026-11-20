@@ -1,0 +1,224 @@
+"""Adaptive causal integration for a state coupled to a retarded source."""
+
+from dataclasses import asdict, dataclass
+import json
+from pathlib import Path
+
+import numpy as np
+
+from .compressed_history import CompressedPanelHistory
+from .history import PanelHistory, SourcePanel
+from .conventions import Binary
+from .incoming import IncomingOrbit, IncomingQuadrupole, ParabolicQuadrupole, SampledIncomingTail
+from .tail_parts import PartsIncomingTail
+from .tails import PrimitiveIncomingTail
+
+
+# Three-node Lobatto IIIA integration matrix. The stage derivative is quadratic.
+_LOBATTO = np.array([[0, 0, 0], [5 / 24, 1 / 3, -1 / 24], [1 / 6, 2 / 3, 1 / 6]])
+_NODES = np.array([0, 0.5, 1])
+
+
+def _interpolate(values):
+    first, middle, last = values
+    return np.stack((first, 4 * middle - 3 * first - last, 2 * (first - 2 * middle + last)))
+
+
+def _collocate(rhs, source, start, stop, initial, history, rtol, atol, interpolate_source):
+    width = stop - start
+    times = start + width * _NODES
+    times[-1] = stop
+    first_rate = rhs(start, initial, history, None)
+    stages = initial + (times - start)[:, None] * first_rate
+    for _ in range(16):
+        panel = SourcePanel(start, stop, interpolate_source(source, stages, width))
+        rates = np.stack((first_rate, *(
+            rhs(time, state, history, panel) for time, state in zip(times[1:], stages[1:])
+        )))
+        updated = initial + width * (_LOBATTO @ rates)
+        scale = atol + rtol * np.maximum(np.abs(updated), np.abs(stages))
+        if np.max(np.abs(updated - stages) / scale) <= 0.03:
+            constant, linear, quadratic = _interpolate(rates)
+            dense = np.stack((initial, width * constant, width * linear / 2, width * quadratic / 3))
+            source_panel = SourcePanel(start, stop, interpolate_source(source, updated, width))
+            return updated[-1], source_panel, dense
+        stages = updated
+    return None
+
+
+@dataclass(frozen=True)
+class AcceptedHistory:
+    """Last accepted state and its history, sufficient to continue integration."""
+
+    state: np.ndarray
+    history: PanelHistory | CompressedPanelHistory
+    next_step: float
+    configuration: str | None = None
+    canonical_history: object = None
+
+    def save(self, path):
+        """Store numeric state and committed source panels in a versioned file."""
+        record = {
+            "format": "eccpn.accepted-history.v1",
+            "state": self.state.tolist(),
+            "next_step": self.next_step,
+            "start": self.history.start,
+            "source_shape": self.history.source_shape,
+            "identity": self.history.identity,
+            "configuration": self.configuration,
+            "compressed": isinstance(self.history,CompressedPanelHistory),
+            "panels": [
+                [panel.start, panel.end, panel.coefficients.tolist()]
+                for panel in self.history.panels
+            ],
+        }
+        incoming = self.history.incoming
+        if isinstance(incoming,PrimitiveIncomingTail):
+            record["primitive_incoming"] = {
+                "orbit":asdict(incoming.orbit),"binary":asdict(incoming.binary),
+                "type":type(incoming.orbit).__name__,"nodes":incoming.nodes,
+            }
+            incoming = incoming.base
+        elif isinstance(incoming,PartsIncomingTail):
+            record["parts_incoming"] = {
+                "orbit":asdict(incoming.orbit),"binary":asdict(incoming.binary),
+                "type":type(incoming.orbit).__name__,
+            }
+            incoming = incoming.base
+        if isinstance(incoming, ParabolicQuadrupole):
+            record["parabolic"] = [incoming.cutoff, incoming.time_origin, incoming.tensor.tolist()]
+        elif isinstance(incoming,SampledIncomingTail):
+            record["sampled_incoming"] = {
+                "orbit": asdict(incoming.orbit), "binary": asdict(incoming.binary), "nodes": incoming.nodes,
+            }
+        elif incoming is not None:
+            correction = None if incoming.subleading is None else incoming.subleading.tolist()
+            record["incoming"] = [
+                incoming.cutoff, incoming.time_origin, incoming.tensor.tolist(), correction, incoming.log_reference,
+            ]
+        if self.canonical_history is not None:
+            record["canonical"] = self.canonical_history.to_record()
+        with Path(path).open("x", encoding="utf-8") as stream:
+            json.dump(record, stream, allow_nan=False)
+
+    @classmethod
+    def load(cls, path, *, identity):
+        """Resume only a checkpoint with the caller's expected problem identity."""
+        with Path(path).open(encoding="utf-8") as stream:
+            record = json.load(stream)
+        if record["format"] != "eccpn.accepted-history.v1" or record["identity"] != identity:
+            raise ValueError("The checkpoint format or problem identity does not match.")
+        incoming = record.get("incoming")
+        parabolic = record.get("parabolic")
+        sampled = record.get("sampled_incoming")
+        if sum(item is not None for item in (incoming,parabolic,sampled)) > 1:
+            raise ValueError("A checkpoint can contain only one incoming model.")
+        if incoming is not None:
+            remote = IncomingQuadrupole(*incoming)
+        elif parabolic is not None:
+            remote = ParabolicQuadrupole(*parabolic)
+        elif sampled is not None:
+            remote = SampledIncomingTail(IncomingOrbit(**sampled["orbit"]), Binary(**sampled["binary"]),
+                                         sampled["nodes"])
+        else:
+            remote = None
+        if "primitive_incoming" in record or "parts_incoming" in record:
+            from .incoming import ParabolicOrbit
+
+            primitive = record.get("primitive_incoming",record.get("parts_incoming"))
+            types = {"IncomingOrbit":IncomingOrbit,"ParabolicOrbit":ParabolicOrbit}
+            orbit = types[primitive["type"]](**primitive["orbit"])
+            binary = Binary(**primitive["binary"])
+            remote = (PartsIncomingTail(remote,orbit,binary) if "parts_incoming" in record
+                      else PrimitiveIncomingTail(remote,orbit,binary,primitive["nodes"]))
+        history = PanelHistory(
+            record["start"], tuple(record["source_shape"]), identity,
+            tuple(SourcePanel(*entry) for entry in record["panels"]),
+            remote,
+        )
+        if record.get("compressed",False):
+            history = CompressedPanelHistory.from_history(history)
+        canonical = None
+        if "canonical" in record:
+            from .waveform_history import CanonicalHistory
+
+            canonical = CanonicalHistory.from_record(record["canonical"])
+            quadrupole = canonical.moments["M2"][0]
+            if quadrupole.start != history.start or quadrupole.end != history.end:
+                raise ValueError("Saved wave and force histories must share their first and last cuts.")
+        return cls(
+            np.array(record["state"], dtype=float), history, float(record["next_step"]),
+            record.get("configuration"), canonical,
+        )
+
+
+@dataclass(frozen=True)
+class HereditarySolution:
+    checkpoint: AcceptedHistory
+    boundaries: np.ndarray
+    dense: np.ndarray
+    rejected_steps: int
+
+    def __call__(self, times):
+        times = np.atleast_1d(times)
+        if not (np.isfinite(times) & (times >= self.boundaries[0]) & (times <= self.boundaries[-1])).all():
+            raise ValueError("Evaluation times must be covered by these accepted steps.")
+        indices = np.clip(np.searchsorted(self.boundaries, times, side="right") - 1, 0, len(self.dense) - 1)
+        coordinate = ((times - self.boundaries[indices])
+                      / (self.boundaries[indices + 1] - self.boundaries[indices]))
+        values = self.dense[indices]
+        coordinate = coordinate[:, None]
+        return (values[:, 0] + coordinate * (
+            values[:, 1] + coordinate * (values[:, 2] + coordinate * values[:, 3])
+        )).T
+
+
+def _pointwise_source(source, stages, width):
+    return _interpolate([source(state) for state in stages])
+
+
+def integrate_hereditary(rhs, source, checkpoint, stop, rtol, atol, max_step, *, max_steps=100000,
+                         interpolate_source=_pointwise_source):
+    """Advance with step doubling, committing the two fine source panels on acceptance."""
+    history = checkpoint.history
+    state = np.asarray(checkpoint.state, dtype=float)
+    current = history.end
+    step = min(checkpoint.next_step, max_step)
+    if (state.ndim != 1 or not state.size or not np.isfinite(state).all()
+            or not np.isfinite(stop) or stop <= current
+            or not np.isfinite([rtol, atol, step]).all() or min(rtol, atol, step) <= 0):
+        raise ValueError("An advance requires a finite state, later stop and positive finite initial step and tolerances.")
+    boundaries = [current]
+    dense_steps = []
+    rejected = 0
+    for _ in range(max_steps):
+        end = min(stop, current + step)
+        middle = current + (end - current) / 2
+        if not current < middle < end:
+            raise RuntimeError("Hereditary integration step underflow.")
+        coarse = _collocate(rhs, source, current, end, state, history, rtol, atol, interpolate_source)
+        left = _collocate(rhs, source, current, middle, state, history, rtol, atol, interpolate_source)
+        right = None if left is None else _collocate(
+            rhs, source, middle, end, left[0], history.append(left[1]), rtol, atol, interpolate_source,
+        )
+        if coarse is None or right is None:
+            step /= 2
+            rejected += 1
+            continue
+        error = np.max(np.abs(right[0] - coarse[0]) / (atol + rtol * np.maximum(np.abs(state), np.abs(right[0]))))
+        if error > 1:
+            step /= 2
+            rejected += 1
+            continue
+        state = right[0]
+        history = history.append(left[1], right[1])
+        dense_steps.extend((left[2], right[2]))
+        boundaries.extend((middle, end))
+        current = end
+        step = min(max_step, (end - boundaries[-3]) * (2 if error < 0.04 else 1))
+        if current == stop:
+            return HereditarySolution(
+                AcceptedHistory(state, history, step, checkpoint.configuration),
+                np.array(boundaries), np.array(dense_steps), rejected,
+            )
+    raise RuntimeError("Hereditary integration exceeded its step limit.")
