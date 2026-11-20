@@ -1,7 +1,10 @@
 """Adaptive causal integration for a state coupled to a retarded source."""
 
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
+from hashlib import sha256
 import json
+import os
+from tempfile import NamedTemporaryFile
 from pathlib import Path
 
 import numpy as np
@@ -9,7 +12,8 @@ import numpy as np
 from .compressed_history import CompressedPanelHistory
 from .history import PanelHistory, SourcePanel
 from .conventions import Binary
-from .incoming import IncomingOrbit, IncomingQuadrupole, ParabolicQuadrupole, SampledIncomingTail
+from .incoming import (IncomingOrbit, IncomingQuadrupole, ParabolicOrbit, ParabolicQuadrupole,
+                       SampledIncomingTail, incoming_identity, incoming_parameters)
 from .tail_parts import PartsIncomingTail
 from .tails import PrimitiveIncomingTail
 
@@ -46,6 +50,16 @@ def _collocate(rhs, source, start, stop, initial, history, rtol, atol, interpola
     return None
 
 
+def _incoming_record_digest(record):
+    """Bind the saved force and waveform prefix parameters, including their quadrature grids."""
+    keys = ("physical_incoming", "incoming", "parabolic", "sampled_incoming",
+            "parts_incoming", "primitive_incoming")
+    metadata = {key: record[key] for key in keys if key in record}
+    metadata["waveform"] = record.get("canonical", {}).get("incoming")
+    data = json.dumps(metadata, sort_keys=True, separators=(",", ":"), allow_nan=False)
+    return sha256(data.encode("utf-8")).hexdigest()
+
+
 @dataclass(frozen=True)
 class AcceptedHistory:
     """Last accepted state and its history, sufficient to continue integration."""
@@ -59,7 +73,7 @@ class AcceptedHistory:
     def save(self, path):
         """Store numeric state and committed source panels in a versioned file."""
         record = {
-            "format": "eccpn.accepted-history.v1",
+            "format": "eccpn.accepted-history.v2",
             "state": self.state.tolist(),
             "next_step": self.next_step,
             "start": self.history.start,
@@ -73,23 +87,19 @@ class AcceptedHistory:
             ],
         }
         incoming = self.history.incoming
+        if getattr(incoming, "orbit", None) is not None:
+            record["physical_incoming"] = incoming_parameters(incoming.binary, incoming.orbit)
         if isinstance(incoming,PrimitiveIncomingTail):
-            record["primitive_incoming"] = {
-                "orbit":asdict(incoming.orbit),"binary":asdict(incoming.binary),
-                "type":type(incoming.orbit).__name__,"nodes":incoming.nodes,
-            }
+            record["primitive_incoming"] = dict(record["physical_incoming"], nodes=incoming.nodes)
             incoming = incoming.base
         elif isinstance(incoming,PartsIncomingTail):
-            record["parts_incoming"] = {
-                "orbit":asdict(incoming.orbit),"binary":asdict(incoming.binary),
-                "type":type(incoming.orbit).__name__,
-            }
+            record["parts_incoming"] = record["physical_incoming"]
             incoming = incoming.base
         if isinstance(incoming, ParabolicQuadrupole):
             record["parabolic"] = [incoming.cutoff, incoming.time_origin, incoming.tensor.tolist()]
         elif isinstance(incoming,SampledIncomingTail):
             record["sampled_incoming"] = {
-                "orbit": asdict(incoming.orbit), "binary": asdict(incoming.binary), "nodes": incoming.nodes,
+                **incoming_parameters(incoming.binary, incoming.orbit), "nodes": incoming.nodes,
             }
         elif incoming is not None:
             correction = None if incoming.subleading is None else incoming.subleading.tolist()
@@ -98,16 +108,31 @@ class AcceptedHistory:
             ]
         if self.canonical_history is not None:
             record["canonical"] = self.canonical_history.to_record()
-        with Path(path).open("x", encoding="utf-8") as stream:
+        if "physical_incoming" in record:
+            record["incoming_parameters_sha256"] = _incoming_record_digest(record)
+        # Publish only a complete serialization. link() retains the exclusive
+        # create contract if another writer claims this destination first.
+        with NamedTemporaryFile(mode="w", dir=Path(path).parent, encoding="utf-8") as stream:
             json.dump(record, stream, allow_nan=False)
+            stream.flush()
+            os.link(stream.name, path)
 
     @classmethod
     def load(cls, path, *, identity):
         """Resume only a checkpoint with the caller's expected problem identity."""
         with Path(path).open(encoding="utf-8") as stream:
             record = json.load(stream)
-        if record["format"] != "eccpn.accepted-history.v1" or record["identity"] != identity:
+        physical = record.get("physical_incoming")
+        has_remote = any(key in record for key in ("incoming", "parabolic", "sampled_incoming"))
+        if physical is None and (record["identity"].startswith("eccpn.incoming.v1:") or
+                                 (has_remote and record["format"] == "eccpn.accepted-history.v1")):
+            raise ValueError("Checkpoint lacks verified incoming parameters. Replay with its original version "
+                             "or recompute from the physical inputs.")
+        if record["format"] not in ("eccpn.accepted-history.v1", "eccpn.accepted-history.v2") or record["identity"] != identity:
             raise ValueError("The checkpoint format or problem identity does not match.")
+        if (physical is not None and record["format"] == "eccpn.accepted-history.v2"
+                and record.get("incoming_parameters_sha256") != _incoming_record_digest(record)):
+            raise ValueError("The saved incoming force or waveform parameters failed their checksum.")
         incoming = record.get("incoming")
         parabolic = record.get("parabolic")
         sampled = record.get("sampled_incoming")
@@ -122,13 +147,34 @@ class AcceptedHistory:
                                          sampled["nodes"])
         else:
             remote = None
+        if physical is not None:
+            types = {"IncomingOrbit": IncomingOrbit, "ParabolicOrbit": ParabolicOrbit}
+            binary = Binary(**physical["binary"])
+            if physical["type"] not in types:
+                raise ValueError("The checkpoint has an unknown incoming orbit type.")
+            orbit = types[physical["type"]](**physical["orbit"])
+            if incoming_identity(binary, orbit) != identity:
+                raise ValueError("The checkpoint incoming parameters do not match its identity.")
+            expected = orbit.force_prefix(binary)
+            if type(expected) is not type(remote):
+                raise ValueError("The saved force prefix does not match the incoming orbit.")
+            if isinstance(remote, SampledIncomingTail):
+                if incoming_identity(remote.binary, remote.orbit) != identity:
+                    raise ValueError("The sampled force orbit does not match the checkpoint identity.")
+            else:
+                fields = ("cutoff", "time_origin", "tensor")
+                if isinstance(remote, IncomingQuadrupole):
+                    fields += ("subleading", "log_reference")
+                if any(not np.array_equal(getattr(remote, key), getattr(expected, key)) for key in fields):
+                    raise ValueError("The saved force coefficients do not match the incoming parameters.")
+                remote = expected
         if "primitive_incoming" in record or "parts_incoming" in record:
-            from .incoming import ParabolicOrbit
-
             primitive = record.get("primitive_incoming",record.get("parts_incoming"))
             types = {"IncomingOrbit":IncomingOrbit,"ParabolicOrbit":ParabolicOrbit}
             orbit = types[primitive["type"]](**primitive["orbit"])
             binary = Binary(**primitive["binary"])
+            if physical is None or incoming_identity(binary, orbit) != identity:
+                raise ValueError("The saved force orbit does not match the checkpoint identity.")
             remote = (PartsIncomingTail(remote,orbit,binary) if "parts_incoming" in record
                       else PrimitiveIncomingTail(remote,orbit,binary,primitive["nodes"]))
         history = PanelHistory(
@@ -143,6 +189,21 @@ class AcceptedHistory:
             from .waveform_history import CanonicalHistory
 
             canonical = CanonicalHistory.from_record(record["canonical"])
+            wave = canonical.incoming
+            if (wave is None) != (physical is None) or (
+                wave is not None and incoming_identity(wave.binary, wave.orbit) != identity
+            ):
+                raise ValueError("The saved waveform orbit does not match the force identity.")
+            if wave is not None:
+                masses, dipoles = wave.orbit.conserved_charges(wave.binary)
+                if (wave.harmonic_scale != canonical.harmonic_scale or
+                        wave.infrared_scale != canonical.infrared_scale or
+                        wave.maximum_grade != canonical.maximum_absolute_grade or
+                        masses != canonical.mass_grades or
+                        any(saved.keys() != dipoles.keys() or
+                            any(not np.array_equal(saved[g], dipoles[g]) for g in dipoles)
+                            for saved in (wave.dipoles, canonical.dipole_grades))):
+                    raise ValueError("The incoming waveform scales, grades or charges differ from the saved history.")
             quadrupole = canonical.moments["M2"][0]
             if quadrupole.start != history.start or quadrupole.end != history.end:
                 raise ValueError("Saved wave and force histories must share their first and last cuts.")
@@ -168,9 +229,11 @@ class HereditarySolution:
                       / (self.boundaries[indices + 1] - self.boundaries[indices]))
         values = self.dense[indices]
         coordinate = coordinate[:, None]
-        return (values[:, 0] + coordinate * (
+        result = values[:, 0] + coordinate * (
             values[:, 1] + coordinate * (values[:, 2] + coordinate * values[:, 3])
-        )).T
+        )
+        result[times == self.checkpoint.history.end] = self.checkpoint.state
+        return result.T
 
 
 def _pointwise_source(source, stages, width):

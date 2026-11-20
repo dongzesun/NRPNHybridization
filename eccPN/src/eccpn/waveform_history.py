@@ -354,7 +354,8 @@ def _project_endpoint(binary, kind, rank, grade, tensors, output):
             coefficients[power] += value
 
 
-def build_retained_memory(binary,canonical_history,radiative_scale,*,log_history=None,max_time=None):
+def build_retained_memory(binary,canonical_history,radiative_scale,*,quadrupole_maximum_grade=8,
+                          log_history=None,max_time=None):
     """Integrate the extra formal grades of the full unaveraged news product."""
     from .memory import memory_rate_polynomials, retained_memory_excess, RetainedMemory, _memory_weights
 
@@ -385,7 +386,7 @@ def build_retained_memory(binary,canonical_history,radiative_scale,*,log_history
         )[1]
 
     snapshots = []
-    total = _incoming_memory_excess(binary, canonical_history, radiative_scale)
+    total = _incoming_memory_excess(binary, canonical_history, radiative_scale, quadrupole_maximum_grade)
     first = sample(0, 0, save_endpoint=True)
     for index, panel in enumerate(accepted):
         middle, last = sample(index, 0.5), sample(index, 1)
@@ -398,7 +399,8 @@ def build_retained_memory(binary,canonical_history,radiative_scale,*,log_history
             else:
                 coefficients = _interpolate((value, middle[key], last[key]))[:, None]
             polynomial[key] = coefficients
-        rates, _ = retained_memory_excess(memory_rate_polynomials(binary, polynomial), {})
+        rates, _ = retained_memory_excess(memory_rate_polynomials(binary, polynomial), {},
+                                          quadrupole_maximum_grade=quadrupole_maximum_grade)
         snapshots.append((panel.start, panel.end, rates, total))
         weights = _memory_weights(panel.start, panel.end, origin, scale, 1)
         total = {key: total.get(key, 0) + np.sum(rate * weights[:, :rate.shape[1]])
@@ -407,7 +409,7 @@ def build_retained_memory(binary,canonical_history,radiative_scale,*,log_history
     return RetainedMemory(tuple(snapshots), origin, scale)
 
 
-def _incoming_memory_excess(binary, history, radiative_scale):
+def _incoming_memory_excess(binary, history, radiative_scale, quadrupole_maximum_grade):
     """Seed the higher formal memory with the same physical source approximation."""
     from .memory import null_memory_news, retained_memory_excess
 
@@ -424,7 +426,8 @@ def _incoming_memory_excess(binary, history, radiative_scale):
             binary, nested, time, position, velocity, radiative_scale, news_only=True,
             sampled_jets=canonical,
         )
-        rates, _ = retained_memory_excess(null_memory_news(binary, news), {})
+        rates, _ = retained_memory_excess(null_memory_news(binary, news), {},
+                                          quadrupole_maximum_grade=quadrupole_maximum_grade)
         for key, value in rates.items():
             _add(accumulated, key, weight*value)
     return accumulated

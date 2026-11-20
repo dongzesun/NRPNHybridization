@@ -1,7 +1,9 @@
 """Incoming hyperbolic phase space and its quadrupole asymptote."""
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from functools import cache, cached_property
+from hashlib import sha256
+import json
 from math import comb, exp, factorial, fsum, log, log1p
 
 import numpy as np
@@ -10,6 +12,32 @@ from scipy.signal import convolve2d
 from scipy.special import polygamma
 
 from .generated import sh_local as conservative
+
+
+def incoming_parameters(binary, orbit):
+    """JSON-safe physical inputs, independent of scalar and vector container type."""
+    return {"type": type(orbit).__name__, "binary": asdict(binary), "orbit": asdict(orbit)}
+
+
+def _normalize_orbit(orbit, vector_names):
+    # Freeze numeric inputs at construction, including mutable NumPy vectors.
+    for name in orbit.__dataclass_fields__:
+        value = getattr(orbit, name)
+        if name in vector_names:
+            value = tuple(float(x) + 0. for x in value)
+        elif name == "asymptotic_order":
+            if int(value) != value:
+                raise ValueError("The incoming asymptotic_order must be an integer.")
+            value = int(value)
+        else:
+            value = float(value) + 0.
+        object.__setattr__(orbit, name, value)
+
+
+def incoming_identity(binary, orbit):
+    payload = json.dumps(incoming_parameters(binary, orbit), sort_keys=True,
+                         separators=(",", ":"), allow_nan=False).encode("ascii")
+    return "eccpn.incoming.v1:" + sha256(payload).hexdigest()
 
 
 def incoming_grid(order,cutoff,origin):
@@ -133,6 +161,13 @@ def remote_log_moment(cutoff, origin, time, source_scale, lag_scale, decay, sour
     return duration**(1 - decay) * value
 
 
+def _is_stf(tensors):
+    # Scale each tensor separately so the roundoff allowance has its physical units.
+    tolerance = 32 * np.finfo(float).eps * np.max(np.abs(tensors), axis=(-2, -1))
+    skew = np.max(np.abs(tensors - tensors.swapaxes(-1, -2)), axis=(-2, -1))
+    return np.all(skew <= tolerance) and np.all(np.abs(np.trace(tensors, axis1=-1, axis2=-2)) <= tolerance)
+
+
 @dataclass(frozen=True)
 class IncomingQuadrupole:
     """Inverse-power and logarithmic asymptote of I^(4), I^(5) and I^(7)."""
@@ -142,13 +177,15 @@ class IncomingQuadrupole:
     tensor: np.ndarray
     subleading: np.ndarray | None = None
     log_reference: float = 1.0
+    orbit: object = None
+    binary: object = None
 
     def __post_init__(self):
         tensor = np.array(self.tensor, dtype=float, copy=True)
         if (not np.isfinite([self.cutoff, self.time_origin]).all() or self.cutoff >= self.time_origin
                 or tensor.shape != (3, 3) or not np.isfinite(tensor).all()):
             raise ValueError("An incoming asymptote requires a finite cutoff, origin and Cartesian STF tensor.")
-        if not np.allclose(tensor, tensor.T) or not np.isclose(np.trace(tensor), 0):
+        if not _is_stf(tensor):
             raise ValueError("The incoming quadrupole must be symmetric and trace-free.")
         tensor.flags.writeable = False
         object.__setattr__(self, "tensor", tensor)
@@ -157,8 +194,7 @@ class IncomingQuadrupole:
         if self.subleading is not None:
             correction = np.array(self.subleading, dtype=float, copy=True)
             if (correction.shape != (3, 2, 3, 3) or not np.isfinite(correction).all()
-                    or not np.allclose(correction, correction.swapaxes(-1, -2))
-                    or not np.allclose(np.trace(correction, axis1=-1, axis2=-2), 0)):
+                    or not _is_stf(correction)):
                 raise ValueError("Supply constant and logarithmic STF coefficients for each incoming derivative.")
             correction.flags.writeable = False
             object.__setattr__(self, "subleading", correction)
@@ -199,6 +235,11 @@ class IncomingQuadrupole:
         return result
 
 
+def _incoming_pn_powers(binary):
+    """Denominators for the Newtonian through 4PN conservative coefficients."""
+    return binary.c ** (2 * np.arange(5))
+
+
 def _incoming_phase_space(
     binary, velocity, impact, duration, log_reference, asymptotic_order, *, include_acceleration=False,
 ):
@@ -207,7 +248,7 @@ def _incoming_phase_space(
     log_time = log(duration / log_reference)
     g = binary.G * binary.mass
     values = np.asarray(conservative.incoming_conservative(speed, binary.nu))
-    values /= binary.c**(2 * np.arange(5))[:, None]
+    values /= _incoming_pn_powers(binary)[:, None]
     radial, projected, derivative_u = values.T
     drift = g / speed**3 * sum(projected)
     position = -duration * velocity - drift * velocity * log_time + impact
@@ -293,7 +334,7 @@ def _remote_correction(binary, velocity, impact):
     transverse = _stf(direction, impact - parallel * direction)
     g = binary.G * binary.mass
     projection = np.asarray(conservative.incoming_conservative(speed, binary.nu))[:, 1]
-    drift = g / speed**3 * np.sum(projection / binary.c**(2 * np.arange(5)))
+    drift = g / speed**3 * np.sum(projection / _incoming_pn_powers(binary))
     coefficients = []
     # At s=-v and u=0, the radial jet coefficient is B*v**(n-2).
     # The next two columns are its potential derivative and the response
@@ -321,12 +362,15 @@ class IncomingOrbit:
     time_origin: float = 0.0
     asymptotic_order: int = 2
 
+    def __post_init__(self):
+        _normalize_orbit(self, ('velocity', 'impact'))
+
     def state_at(self, binary, time, *, include_acceleration=False):
         """Evaluate the chosen SH asymptote in its finite-to-remote domain."""
         if not np.isfinite(time) or time > self.cutoff or not time < self.time_origin:
             raise ValueError("The incoming phase expansion covers finite cuts at and before its join.")
         return _incoming_phase_space(
-            binary, np.asarray(self.velocity), np.asarray(self.impact), self.time_origin-time,
+            binary, np.asarray(self.velocity, dtype=float), np.asarray(self.impact, dtype=float), self.time_origin-time,
             self.log_reference, self.asymptotic_order, include_acceleration=include_acceleration,
         )
 
@@ -342,6 +386,16 @@ class IncomingOrbit:
                 4: 3 * binary.mu * (1 - 3 * binary.nu) * w**2 / 8}
         dipole = binary.mu * np.cross(impact, velocity)
         return mass, {0: dipole, 2: (1 - 3 * binary.nu) * w * dipole / 2}
+
+    def force_prefix(self, binary):
+        if self.asymptotic_order == 3:
+            return SampledIncomingTail(self, binary)
+        velocity = np.asarray(self.velocity, dtype=float)
+        impact = np.asarray(self.impact, dtype=float)
+        leading = IncomingQuadrupole.from_velocity(binary, self.cutoff, velocity, self.time_origin)
+        extra = _remote_correction(binary, velocity, impact) if self.asymptotic_order >= 2 else None
+        return IncomingQuadrupole(self.cutoff, self.time_origin, leading.tensor, extra,
+                                  self.log_reference, self, binary)
 
     def prepare(self, binary):
         """Construct the leading physical inner and outer matching data."""
@@ -360,18 +414,13 @@ class IncomingOrbit:
             raise ValueError("Supply finite, subluminal incoming data with a positive remote duration.")
         g, c, nu = binary.G * binary.mass, binary.c, binary.nu
         position, evolved_velocity = self.state_at(binary, self.cutoff)
-        leading = IncomingQuadrupole.from_velocity(binary, self.cutoff, velocity, self.time_origin)
-        extra = _remote_correction(binary, velocity, impact) if self.asymptotic_order >= 2 else None
-        if self.asymptotic_order == 3:
-            remote = SampledIncomingTail(self,binary)
-        else:
-            remote = IncomingQuadrupole(self.cutoff, self.time_origin, leading.tensor, extra, self.log_reference)
+        remote = self.force_prefix(binary)
         phase_space = np.concatenate((position, evolved_velocity))
         at_cut = quadrupole_tail_sources(binary, phase_space)
         difference = np.linalg.norm(at_cut - remote.at_cutoff(), axis=(-2, -1))
         normalization = np.linalg.norm(remote.at_cutoff(), axis=(-2, -1))
         residual = tuple(difference / normalization)
-        history = PanelHistory(self.cutoff, (3, 3, 3), f"incoming-hyperbolic-order-{self.asymptotic_order}", incoming=remote)
+        history = PanelHistory(self.cutoff, (3, 3, 3), incoming_identity(binary, self), incoming=remote)
 
         delta = (binary.m1 - binary.m2) / binary.mass
         prefactor = binary.mass * delta * nu**2 / c**7
@@ -439,6 +488,8 @@ class ParabolicQuadrupole:
     cutoff: float
     time_origin: float
     tensor: np.ndarray
+    orbit: object = None
+    binary: object = None
 
     def __post_init__(self):
         base = IncomingQuadrupole(self.cutoff, self.time_origin, self.tensor)
@@ -475,6 +526,9 @@ class ParabolicOrbit:
     cutoff: float
     time_origin: float = 0.0
     asymptotic_order: int = 1
+
+    def __post_init__(self):
+        _normalize_orbit(self, ('pericenter_direction', 'transverse_direction'))
 
     def conserved_charges(self, binary):
         """Use pericenter_distance to parameterize the zero-energy incoming angular momentum."""
@@ -557,13 +611,20 @@ class ParabolicOrbit:
                         +(2*r_rate*theta_rate+r*theta_acceleration)*transverse)
         return (*result,acceleration)
 
+    def force_prefix(self, binary):
+        from .tails import _stf
+
+        peri = np.asarray(self.pericenter_direction, dtype=float)
+        tensor = binary.mu * (9 * binary.G * binary.mass / 2)**(2 / 3) * _stf(peri, peri)
+        return ParabolicQuadrupole(self.cutoff, self.time_origin, tensor, self, binary)
+
     def prepare(self, binary):
         from scipy.integrate import quad_vec
 
         from .conventions import InitialState
         from .history import PanelHistory, TailInitialData
         from .recoil import recoil_fluxes
-        from .tails import _stf, quadrupole_tail_sources
+        from .tails import quadrupole_tail_sources
 
         peri, tangent = np.asarray((self.pericenter_direction, self.transverse_direction), dtype=float)
         radius = self.pericenter_distance
@@ -582,13 +643,11 @@ class ParabolicOrbit:
             return position, velocity
 
         position, velocity = self.state_at(binary, self.cutoff)
-        remote = ParabolicQuadrupole(
-            self.cutoff, self.time_origin, binary.mu * (9 * g / 2)**(2 / 3) * _stf(peri, peri),
-        )
+        remote = self.force_prefix(binary)
         actual = quadrupole_tail_sources(binary, np.concatenate((position, velocity)))
         expected = remote.at_cutoff()
         residual = tuple(np.linalg.norm(actual - expected, axis=(-2, -1)) / np.linalg.norm(expected, axis=(-2, -1)))
-        history = PanelHistory(self.cutoff, (3, 3, 3), "incoming-parabolic-newtonian", incoming=remote)
+        history = PanelHistory(self.cutoff, (3, 3, 3), incoming_identity(binary, self), incoming=remote)
 
         def combined_flux(parameter):
             cut = self.time_origin+tau*(parameter+parameter**3/3)

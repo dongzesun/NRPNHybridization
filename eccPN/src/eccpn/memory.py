@@ -268,12 +268,12 @@ def _quadrupole_tail_join(binary, history, mass, radiative_scale):
     return _contract(history.start_jump(3), tail)
 
 
-def retained_memory_excess(raw_strain, raw_news, *, other_maximum_grade=7):
+def retained_memory_excess(raw_strain, raw_news, *, quadrupole_maximum_grade=8, other_maximum_grade=7):
     """Extract raw terms above each mode's fixed-history MPM budget."""
-    if other_maximum_grade not in range(5, 8):
+    if quadrupole_maximum_grade not in (7, 8) or other_maximum_grade not in range(5, 8):
         raise ValueError("Choose the absolute grade of the higher-mode MPM memory.")
     return tuple(
         {key: value for key, value in source.items()
-         if key[0] > (8 if key[1] == 2 else other_maximum_grade)}
+         if key[0] > (quadrupole_maximum_grade if key[1] == 2 else other_maximum_grade)}
         for source in (raw_strain, raw_news)
     )

@@ -95,6 +95,13 @@ class PanelHistory:
         end = trial.end if trial is not None else self.end
         if not self.start <= time <= end:
             raise ValueError("The represented history must cover the requested time.")
+        initial = self._committed_integral(time, scale, power)
+        if trial is not None and trial.start < time:
+            initial = initial + trial.integral(time, scale, power)
+        return initial
+
+    def _committed_integral(self, time, scale, power):
+        """Integrate the committed prefix up to min(time, end), including for a trial cut."""
         initial = np.zeros(self.source_shape)
         if self.incoming is not None:
             initial = self.incoming.integral(time, scale, power)
@@ -108,8 +115,6 @@ class PanelHistory:
             initial = sum(
                 (panel.integral(time, scale, power) for panel in self.panels if panel.start < time), initial,
             )
-        if trial is not None and trial.start < time:
-            initial = initial + trial.integral(time, scale, power)
         return initial
 
     def value(self, time):

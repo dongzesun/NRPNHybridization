@@ -1,6 +1,7 @@
 """Units and accuracy for the local development models."""
 
 from dataclasses import dataclass
+from numbers import Real
 
 import numpy as np
 
@@ -24,7 +25,15 @@ class Binary:
     c: float = 1.0
 
     def __post_init__(self):
-        values = np.array([self.m1, self.m2, self.G, self.c, self.mass], dtype=float)
+        for name in ("m1", "m2", "G", "c"):
+            value = np.asarray(getattr(self, name))
+            if value.ndim != 0 or not isinstance(value.item(), Real):
+                raise ValueError(f"{name} must be a finite positive real scalar.")
+            try:
+                object.__setattr__(self, name, float(value))
+            except OverflowError as exc:
+                raise ValueError(f"{name} exceeds the finite floating-point range.") from exc
+        values = np.array([self.m1, self.m2, self.G, self.c, self.mass])
         if not (np.isfinite(values) & (values > 0)).all():
             raise ValueError("Rest masses, total mass, G and c must be finite and positive.")
 

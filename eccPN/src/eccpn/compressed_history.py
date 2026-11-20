@@ -126,6 +126,13 @@ class CompressedPanelHistory:
             raise ValueError("Supply a covered cut, positive scale and log power zero to two.")
         if trial is not None and (trial.start!=self.end or trial.coefficients.shape[1:]!=self.source_shape):
             raise ValueError("The provisional source panel must join the committed history.")
+        result = self._committed_integral(time, scale, power)
+        if trial is not None and trial.start<time:
+            result += trial.integral(time,scale,power)
+        return result
+
+    def _committed_integral(self, time, scale, power):
+        """Integrate the committed prefix up to min(time, end), including for a trial cut."""
         result = np.zeros(self.source_shape)
         if self.incoming is not None:
             result = result+self.incoming.integral(time,scale,power)
@@ -144,8 +151,6 @@ class CompressedPanelHistory:
                 result += node.contracted(time,scale,power)
             else:
                 stack.extend(reversed(node.members))
-        if trial is not None and trial.start<time:
-            result += trial.integral(time,scale,power)
         return result
 
     def value(self,time):

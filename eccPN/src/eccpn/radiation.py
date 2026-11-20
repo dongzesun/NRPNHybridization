@@ -123,13 +123,65 @@ class Radiation:
         return series[2, 2]
 
 
+def _radiation_trajectory(trajectory, request):
+    """Resolve a radiation request against the evolved model and its saved jets."""
+    if request is None:
+        return trajectory
+    if not isinstance(request, Accuracy):
+        raise ValueError("Radiation accuracy must be an Accuracy instance.")
+    from .dynamics import _resolve_full_accuracy
+
+    saved = trajectory.accuracy
+    request = _resolve_full_accuracy(trajectory.binary, request, trajectory)
+    fixed = ("dynamics", "harmonic_scales", "causal_tail_interpolation", "causal_tail_split_time",
+             "selected_nonlinear_5pn_sectors")
+    incompatible = [name for name in fixed if getattr(request, name) != getattr(saved, name)]
+    if incompatible:
+        raise ValueError("Radiation cannot change evolved trajectory fields: " + ", ".join(incompatible))
+    history = trajectory._canonical_history
+    grade = request.canonical_grade
+    if grade is not None:
+        if trajectory.history is None or history is None or grade > history.maximum_absolute_grade:
+            raise ValueError(f"waveform_pn={request.waveform_pn} requires a saved grade-{grade} canonical history.")
+        required_mass = {0, 2, 4} if grade == 7 else {0, 2}
+        required_dipole = {0, 2} if grade == 7 else {0}
+        if not required_mass <= history.mass_grades.keys() or not required_dipole <= history.dipole_grades.keys():
+            raise ValueError("The saved mass_grades or dipole_grades are incomplete for the requested waveform_pn.")
+        if history.harmonic_scale != request.harmonic_scales[0]:
+            raise ValueError("The saved canonical harmonic_scale differs from the requested harmonic_scales.")
+        incoming = history.incoming
+        if request.retain_memory_excess and 0 not in history.moments.get("orbital", {}):
+            raise ValueError("retain_memory_excess requires saved orbital source panels.")
+        if incoming is not None:
+            if incoming.maximum_grade < grade:
+                raise ValueError(f"Missing grade-{grade} incoming canonical history for waveform_pn.")
+            if request.incoming_infrared_scale != incoming.infrared_scale:
+                raise ValueError("incoming_infrared_scale differs from the saved canonical source convention.")
+            if request.incoming_waveform_nodes != incoming.order:
+                incoming = replace(incoming, order=request.incoming_waveform_nodes)
+        elif request.radiative_tail_split_time is not None:
+            raise ValueError("radiative_tail_split_time requires a saved physical incoming waveform.")
+        from .waveform_jets import canonical_waveform_jets
+
+        required = canonical_waveform_jets(trajectory.binary, *trajectory.state(trajectory.time_span[0]),
+                                           history.harmonic_scale, history.infrared_scale,
+                                           history.dipole_grades, grade)
+        for name, jets in required.items():
+            for order, jet in jets.items():
+                past = history.moments.get(name, {}).get(order)
+                if (past is None or past.source_shape[0] < len(jet) or past.source_shape[1:] != jet.shape[1:]
+                        or past.start != trajectory.history.start or past.end < trajectory.time_span[1]):
+                    raise ValueError(f"Missing canonical history or derivatives for {name} grade {order}.")
+        if grade != history.maximum_absolute_grade or incoming is not history.incoming:
+            history = replace(history, maximum_absolute_grade=grade, incoming=incoming)
+    return replace(trajectory, accuracy=request, _canonical_history=history)
+
+
 def compute_radiation(trajectory, output_times, frame="native", accuracy=None):
     """Return H = R h and news on the requested cuts, plus native total power."""
     if not isinstance(frame, BondiFrame) and frame != "native":
         raise NotImplementedError("Select frame='native' or supply a BondiFrame.")
-    if accuracy is not None:
-        if not isinstance(accuracy, Accuracy) or accuracy.dynamics != trajectory.accuracy.dynamics:
-            raise ValueError("Radiation accuracy must match the local trajectory model.")
+    trajectory = _radiation_trajectory(trajectory, accuracy)
     times = np.array(output_times,dtype=float,copy=True)
     if times.size==0 or not (np.isfinite(times)&(times>=trajectory.time_span[0])
                              &(times<=trajectory.time_span[1])).all():
@@ -140,13 +192,14 @@ def compute_radiation(trajectory, output_times, frame="native", accuracy=None):
 
         split = RadiativeLogHistory(trajectory._canonical_history,trajectory.accuracy.radiative_tail_split_time)
     memory = None
-    if (accuracy or trajectory.accuracy).retain_memory_excess:
+    if trajectory.accuracy.retain_memory_excess:
         from .waveform_history import build_retained_memory
 
         if trajectory.accuracy.canonical_grade != 7:
             raise ValueError("Retained higher memory requires a trajectory with the 3.5PN canonical history.")
         memory = build_retained_memory(
             trajectory.binary,trajectory._canonical_history,trajectory.accuracy.radiative_scale,
+            quadrupole_maximum_grade=int(2*trajectory.accuracy.waveform_pn),
             log_history=split,max_time=float(times.max()) if frame=="native" else None,
         )
     # Both native cuts and BMS-resampled cuts share the same ordered past.
@@ -157,7 +210,8 @@ def compute_radiation(trajectory, output_times, frame="native", accuracy=None):
             result = _native_radiation(trajectory,sample_times,memory,prefix_cache,split)
             return result.strain, result.news
 
-        strain, news = retime_and_project(frame, times, trajectory.binary.c, sample_native, native.strain)
+        strain, news = retime_and_project(frame, times, trajectory.binary.c, sample_native,
+                                          native.strain.keys() | native.news.keys())
         return replace(
             native, frame=frame, strain=strain, news=news,
             native_strain=native.strain, native_news=native.news,

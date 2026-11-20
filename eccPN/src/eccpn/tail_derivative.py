@@ -48,11 +48,17 @@ def fourfold_tail_jet(history,time,scale,log_scale_rate,lag):
     split = time-lag
     incoming = history.incoming
     value = fourfold_tail_integral(history,time,scale,lag,None)
+    if incoming is None:
+        panels = (history.intersecting(history.start,time) if hasattr(history,"intersecting") else
+                  (panel for panel in history.panels if panel.start < time))
+        # Translation of a piecewise polynomial gives its interior slopes,
+        # the onset and each right-minus-left jump at a panel boundary.
+        derivative = history.value(history.start)[2] * np.log((time-history.start)/scale)
+        derivative += _recent_derivative(panels,time,history.start,scale)
+        return value,derivative-log_scale_rate*history._parts_cache[time][1]
     recent = (history.intersecting(split,time) if hasattr(history,"intersecting") else
               (panel for panel in history.panels if panel.end>split and panel.start<time))
     derivative = _recent_derivative(recent,time,split,scale)
-    if split<history.start and incoming is None:
-        return value,derivative-log_scale_rate*history.integral(time,1.,0)[2]
 
     if split>=history.start:
         boundary = history.value(split)

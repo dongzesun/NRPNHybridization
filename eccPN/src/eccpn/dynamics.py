@@ -106,7 +106,7 @@ def _resolve_full_accuracy(binary,accuracy,prehistory):
         settings.update(causal_tail_interpolation="integration_by_parts",
                         causal_tail_split_time=accuracy.causal_tail_split_time or 480*geometric_time)
     physical_incoming = (getattr(prehistory,"incoming_orbit",None) is not None
-                         or getattr(getattr(prehistory,"canonical_history",None),"incoming",None) is not None)
+                         or getattr(getattr(prehistory,"history",None),"incoming",None) is not None)
     if accuracy.radiative_tail_split_time is None and accuracy.canonical_grade is not None and physical_incoming:
         settings["radiative_tail_split_time"] = 7680*geometric_time
     return replace(accuracy,**settings)
@@ -184,7 +184,10 @@ def _evolve_tail(binary, initial, prehistory, start, stop, accuracy):
     configuration = _configuration(binary, accuracy)
     restart = prehistory if isinstance(prehistory, AcceptedHistory) else None
     if restart is not None:
-        if (restart.configuration != configuration or restart.history.end != start
+        if restart.configuration != configuration:
+            raise ValueError("Checkpoint evolution configuration differs. Replay with its original version "
+                             "and settings or recompute from the original inputs.")
+        if (restart.history.end != start
                 or not np.array_equal(initial, restart.state[:6])
                 or (accuracy.canonical_grade is not None) != (restart.canonical_history is not None)):
             raise ValueError("The checkpoint, start state and supported waveform configuration must match.")
@@ -198,6 +201,14 @@ def _evolve_tail(binary, initial, prehistory, start, stop, accuracy):
         orbital_prefix = prehistory.orbital_prefix
         incoming_orbit = prehistory.incoming_orbit
         prehistory = prehistory.quadrupole
+        if incoming_orbit is not None:
+            from .incoming import incoming_identity
+
+            force = prehistory.incoming
+            if (getattr(force, "orbit", None) is None or
+                    incoming_identity(binary, incoming_orbit) != prehistory.identity or
+                    incoming_identity(force.binary, force.orbit) != prehistory.identity):
+                raise ValueError("The physical force and orbital prefixes must share the incoming identity.")
     source_shape = (5,3,3) if uses_parts and restart is not None else (3,3,3)
     if (not isinstance(prehistory, (PanelHistory,CompressedPanelHistory)) or not (prehistory.panels or prehistory.incoming)
             or prehistory.end != start or prehistory.source_shape != source_shape):

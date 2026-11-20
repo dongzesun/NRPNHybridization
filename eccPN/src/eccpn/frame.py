@@ -85,12 +85,18 @@ class BondiFrame:
                 raise ValueError("Invalid supertranslation mode.")
             if not np.isclose(modes.get((ell, -m), 0), (-1)**m * np.conj(value), atol=0, rtol=2e-13):
                 raise ValueError("The supertranslation coefficients must describe a real scalar field.")
-        if self.ell_max < 2 or self.polar_points <= self.ell_max or self.azimuthal_points <= 2 * self.ell_max:
-            raise ValueError("Angular resolution must cover the output harmonic degrees.")
+        if self.ell_max < 2:
+            raise ValueError("The output harmonic degree must be at least two.")
+        self._check_grid(self.ell_max)
         rotation.flags.writeable = False
         object.__setattr__(self, "rotation", rotation)
         object.__setattr__(self, "boost", tuple(beta))
         object.__setattr__(self, "supertranslation", modes)
+
+    def _check_grid(self, degree):
+        if self.polar_points < degree + 1 or self.azimuthal_points < 2*degree + 1:
+            raise ValueError(f"Angular grid {self.polar_points} x {self.azimuthal_points} requires at least "
+                             f"{degree + 1} x {2*degree + 1} points for harmonic degree {degree}.")
 
     def _grid(self):
         out_vectors, weights = angular_grid(self.polar_points, self.azimuthal_points)
@@ -119,6 +125,10 @@ def retime_and_project(frame, times, speed_of_light, sample_native, native_modes
     The sampler receives a flat array of native times in time units and
     returns dictionaries of asymptotic strain and news modes.
     """
+    native_modes = tuple(native_modes)
+    degree = max([frame.ell_max, *(ell for ell, _ in native_modes),
+                  *(ell for (ell, _), value in frame.supertranslation.items() if value != 0)])
+    frame._check_grid(degree)
     theta, phi, theta_out, phi_out, conformal, phase, weights = frame._grid()
     alpha = np.zeros_like(theta, dtype=complex)
     shear_offset = np.zeros_like(theta, dtype=complex)
@@ -135,7 +145,7 @@ def retime_and_project(frame, times, speed_of_light, sample_native, native_modes
         (ell, m): spin_harmonic(ell, m, -2, theta, phi) for ell, m in native_modes
     }
     fields = [
-        sum(series[key][inverse]*native_basis[key] for key in native_modes)
+        sum(series[key][inverse]*native_basis[key] for key in native_modes if key in series)
         for series in channels
     ]
     fields[0] = phase * (fields[0] - shear_offset.conj()) / conformal

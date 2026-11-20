@@ -140,8 +140,6 @@ class PartsIncomingTail:
 def _parts_moments(history,time,lag,trial):
     split = time-lag
     remote = history.incoming
-    if split<=history.start and remote is None:
-        return np.stack([history.integral(time,1.,power,trial=trial)[2] for power in (1,0)])
     if split>=history.start:
         if trial is not None and split>trial.start:
             fraction = (split-trial.start)/(trial.end-trial.start)
@@ -177,7 +175,22 @@ def _parts_moments(history,time,lag,trial):
 def fourfold_tail_integral(history,time,scale,lag,trial):
     """Use the original log at recent times and the inverse quartic on the earlier past."""
     split = time-lag
-    if split>history.end or (time>history.end and split<=history.start and history.incoming is None):
+    if history.incoming is None:
+        # Independently interpolated lower jets cannot supply integration-by-parts
+        # boundary terms for the represented Q7 polynomial on a finite prefix.
+        if not history.start <= time <= (history.end if trial is None else trial.end):
+            raise ValueError("The represented history must cover the requested time.")
+        if trial is not None and (trial.start != history.end or trial.coefficients.shape[1:] != history.source_shape):
+            raise ValueError("The provisional panel must join the committed source history.")
+        cache = history._parts_cache
+        if time not in cache:
+            cache[time] = tuple(history._committed_integral(time, 1., power)[2] for power in (1, 0))
+        logarithmic, ordinary = cache[time]
+        result = logarithmic - np.log(scale)*ordinary
+        if trial is not None and trial.start < time:
+            result += near_log_panel(trial, time, trial.start, scale)
+        return result
+    if split>history.end:
         # The provisional interval contains the split, or its finite
         # start is the boundary. Its contributions must remain provisional.
         moments = _parts_moments(history,time,lag,trial)
