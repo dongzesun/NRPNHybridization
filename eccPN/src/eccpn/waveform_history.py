@@ -5,10 +5,11 @@ from functools import cached_property, partial
 
 import numpy as np
 
-from .compact_moments import CompactMomentHistory, pack_stf
+from .canonical_sampling import CanonicalSampler
+from .compact_moments import CompactMomentHistory
 from .generated import mpm_tables
 from .hereditary import _interpolate
-from .history import PanelHistory, SourcePanel
+from .history import PanelHistory, SourcePanel, reuse_radiation_weights
 from .incoming_waveform import IncomingMomentHistory, IncomingWaveform
 from .leading_modes import leading_mode_coefficients
 from .mpm import _contraction_equation, _LEVI_CIVITA, instantaneous_corrections
@@ -124,59 +125,18 @@ class CanonicalHistory:
 
 def build_canonical_history(
     binary, times, state, mass_grades, dipole_grades, harmonic_scale, infrared_scale,
-    maximum_absolute_grade=6, incoming=None,
+    maximum_absolute_grade=6, incoming=None, *, executor=None,
 ):
     """Sample an explicit covered SH state into quadratic canonical panels."""
     times = np.asarray(times, dtype=float)
     if times.ndim != 1 or len(times) < 2 or not np.isfinite(times).all() or not (np.diff(times) > 0).all():
         raise ValueError("Supply two or more strictly increasing finite history boundaries.")
-    expected_mass = {0, 2} if maximum_absolute_grade == 6 else {0, 2, 4}
-    expected_dipole = {0} if maximum_absolute_grade == 6 else {0, 2}
-    if (maximum_absolute_grade not in (6, 7) or not expected_mass <= mass_grades.keys()
-            or not expected_dipole <= dipole_grades.keys() or mass_grades[0] != binary.mass or any(
-            grade not in (0, 2, 4) or not np.isfinite(value) for grade, value in mass_grades.items()
-    )):
-        raise ValueError("Supply all finite conserved mass and dipole grades required by the waveform budget.")
-
-    def sample(time):
-        position, velocity = state(time)
-        jets = canonical_waveform_jets(
-            binary, position, velocity, harmonic_scale, infrared_scale, dipole_grades,
-            maximum_absolute_grade,
-        )
-        for name,grades in jets.items():
-            if _stored_rank(name) is not None:
-                jets[name] = {grade:pack_stf(jet,_stored_rank(name)) for grade,jet in grades.items()}
-        jets["orbital"] = {0: np.stack((position, velocity))}
-        return jets
-
-    output = {}
-    initial = sample(times[0])
-    for start, stop in zip(times[:-1], times[1:]):
-        middle, final = sample((start + stop) / 2), sample(stop)
-        for name, inventory in initial.items():
-            panels = output.setdefault(name, {})
-            for grade, first in inventory.items():
-                coefficients = _interpolate((first, middle[name][grade], final[name][grade]))
-                panels.setdefault(grade, []).append(SourcePanel(start, stop, coefficients))
-        initial = final
-    def history(name,grade,panels):
-        finite = PanelHistory(
-            times[0],panels[0].coefficients.shape[1:],f"{name}-grade-{grade}",tuple(panels),
-        )
-        rank = _stored_rank(name)
-        return finite if rank is None else CompactMomentHistory(finite,rank)
-
-    return CanonicalHistory({
-        name:{grade:history(name,grade,panels) for grade,panels in data.items()}
-        for name,data in output.items()
-    },dict(mass_grades),dict(dipole_grades),harmonic_scale,infrared_scale,maximum_absolute_grade,incoming)
-
-
-def _stored_rank(name):
-    if name.startswith(("M","S")) and int(name[1:])>=3:
-        return int(name[1:])
-    return None
+    with CanonicalSampler(binary, mass_grades, dipole_grades, harmonic_scale, infrared_scale,
+                          maximum_absolute_grade, incoming, executor) as sampler:
+        for start, stop in zip(times[:-1], times[1:]):
+            sampler.interval(start, stop, state)
+        sampler.boundary(times[-1], state(times[-1]))
+        return sampler.finish()
 
 
 def _add(pieces, grade, value):
@@ -238,8 +198,12 @@ class _FormalMemoryProduct:
             fraction**order/order,self.coefficients[index],axes=1)
 
 
-def _panel_products(first,second,tensors,equation,time,cache):
-    key = (id(getattr(first,"finite",first)),id(getattr(second,"finite",second)),tensors,equation)
+def _panel_products(first,second,tensors,equation,time,cache, sources=None):
+    # The cache belongs to one canonical history. Stable moment names and
+    # grades also identify the immutable products after a worker maps it.
+    if sources is None:
+        sources = (id(getattr(first, "finite", first)), id(getattr(second, "finite", second)))
+    key = (sources, tensors, equation)
     if key not in cache:
         cache[key] = _FormalMemoryProduct.from_moments(first,second,tensors,equation)
     return cache[key].value(time)
@@ -259,11 +223,12 @@ def _memory_value(binary,target,canonical,time,maximum_relative_grade,cache):
                 grade = term_grade + grade_a + grade_b
                 if grade > maximum_relative_grade:
                     continue
-                value = _panel_products(first,second,tensors,equation,time,cache)
+                value = _panel_products(first,second,tensors,equation,time,cache, (names[0], grade_a, names[1], grade_b))
                 _add(result, grade, scale * value)
     return {grade: stf_tensor(value, rank) for grade, value in result.items()}
 
 
+@reuse_radiation_weights()
 def finite_radiation_available(
     binary, history, time, position, velocity, radiative_scale, *,
     news_only=False, sampled_jets=None, news_endpoint=None, log_history=None, prefix_cache=None,
@@ -354,82 +319,122 @@ def _project_endpoint(binary, kind, rank, grade, tensors, output):
             coefficients[power] += value
 
 
-def build_retained_memory(binary,canonical_history,radiative_scale,*,quadrupole_maximum_grade=8,
-                          log_history=None,max_time=None):
-    """Integrate the extra formal grades of the full unaveraged news product."""
-    from .memory import memory_rate_polynomials, retained_memory_excess, RetainedMemory, _memory_weights
+def _sample_memory_panel(context, index, fractions, news_endpoint=False):
+    binary, history, radiative_scale, log_history, _, _ = context
+    panel = history.moments["orbital"][0].panels[index]
+    # Expand each packed tensor once per panel, with the same representation
+    # and polynomial evaluation used at each cut.
+    coefficients = {name: {g: past.panels[index].coefficients for g, past in grades.items()}
+                    for name, grades in history.moments.items()}
+    samples = []
+    for fraction in fractions:
+        time = panel.start + fraction * (panel.end - panel.start)
+        current = {name: {g: np.polynomial.polynomial.polyval(fraction, c) for g, c in grades.items()}
+                   for name, grades in coefficients.items()}
+        position, velocity = current.pop("orbital")[0]
+        samples.append(finite_radiation_available(
+            binary, history, time, position, velocity, radiative_scale, news_only=True,
+            sampled_jets=current, news_endpoint=news_endpoint,
+            log_history=log_history if log_history is not None and log_history.active(time) else None,
+        )[1])
+    return samples
 
-    moments = canonical_history.moments
-    accepted = moments["orbital"][0].panels
+
+def _retained_rates(binary, endpoint, maximum, first, middle, last):
+    from .memory import memory_rate_polynomials, retained_memory_excess
+
+    polynomial = {}
+    for key, value in first.items():
+        if key in endpoint:
+            coefficients = np.zeros((3, 3), dtype=complex)
+            coefficients[:, 0] = _interpolate((value, middle[key], last[key]))
+            coefficients[0] += endpoint[key]
+        else:
+            coefficients = _interpolate((value, middle[key], last[key]))[:, None]
+        polynomial[key] = coefficients
+    rates, _ = retained_memory_excess(memory_rate_polynomials(binary, polynomial), {},
+                                      quadrupole_maximum_grade=maximum)
+    return rates
+
+
+def _retained_panel_chunk(context, indices):
+    binary, _, _, _, endpoint, maximum = context
+    rates = []
+    first = None
+    for index in indices:
+        middle, last = _sample_memory_panel(context, index, (0.5, 1))
+        if first is None:
+            boundary = (middle, last)
+        else:
+            rates.append(_retained_rates(binary, endpoint, maximum, first, middle, last))
+        first = last
+    # The caller joins this chunk to its predecessor without resampling any cut.
+    return indices, boundary, rates, last
+
+
+def build_retained_memory(binary,canonical_history,radiative_scale,*,quadrupole_maximum_grade=8,
+                          log_history=None,max_time=None,executor=None):
+    """Integrate the extra formal grades of the full unaveraged news product."""
+    from .memory import RetainedMemory, _memory_weights
+    from .parallel import ordered_chunks
+
+    accepted = canonical_history.moments["orbital"][0].panels
+    count = len(accepted)
     if max_time is not None:
         ends = np.array([panel.end for panel in accepted])
-        last = np.searchsorted(ends,max_time,side="left")
-        accepted = accepted[:last+1]
+        count = min(count, np.searchsorted(ends, max_time, side="left") + 1)
     origin, scale = accepted[0].start, 2 * radiative_scale
     endpoint = {}
-
-    def sample(index, fraction, save_endpoint=False):
-        current = {
-            name: {
-                grade: np.polynomial.polynomial.polyval(fraction, past.panels[index].coefficients)
-                for grade, past in grades.items()
-            }
-            for name, grades in moments.items()
-        }
-        panel = accepted[index]
-        time = panel.start + fraction * (panel.end - panel.start)
-        position, velocity = current.pop("orbital")[0]
-        return finite_radiation_available(
-            binary, canonical_history, time, position, velocity, radiative_scale,
-            news_only=True, sampled_jets=current, news_endpoint=endpoint if save_endpoint else False,
-            log_history=log_history if log_history is not None and log_history.active(time) else None,
-        )[1]
-
+    context = (binary, canonical_history, radiative_scale, log_history, endpoint, quadrupole_maximum_grade)
+    total = _incoming_memory_excess(binary, canonical_history, radiative_scale, quadrupole_maximum_grade,
+                                    executor=executor)
+    first, = _sample_memory_panel(context, 0, (0,), news_endpoint=endpoint)
     snapshots = []
-    total = _incoming_memory_excess(binary, canonical_history, radiative_scale, quadrupole_maximum_grade)
-    first = sample(0, 0, save_endpoint=True)
-    for index, panel in enumerate(accepted):
-        middle, last = sample(index, 0.5), sample(index, 1)
-        polynomial = {}
-        for key, value in first.items():
-            if key in endpoint:
-                coefficients = np.zeros((3, 3), dtype=complex)
-                coefficients[:, 0] = _interpolate((value, middle[key], last[key]))
-                coefficients[0] += endpoint[key]
-            else:
-                coefficients = _interpolate((value, middle[key], last[key]))[:, None]
-            polynomial[key] = coefficients
-        rates, _ = retained_memory_excess(memory_rate_polynomials(binary, polynomial), {},
-                                          quadrupole_maximum_grade=quadrupole_maximum_grade)
-        snapshots.append((panel.start, panel.end, rates, total))
-        weights = _memory_weights(panel.start, panel.end, origin, scale, 1)
-        total = {key: total.get(key, 0) + np.sum(rate * weights[:, :rate.shape[1]])
-                 for key, rate in rates.items()}
+    for indices, boundary, rates, last in ordered_chunks(executor, context, _retained_panel_chunk, range(count)):
+        seam = _retained_rates(binary, endpoint, quadrupole_maximum_grade, first, *boundary)
+        for index, rate in zip(indices, (seam, *rates)):
+            panel = accepted[index]
+            snapshots.append((panel.start, panel.end, rate, total))
+            weights = _memory_weights(panel.start, panel.end, origin, scale, 1)
+            total = {key: total.get(key, 0) + np.sum(value * weights[:, :value.shape[1]])
+                     for key, value in rate.items()}
         first = last
     return RetainedMemory(tuple(snapshots), origin, scale)
 
 
-def _incoming_memory_excess(binary, history, radiative_scale, quadrupole_maximum_grade):
-    """Seed the higher formal memory with the same physical source approximation."""
+def _incoming_memory_chunk(context, indices):
     from .memory import null_memory_news, retained_memory_excess
 
+    binary, history, radiative_scale, maximum = context
     incoming = history.incoming
-    if incoming is None:
-        return {}
-    accumulated = {}
-    for time, weight in zip(*incoming.grid):
+    cuts, weights = incoming.grid
+    result = []
+    for index in indices:
+        time = cuts[index]
         local = replace(incoming, orbit=replace(incoming.orbit, cutoff=time))
         nested = replace(history, incoming=local)
         position, velocity = local.orbit.state_at(binary, time)
-        canonical = local.join
         _, news, _, _ = finite_radiation_available(
             binary, nested, time, position, velocity, radiative_scale, news_only=True,
-            sampled_jets=canonical,
+            sampled_jets=local.join,
         )
-        rates, _ = retained_memory_excess(null_memory_news(binary, news), {},
-                                          quadrupole_maximum_grade=quadrupole_maximum_grade)
-        for key, value in rates.items():
-            _add(accumulated, key, weight*value)
+        rates, _ = retained_memory_excess(null_memory_news(binary, news), {}, quadrupole_maximum_grade=maximum)
+        result.append({key: weights[index] * value for key, value in rates.items()})
+    return result
+
+
+def _incoming_memory_excess(binary, history, radiative_scale, quadrupole_maximum_grade, *, executor=None):
+    """Seed the higher formal memory with the same physical source approximation."""
+    from .parallel import ordered_chunks
+
+    if history.incoming is None:
+        return {}
+    context = (binary, history, radiative_scale, quadrupole_maximum_grade)
+    accumulated = {}
+    for chunk in ordered_chunks(executor, context, _incoming_memory_chunk, range(history.incoming.order)):
+        for increment in chunk:
+            for key, value in increment.items():
+                _add(accumulated, key, value)
     return accumulated
 
 
@@ -483,7 +488,7 @@ def finite_quadrupole_grade_eight(
     )
     cubic = mpm_quadrupole_interactions(
         binary, leading_past, time, mass[0], history.dipole_grades[0],
-        infrared_scale, radiative_scale, current=current, prefix_cache=prefix_cache, log_history=log_history,
+        infrared_scale, radiative_scale, current=current, prefix_cache=prefix_cache, log_history=log_history, cubic_only=True,
     )[8]
     return {
         "canonical_local": local, "canonical_nonlocal": hereditary_source,

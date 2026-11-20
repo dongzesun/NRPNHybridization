@@ -1,6 +1,9 @@
 """Adaptive causal integration for a state coupled to a retarded source."""
 
+from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass
+from multiprocessing import get_context
+from traceback import format_exc
 from hashlib import sha256
 import json
 import os
@@ -28,11 +31,10 @@ def _interpolate(values):
     return np.stack((first, 4 * middle - 3 * first - last, 2 * (first - 2 * middle + last)))
 
 
-def _collocate(rhs, source, start, stop, initial, history, rtol, atol, interpolate_source):
+def _collocate(rhs, source, start, stop, initial, history, rtol, atol, interpolate_source, first_rate):
     width = stop - start
     times = start + width * _NODES
     times[-1] = stop
-    first_rate = rhs(start, initial, history, None)
     stages = initial + (times - start)[:, None] * first_rate
     for _ in range(16):
         panel = SourcePanel(start, stop, interpolate_source(source, stages, width))
@@ -240,9 +242,66 @@ def _pointwise_source(source, stages, width):
     return _interpolate([source(state) for state in stages])
 
 
+def _coarse_worker(channel, history, rhs, source, rtol, atol, interpolate_source):
+    with channel:
+        try:
+            while True:
+                try:
+                    request = channel.recv()
+                except EOFError:
+                    return
+                if request is None:
+                    return
+                start, end, state, first_rate, committed = request
+                if committed:
+                    history = history.append(*committed)
+                step = _collocate(rhs, source, start, end, state, history, rtol, atol,
+                                  interpolate_source, first_rate)
+                channel.send((True, None if step is None else step[0]))
+        except Exception:
+            channel.send((False, format_exc()))
+
+
+@contextmanager
+def _coarse_process(*settings):
+    context = get_context("spawn")
+    local, remote = context.Pipe()
+    process = context.Process(target=_coarse_worker, args=(remote, *settings))
+    try:
+        process.start()
+        remote.close()
+        try:
+            yield local
+            local.send(None)
+        except BaseException:
+            process.terminate()
+            raise
+        finally:
+            process.join()
+            process.close()
+    finally:
+        local.close()
+        remote.close()
+
+
 def integrate_hereditary(rhs, source, checkpoint, stop, rtol, atol, max_step, *, max_steps=100000,
-                         interpolate_source=_pointwise_source):
-    """Advance with step doubling, committing the two fine source panels on acceptance."""
+                         interpolate_source=_pointwise_source, on_accept=None, parallel_orbit=False):
+    """Advance with step doubling, committing the two fine source panels on acceptance.
+
+    on_accept(left, right) receives each accepted half as (end_state,
+    source_panel, dense_coefficients). The halves are in chronological order.
+    parallel_orbit overlaps the coarse error estimate with both fine steps
+    in one dedicated process and requires picklable RHS and source functions.
+    """
+    pool = (_coarse_process(checkpoint.history, rhs, source, rtol, atol, interpolate_source)
+            if parallel_orbit else nullcontext(None))
+    with pool as worker:
+        return _integrate_steps(rhs, source, checkpoint, stop, rtol, atol, max_step, max_steps,
+                                interpolate_source, on_accept, worker)
+
+
+def _integrate_steps(rhs, source, checkpoint, stop, rtol, atol, max_step, max_steps,
+                     interpolate_source, on_accept, worker):
     history = checkpoint.history
     state = np.asarray(checkpoint.state, dtype=float)
     current = history.end
@@ -254,27 +313,52 @@ def integrate_hereditary(rhs, source, checkpoint, stop, rtol, atol, max_step, *,
     boundaries = [current]
     dense_steps = []
     rejected = 0
+    first_rate = rhs(current, state, history, None)
+    committed = ()
     for _ in range(max_steps):
         end = min(stop, current + step)
         middle = current + (end - current) / 2
         if not current < middle < end:
             raise RuntimeError("Hereditary integration step underflow.")
-        coarse = _collocate(rhs, source, current, end, state, history, rtol, atol, interpolate_source)
-        left = _collocate(rhs, source, current, middle, state, history, rtol, atol, interpolate_source)
-        right = None if left is None else _collocate(
-            rhs, source, middle, end, left[0], history.append(left[1]), rtol, atol, interpolate_source,
-        )
-        if coarse is None or right is None:
+        if worker is None:
+            coarse = _collocate(rhs, source, current, end, state, history, rtol, atol, interpolate_source, first_rate)
+            if coarse is None:
+                step /= 2
+                rejected += 1
+                continue
+            coarse_endpoint = coarse[0]
+        else:
+            worker.send((current, end, state, first_rate, committed))
+            committed = ()
+        left = _collocate(rhs, source, current, middle, state, history, rtol, atol, interpolate_source, first_rate)
+        right = None
+        if left is not None:
+            midpoint_history = history.append(left[1])
+            midpoint_rate = rhs(middle, left[0], midpoint_history, None)
+            right = _collocate(rhs, source, middle, end, left[0], midpoint_history,
+                               rtol, atol, interpolate_source, midpoint_rate)
+        if worker is not None:
+            try:
+                ok, coarse_endpoint = worker.recv()
+            except EOFError as exc:
+                raise RuntimeError("The coarse orbital worker stopped before returning its estimate.") from exc
+            if not ok:
+                raise RuntimeError(f"Coarse orbital step failed:\n{coarse_endpoint}")
+        if right is None or coarse_endpoint is None:
             step /= 2
             rejected += 1
             continue
-        error = np.max(np.abs(right[0] - coarse[0]) / (atol + rtol * np.maximum(np.abs(state), np.abs(right[0]))))
+        error = np.max(np.abs(right[0] - coarse_endpoint) / (atol + rtol * np.maximum(np.abs(state), np.abs(right[0]))))
         if error > 1:
             step /= 2
             rejected += 1
             continue
         state = right[0]
-        history = history.append(left[1], right[1])
+        history = midpoint_history.append(right[1])
+        if worker is not None:
+            committed = (left[1], right[1])
+        if on_accept is not None:
+            on_accept(left, right)
         dense_steps.extend((left[2], right[2]))
         boundaries.extend((middle, end))
         current = end
@@ -284,4 +368,5 @@ def integrate_hereditary(rhs, source, checkpoint, stop, rtol, atol, max_step, *,
                 AcceptedHistory(state, history, step, checkpoint.configuration),
                 np.array(boundaries), np.array(dense_steps), rejected,
             )
+        first_rate = rhs(current, state, history, None)
     raise RuntimeError("Hereditary integration exceeded its step limit.")

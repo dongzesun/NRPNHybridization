@@ -93,8 +93,17 @@ class HereditaryIntegration(unittest.TestCase):
         history = PanelHistory(0, (1,), "scalar-log-test")
         initial = AcceptedHistory(np.array([1.0]), history, 0.4)
         options = dict(rtol=2e-6, atol=2e-8, max_step=0.4)
-        full = integrate_hereditary(rhs, source, initial, 0.4, **options)
+        accepted = []
+        def record(left, right):
+            accepted.extend((left, right))
+
+        full = integrate_hereditary(rhs, source, initial, 0.4, on_accept=record, **options)
         self.assertGreater(full.rejected_steps, 0)
+        self.assertEqual(len(accepted), len(full.boundaries) - 1)
+        for (state, panel, dense), t, t_next in zip(accepted, full.boundaries[:-1], full.boundaries[1:]):
+            self.assertEqual((panel.start, panel.end), (t, t_next))
+            np.testing.assert_array_equal(state, full(t_next)[:, 0])
+            np.testing.assert_array_equal(dense[0], full(t)[:, 0])
         split = full.boundaries[4]
         first = integrate_hereditary(rhs, source, initial, split, **options)
         with TemporaryDirectory() as directory:
@@ -114,6 +123,35 @@ class HereditaryIntegration(unittest.TestCase):
         )
         self.assertEqual(history.panels, ())
         self.assertEqual(len(full.checkpoint.history.panels), len(full.boundaries) - 1)
+
+    def test_parallel_orbit_with_source_workers_and_restart(self):
+        from concurrent.futures import ProcessPoolExecutor
+        from multiprocessing import get_context
+        from eccpn.incoming import IncomingOrbit
+
+        binary = Binary(0.65, 0.35)
+        orbit = IncomingOrbit((0., 0.21, 0.), (35., 0., 0.), -2000., asymptotic_order=2)
+        initial, past = orbit.prepare(binary)
+        accuracy = Accuracy("sh-through-4.5PN+recoil", max_step=.3, waveform_pn=3.,
+                            incoming_waveform_nodes=8, compress_history=True)
+        span = (orbit.cutoff, orbit.cutoff + .8)
+        serial = evolve(binary, initial, past, span, accuracy)
+        with ProcessPoolExecutor(max_workers=1, mp_context=get_context("spawn")) as sources:
+            parallel = evolve(binary, initial, past, span, accuracy, parallel_orbit=True, executor=sources)
+            stop = span[1] + .51
+            restart = InitialState(*parallel.state(span[1]))
+            continued = evolve(binary, restart, parallel.checkpoint, (span[1], stop), accuracy,
+                               parallel_orbit=True, executor=sources)
+        reference = evolve(binary, restart, serial.checkpoint, (span[1], stop), accuracy)
+        for result, expected in ((parallel, serial), (continued, reference)):
+            np.testing.assert_array_equal(result._solution.boundaries, expected._solution.boundaries)
+            np.testing.assert_array_equal(result._solution.dense, expected._solution.dense)
+            np.testing.assert_array_equal(result.checkpoint.state, expected.checkpoint.state)
+            self.assertEqual(result._solution.rejected_steps, expected._solution.rejected_steps)
+            self.assertEqual(result.checkpoint.canonical_history.to_record(),
+                             expected.checkpoint.canonical_history.to_record())
+            for p, q in zip(result.history.panels, expected.history.panels):
+                np.testing.assert_array_equal(p.coefficients, q.coefficients)
 
     def test_shared_history_tail(self):
         binary = Binary(0.6, 0.4, c=1.8)

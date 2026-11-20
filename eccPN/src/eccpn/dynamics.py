@@ -1,5 +1,6 @@
 """Direct integration in SH coordinates for the local development models."""
 
+from contextlib import nullcontext
 from dataclasses import asdict, dataclass, field, replace
 from functools import partial
 from hashlib import sha256
@@ -112,12 +113,18 @@ def _resolve_full_accuracy(binary,accuracy,prehistory):
     return replace(accuracy,**settings)
 
 
-def evolve(binary, initial_state, prehistory, time_span, accuracy=None):
-    """Integrate the selected local model from the explicit SH initial state."""
+def evolve(binary, initial_state, prehistory, time_span, accuracy=None, *, executor=None, parallel_orbit=False):
+    """Integrate the SH orbit. An optional futures executor samples accepted source moments.
+
+    For hereditary dynamics, parallel_orbit adds one coarse-step process
+    independent of that executor and the coordinating process.
+    """
     accuracy = Accuracy() if accuracy is None else accuracy
     accuracy = _resolve_full_accuracy(binary,accuracy,prehistory)
     if accuracy.dynamics not in HEREDITARY_MODELS and prehistory is not None:
         raise NotImplementedError("The local development models accept prehistory=None.")
+    if parallel_orbit and accuracy.dynamics not in HEREDITARY_MODELS:
+        raise ValueError("parallel_orbit is supported by the hereditary step-doubling integrator.")
     start, stop = map(float, time_span)
     if not np.isfinite([start, stop]).all() or stop <= start:
         raise ValueError("time_span must contain finite, increasing times.")
@@ -131,7 +138,7 @@ def evolve(binary, initial_state, prehistory, time_span, accuracy=None):
     acceleration(binary, position, velocity, accuracy.dynamics)
 
     if accuracy.dynamics in HEREDITARY_MODELS:
-        return _evolve_tail(binary, initial, prehistory, start, stop, accuracy)
+        return _evolve_tail(binary, initial, prehistory, start, stop, accuracy, executor, parallel_orbit)
 
     def rhs(_, state):
         velocity = state[3:]
@@ -161,7 +168,7 @@ def _configuration(binary, accuracy):
     if accuracy.causal_tail_interpolation == "integration_by_parts":
         names += ("tail_parts.py",)
     if accuracy.canonical_grade is not None:
-        names += ("waveform_history.py", "compact_moments.py", "waveform_jets.py", "multipoles.py", "higher_moments.py",
+        names += ("waveform_history.py", "canonical_sampling.py", "compact_moments.py", "waveform_jets.py", "multipoles.py", "higher_moments.py",
                   "gauge_moments.py", "canonical.py", "mpm.py", "newtonian_moments.py", "leading_modes.py",
                   "projection.py", "asymptotic_waveform.py", "incoming_waveform.py",
                   "generated/mpm_tables.py", "generated/source_mass_quadrupole.py",
@@ -174,9 +181,59 @@ def _configuration(binary, accuracy):
     return payload.hexdigest()
 
 
-def _evolve_tail(binary, initial, prehistory, start, stop, accuracy):
+def _canonical_sampler(binary, accuracy, initial, start, orbital_prefix, incoming_orbit, restart, executor):
+    from .canonical_sampling import CanonicalSampler
+
+    incoming = None
+    if restart is not None:
+        past = restart.canonical_history
+        masses, dipoles = past.mass_grades, past.dipole_grades
+        harmonic, infrared = past.harmonic_scale, past.infrared_scale
+    elif incoming_orbit is not None:
+        from .incoming_waveform import IncomingWaveform
+
+        if not np.array_equal(np.concatenate(incoming_orbit.state_at(binary, start)), initial[:6]):
+            raise ValueError("The incoming waveform must share the force's phase-space join.")
+        masses, dipoles = incoming_orbit.conserved_charges(binary)
+        incoming = IncomingWaveform(binary, incoming_orbit, accuracy.harmonic_scales[0],
+                                    accuracy.incoming_infrared_scale, dipoles, accuracy.canonical_grade,
+                                    accuracy.incoming_waveform_nodes)
+        harmonic, infrared = incoming.harmonic_scale, incoming.infrared_scale
+    else:
+        if not np.allclose(np.concatenate(orbital_prefix.state(start)), initial[:6], rtol=1e-12, atol=1e-14):
+            raise ValueError("The supplied orbital prefix and trajectory must share the phase-space join.")
+        masses, dipoles = orbital_prefix.mass_grades, orbital_prefix.dipole_grades
+        harmonic, infrared = accuracy.harmonic_scales[0], orbital_prefix.infrared_scale
+    return CanonicalSampler(binary, masses, dipoles, harmonic, infrared, accuracy.canonical_grade,
+                            incoming, executor)
+
+
+def _ordinary_tail_source(binary, state):
+    return quadrupole_tail_sources(binary, state[:6])
+
+
+def _orbital_rhs(binary, accuracy, time, state, history, trial):
+    position, velocity = state[:3], state[3:6]
+    newtonian, reaction = acceleration(binary, position, velocity, accuracy.dynamics)
+    tail = dynamical_tail(binary,time,state[:6],history,trial,split_time=accuracy.causal_tail_split_time)
+    if accuracy.dynamics in SH_MODELS:
+        conservative, matter = higher_local_acceleration(
+            binary, position, velocity, accuracy.harmonic_scales,
+        )
+        leading, next_order, center = recoil_fluxes(binary, position, velocity)
+        leading_recoil, next_recoil = state[6:9], state[9:12]
+        recoil, promoted = recoil_accelerations(
+            binary, position, velocity, leading_recoil, next_recoil, center,
+        )
+        relative = newtonian + reaction + tail + conservative + matter + recoil + promoted
+        nonlinear_sectors = accuracy.selected_nonlinear_5pn_sectors
+        if nonlinear_sectors:
+            relative += sum(sh_nonlinear_5pn_terms(binary,position,velocity,nonlinear_sectors).values())
+        return np.concatenate((velocity, relative, leading, next_order, leading_recoil + next_recoil + center))
+    return np.concatenate((velocity, newtonian + reaction + tail))
+
+def _evolve_tail(binary, initial, prehistory, start, stop, accuracy, executor, parallel_orbit):
     has_recoil = accuracy.dynamics in SH_MODELS
-    nonlinear_sectors = accuracy.selected_nonlinear_5pn_sectors
     uses_parts = accuracy.causal_tail_interpolation == "integration_by_parts"
     asymptotic_residual = None
     orbital_prefix = None
@@ -221,12 +278,8 @@ def _evolve_tail(binary, initial, prehistory, start, stop, accuracy):
         if not (finite_match or remote_match):
             raise ValueError("The canonical waveform requires a shared finite or incoming orbital history.")
 
-    def source(state):
-        if uses_parts and prehistory.source_shape == (5,3,3):
-            return parts_jet(binary,state)
-        return quadrupole_tail_sources(binary, state[:6])
-
-    expected = source(initial)
+    expected = (parts_jet(binary, initial) if uses_parts and prehistory.source_shape == (5,3,3)
+                else _ordinary_tail_source(binary, initial))
     if prehistory.panels:
         joined_source = np.sum(prehistory.panels[-1].coefficients, axis=0)
         if np.max(np.abs(joined_source - expected)) > 1e-10 * np.max(np.abs(expected)):
@@ -258,68 +311,38 @@ def _evolve_tail(binary, initial, prehistory, start, stop, accuracy):
         else:
             raise ValueError("The integration-by-parts tail needs a supplied phase-space prehistory.")
 
-    def rhs(time, state, history, trial):
-        position, velocity = state[:3], state[3:6]
-        newtonian, reaction = acceleration(binary, position, velocity, accuracy.dynamics)
-        tail = dynamical_tail(binary,time,state[:6],history,trial,split_time=accuracy.causal_tail_split_time)
-        if has_recoil:
-            conservative, matter = higher_local_acceleration(
-                binary, position, velocity, accuracy.harmonic_scales,
-            )
-            leading, next_order, center = recoil_fluxes(binary, position, velocity)
-            leading_recoil, next_recoil = state[6:9], state[9:12]
-            recoil, promoted = recoil_accelerations(
-                binary, position, velocity, leading_recoil, next_recoil, center,
-            )
-            relative = newtonian + reaction + tail + conservative + matter + recoil + promoted
-            if nonlinear_sectors:
-                relative += sum(sh_nonlinear_5pn_terms(binary,position,velocity,nonlinear_sectors).values())
-            return np.concatenate((velocity, relative, leading, next_order, leading_recoil + next_recoil + center))
-        return np.concatenate((velocity, newtonian + reaction + tail))
-
+    source = partial(parts_jet if uses_parts else _ordinary_tail_source, binary)
+    rhs = partial(_orbital_rhs, binary, accuracy)
+    if parallel_orbit:
+        solver_options["parallel_orbit"] = True
     if accuracy.compress_history and isinstance(prehistory,PanelHistory):
         prehistory = CompressedPanelHistory.from_history(prehistory)
     step = min(accuracy.max_step, (stop - start) / 10)
-    solution = integrate_hereditary(
-        rhs, source, restart if restart is not None else AcceptedHistory(initial, prehistory, step, configuration), stop,
-        accuracy.rtol, accuracy.atol, accuracy.max_step, **solver_options,
-    )
-    trajectory = Trajectory(
-        binary, (start, stop), accuracy, solution, solution.checkpoint.history, asymptotic_residual,
-    )
+    sampler_context = nullcontext()
     if accuracy.canonical_grade is not None:
-        from .waveform_history import build_canonical_history
+        sampler_context = _canonical_sampler(binary, accuracy, initial, start, orbital_prefix,
+                                             incoming_orbit, restart, executor)
+    with sampler_context as sampler:
+        if sampler is not None:
+            if orbital_prefix is not None:
+                cuts = np.asarray(orbital_prefix.boundaries, dtype=float)
+                for a, b in zip(cuts[:-1], cuts[1:]):
+                    sampler.interval(a, b, orbital_prefix.state)
+            if executor is not None:
+                solver_options["on_accept"] = sampler.accepted
 
-        if restart is None and incoming_orbit is not None:
-            from .incoming_waveform import IncomingWaveform
-
-            if not np.array_equal(np.concatenate(incoming_orbit.state_at(binary, start)), initial[:6]):
-                raise ValueError("The incoming waveform must share the force's phase-space join.")
-            mass_grades, dipole_grades = incoming_orbit.conserved_charges(binary)
-            remote = IncomingWaveform(
-                binary, incoming_orbit, accuracy.harmonic_scales[0], accuracy.incoming_infrared_scale,
-                dipole_grades, accuracy.canonical_grade, accuracy.incoming_waveform_nodes,
-            )
-            history = build_canonical_history(
-                binary, solution.boundaries, trajectory.state, mass_grades, dipole_grades,
-                remote.harmonic_scale, remote.infrared_scale, accuracy.canonical_grade, incoming=remote,
-            )
-        elif restart is None:
-            def sampled_state(time):
-                return orbital_prefix.state(time) if time < start else trajectory.state(time)
-
-            if not np.allclose(np.concatenate(orbital_prefix.state(start)), initial[:6], rtol=1e-12, atol=1e-14):
-                raise ValueError("The supplied orbital prefix and trajectory must share the phase-space join.")
-            history = build_canonical_history(
-                binary, (*orbital_prefix.boundaries[:-1], *solution.boundaries), sampled_state,
-                orbital_prefix.mass_grades, orbital_prefix.dipole_grades,
-                accuracy.harmonic_scales[0], orbital_prefix.infrared_scale, accuracy.canonical_grade,
-            )
-        else:
-            past = restart.canonical_history
-            history = past.extend(build_canonical_history(
-                binary, solution.boundaries, trajectory.state, past.mass_grades, past.dipole_grades,
-                past.harmonic_scale, past.infrared_scale, accuracy.canonical_grade,
-            ))
-        trajectory = replace(trajectory, _canonical_history=history)
-    return trajectory
+        initial_history = restart if restart is not None else AcceptedHistory(initial, prehistory, step, configuration)
+        solution = integrate_hereditary(rhs, source, initial_history, stop, accuracy.rtol, accuracy.atol,
+                                        accuracy.max_step, **solver_options)
+        trajectory = Trajectory(binary, (start, stop), accuracy, solution, solution.checkpoint.history,
+                                asymptotic_residual)
+        if sampler is not None:
+            if executor is None:
+                for a, b in zip(solution.boundaries[:-1], solution.boundaries[1:]):
+                    sampler.interval(a, b, trajectory.state)
+            sampler.boundary(stop, trajectory.state(stop))
+            history = sampler.finish()
+            if restart is not None:
+                history = restart.canonical_history.extend(history)
+            trajectory = replace(trajectory, _canonical_history=history)
+        return trajectory

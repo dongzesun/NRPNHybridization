@@ -177,8 +177,12 @@ def _radiation_trajectory(trajectory, request):
     return replace(trajectory, accuracy=request, _canonical_history=history)
 
 
-def compute_radiation(trajectory, output_times, frame="native", accuracy=None):
-    """Return H = R h and news on the requested cuts, plus native total power."""
+def compute_radiation(trajectory, output_times, frame="native", accuracy=None, *, executor=None):
+    """Return H = R h and news on the requested cuts, plus native total power.
+
+    An optional caller-owned concurrent.futures.Executor processes independent
+    canonical cuts and memory panels. The caller controls its lifetime and size.
+    """
     if not isinstance(frame, BondiFrame) and frame != "native":
         raise NotImplementedError("Select frame='native' or supply a BondiFrame.")
     trajectory = _radiation_trajectory(trajectory, accuracy)
@@ -200,14 +204,14 @@ def compute_radiation(trajectory, output_times, frame="native", accuracy=None):
         memory = build_retained_memory(
             trajectory.binary,trajectory._canonical_history,trajectory.accuracy.radiative_scale,
             quadrupole_maximum_grade=int(2*trajectory.accuracy.waveform_pn),
-            log_history=split,max_time=float(times.max()) if frame=="native" else None,
+            log_history=split,max_time=float(times.max()) if frame=="native" else None,executor=executor,
         )
     # Both native cuts and BMS-resampled cuts share the same ordered past.
     prefix_cache = {}
-    native = _native_radiation(trajectory,times,memory,prefix_cache,split)
+    native = _native_radiation(trajectory,times,memory,prefix_cache,split,executor)
     if isinstance(frame, BondiFrame):
         def sample_native(sample_times):
-            result = _native_radiation(trajectory,sample_times,memory,prefix_cache,split)
+            result = _native_radiation(trajectory,sample_times,memory,prefix_cache,split,executor)
             return result.strain, result.news
 
         strain, news = retime_and_project(frame, times, trajectory.binary.c, sample_native,
@@ -219,10 +223,12 @@ def compute_radiation(trajectory, output_times, frame="native", accuracy=None):
     return native
 
 
-def _native_radiation(trajectory,times,memory=None,prefix_cache=None,split=None):
+def _native_radiation(trajectory,times,memory=None,prefix_cache=None,split=None,executor=None):
     position, velocity = trajectory.state(times)
+    if prefix_cache is None:
+        prefix_cache = {}
     if trajectory.accuracy.canonical_grade is not None:
-        return _native_canonical(trajectory,times,position,velocity,memory,prefix_cache,split)
+        return _native_canonical(trajectory,times,position,velocity,memory,prefix_cache,split,executor)
     quadrupole, leading_news, derivative = _quadrupole_jets(trajectory, times, position, velocity)
     binary = trajectory.binary
     # Use the formally leading news in the leading flux contractions.
@@ -250,33 +256,73 @@ def _native_radiation(trajectory,times,memory=None,prefix_cache=None,split=None)
     )
 
 
-def _native_canonical(trajectory,times,position,velocity,memory,prefix_cache,split):
+def _portable_prefixes(binary, accuracy, history, times, prefix_cache, split, executor):
+    """Prepare one physical prefix; its keys survive mapping into another process."""
+    from bisect import bisect_left
+    from .radiative_quadrupole import _extend_nested_prefix, _new_nested_prefix, _product_coefficients
+    from .waveform_history import _memory_value
+
+    formal = prefix_cache.setdefault(("formal_memory", id(history)), {})
+    parallel_cuts = executor is not None and len(times) > 1
+    if parallel_cuts and not formal:
+        canonical = history.covered_moments()
+        for rank in range(2, 8 if accuracy.canonical_grade == 7 else 7):
+            _memory_value(binary, "u" + str(rank), canonical, times[0], accuracy.canonical_grade - rank + 2, formal)
+    if accuracy.waveform_pn != 4.0:
+        return formal, None, {}
+    leading = history.quadrupole_for_cubic_terms
+    scale = 2 * history.infrared_scale / binary.c
+    key = (id(leading), scale, -1613 / 270, 1e-9, 1e-18)
+    if key not in prefix_cache:
+        prefix_cache[key] = _new_nested_prefix(leading, *key[1:])
+    nested = prefix_cache[key]
+    if executor is not None:
+        _extend_nested_prefix(nested, max(times), executor)
+    products = prefix_cache.setdefault(("quadratic_products", id(leading)), {})
+    if parallel_cuts:
+        direct = [t for t in times if split is None or not split.active(t)]
+        if direct:
+            _, ends, _ = nested
+            count = min(bisect_left(ends, max(direct)) + 1, len(ends))
+            for pair in ((3, 4), (2, 5), (1, 6), (0, 7)):
+                coefficients = products.setdefault(pair, [])
+                coefficients.extend(_product_coefficients(leading.panels[i], *pair)
+                                    for i in range(len(coefficients), count))
+    return formal, nested, products
+
+
+def _canonical_cut_chunk(context, cuts):
     from .luminosity import _flux_grade_eight, angular_momentum_flux
     from .multipoles import additional_local_quadrupole_grade_eight
+    from .recoil_radiation import recoil_quadrupole_terms
     from .tail_derivative import fourfold_tail_jet
     from .waveform_history import finite_radiation_available, finite_radiation_grade_eight
 
-    binary = trajectory.binary
-    history = trajectory._canonical_history
-    maximum_grade = trajectory.accuracy.canonical_grade
-    upgraded = trajectory.accuracy.waveform_pn == 4.0
+    binary, accuracy, history, force_history, split, (formal, nested, products) = context
+    maximum_grade = accuracy.canonical_grade
+    upgraded = accuracy.waveform_pn == 4.0
     flux_grade = 8 if upgraded else maximum_grade
-    radiative_scale = trajectory.accuracy.radiative_scale
+    radiative_scale = accuracy.radiative_scale
+    tail_lag = accuracy.causal_tail_split_time
+    prefix_cache = {("formal_memory", id(history)): formal}
+    if upgraded:
+        leading = history.quadrupole_for_cubic_terms
+        scale = 2 * history.infrared_scale / binary.c
+        prefix_cache[id(leading), scale, -1613 / 270, 1e-9, 1e-18] = nested
+        prefix_cache["quadratic_products", id(leading)] = products
     samples = []
-    channels_by_cut = []
-    tail_lag = trajectory.accuracy.causal_tail_split_time
-    for time, x, v in zip(times.flat, position.reshape(-1, 3), velocity.reshape(-1, 3)):
+    for time, x, v, momentum, displacement in cuts:
         logs = split if split is not None and split.active(time) else None
         if upgraded:
             tail_jet = None
             if tail_lag is not None:
                 radius = np.linalg.norm(x)
                 tail_jet = fourfold_tail_jet(
-                    trajectory.history, time, 2*radius/binary.c, x@v/radius**2, tail_lag,
+                    force_history, time, 2*radius/binary.c, x@v/radius**2, tail_lag,
                 )
             local = additional_local_quadrupole_grade_eight(binary, x, v, history.harmonic_scale)[2:4]
             strain, news, tensors, canonical, quadrupole_parts = finite_radiation_grade_eight(
-                binary, history, time, x, v, trajectory.accuracy.harmonic_scales, radiative_scale, local,
+                binary, history, time, x, v, accuracy.harmonic_scales, radiative_scale, local,
                 prefix_cache=prefix_cache, dynamical_tail_jet=tail_jet, log_history=logs,
             )
             parts = _flux_grade_eight(
@@ -285,8 +331,9 @@ def _native_canonical(trajectory,times,position,velocity,memory,prefix_cache,spl
             )
             power = sum(sum(parts[key].values())
                         for key in ("canonical_local", "canonical_nonlocal_retarded", "propagation"))
-            channels_by_cut.append(parts)
+
         else:
+            parts = None
             strain, news, tensors, canonical = finite_radiation_available(
                 binary,history,time,x,v,radiative_scale,log_history=logs,prefix_cache=prefix_cache,
             )
@@ -294,15 +341,37 @@ def _native_canonical(trajectory,times,position,velocity,memory,prefix_cache,spl
         sky_power = sum(mode_luminosity(binary, news, flux_grade).values())
         quad, quad_news = tensors["mass", 2]
         torque = sum(angular_momentum_flux(binary, tensors, flux_grade).values())
-        samples.append((strain, news, sum(quad.values()), sum(quad_news.values()), power, sky_power, torque))
+        modes = []
+        for field in (strain, news):
+            summed = {}
+            for (_, ell, m), value in field.items():
+                summed[ell, m] = summed.get((ell, m), 0) + value
+            modes.append(summed)
+        recoil = recoil_quadrupole_terms(binary, x, v, momentum, displacement)
+        samples.append((*modes, sum(quad.values()), sum(quad_news.values()), power, sky_power, torque, parts, recoil))
 
+    return samples
+
+
+def _native_canonical(trajectory,times,position,velocity,memory,prefix_cache,split,executor):
+    from .parallel import ordered_chunks
+
+    binary = trajectory.binary
+    history = trajectory._canonical_history
+    accuracy = trajectory.accuracy
+    maximum_grade = accuracy.canonical_grade
+    upgraded = accuracy.waveform_pn == 4.0
+    flux_grade = 8 if upgraded else maximum_grade
+    leading_recoil, _, center = trajectory.recoil(times)
+    cuts = list(zip(times.flat, *(value.reshape(-1, 3) for value in (position, velocity, leading_recoil, center))))
+    prefixes = _portable_prefixes(binary, accuracy, history, times.ravel(), prefix_cache, split, executor)
+    force_history = trajectory.history if accuracy.causal_tail_split_time is not None and upgraded else None
+    context = (binary, accuracy, history, force_history, split, prefixes)
+    samples = [cut for chunk in ordered_chunks(executor, context, _canonical_cut_chunk, cuts) for cut in chunk]
     channels = ({}, {})
     for index, channel in enumerate(channels):
-        keys = {key[1:] for key in samples[0][index]}
-        for ell, m in keys:
-            values = [sum(value for key, value in sample[index].items() if key[1:] == (ell, m))
-                      for sample in samples]
-            channel[ell, m] = np.array(values).reshape(times.shape)
+        for key in set(samples[0][index]):
+            channel[key] = np.array([sample[index][key] for sample in samples]).reshape(times.shape)
     values = [np.stack([sample[index] for sample in samples]) for index in range(2, 7)]
     mass_quadrupole, quadrupole_news, power, sky, torque = (
         value.reshape(times.shape + value.shape[1:]) for value in values
@@ -320,19 +389,13 @@ def _native_canonical(trajectory,times,position,velocity,memory,prefix_cache,spl
                 channel[ell, m] = channel.get((ell, m), 0) + value
     parts = None
     if upgraded:
+        channels_by_cut = [sample[7] for sample in samples]
         parts = {
             name: {grade: np.array([cut[name][grade] for cut in channels_by_cut]).reshape(times.shape)
                    for grade in values}
             for name, values in channels_by_cut[0].items()
         }
-    from .recoil_radiation import recoil_quadrupole_terms
-
-    leading_recoil,_,center = trajectory.recoil(times)
-    recoil = [
-        recoil_quadrupole_terms(binary,x,v,momentum,displacement)
-        for x,v,momentum,displacement in zip(*(value.reshape(-1,3)
-                                              for value in (position,velocity,leading_recoil,center)))
-    ]
+    recoil = [sample[8] for sample in samples]
     native_recoil = {
         key:np.stack([part[key] for part in recoil]).reshape(times.shape+(2,3,3))
         for key in recoil[0]

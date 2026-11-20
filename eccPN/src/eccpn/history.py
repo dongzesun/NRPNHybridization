@@ -1,8 +1,10 @@
 """Causal logarithmic integrals of polynomial source panels."""
 
 from bisect import bisect_left
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass
-from functools import cache, cached_property
+from functools import cache, cached_property, lru_cache
 from math import comb, fsum, log
 
 import numpy as np
@@ -209,6 +211,7 @@ def _primitive(distance, degree, power):
     return distance**divisor / divisor * factor
 
 
+@lru_cache(maxsize=1024)
 def _log_moments(degree, ratio):
     """Integrate xi**degree times log(1-ratio*xi) and its square."""
     if ratio == 1:
@@ -278,8 +281,37 @@ def _batch_log_moment(degree, ratio, power):
     return result
 
 
-def batched_log_weights(starts,ends,time,scale,power,degree_count=3):
+_radiation_weights = ContextVar("radiation_panel_weights", default=None)
+
+
+@contextmanager
+def reuse_radiation_weights():
+    """Reuse one cut's quadrature weights across its canonical multipoles."""
+    token = _radiation_weights.set({})
+    try:
+        yield
+    finally:
+        _radiation_weights.reset(token)
+
+
+def batched_log_weights(starts, ends, time, scale, power, degree_count=3):
     """Weights for a batch of covered, possibly clipped polynomial panels."""
+    cache = _radiation_weights.get()
+    if cache is None:
+        return _batched_log_weights(starts, ends, time, scale, power, degree_count)
+    # Publicly supplied moments may have different panel boundaries. Only
+    # share weights when the numerical kernel and both grids match exactly.
+    key = (time, scale, power, degree_count, starts.dtype, ends.dtype, len(starts))
+    previous = cache.get(key)
+    if previous is not None and np.array_equal(starts, previous[0]) and np.array_equal(ends, previous[1]):
+        return previous[2]
+    weights = _batched_log_weights(starts, ends, time, scale, power, degree_count)
+    weights.flags.writeable = False
+    cache[key] = (starts.copy(), ends.copy(), weights)
+    return weights
+
+
+def _batched_log_weights(starts, ends, time, scale, power, degree_count):
     width = np.minimum(ends, time) - starts
     delay = time - starts
     fraction = width / (ends - starts)

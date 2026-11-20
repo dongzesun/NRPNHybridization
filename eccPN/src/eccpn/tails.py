@@ -6,22 +6,28 @@ from functools import cached_property
 import numpy as np
 
 
+_IDENTITY = np.eye(3)
+_IDENTITY.flags.writeable = False
+
+
 def _stf(left, right):
     outer = np.outer(left, right)
-    return (outer + outer.T) / 2 - np.eye(3) * np.trace(outer) / 3
+    return (outer + outer.T) / 2 - _IDENTITY * np.trace(outer) / 3
 
 
-def quadrupole_tail_sources(binary, state):
-    """Newtonian fourth, fifth and seventh derivatives on the instantaneous state."""
+def _tail_basis(binary, state):
     position, velocity = state[:3], state[3:]
     radius = np.linalg.norm(position)
     normal = position / radius
     radial_speed = normal @ velocity
     speed_squared = velocity @ velocity
-    gm = binary.G * binary.mass
-    potential = gm / radius
-    s, w, u = radial_speed, speed_squared, potential
+    potential = binary.G * binary.mass / radius
     basis = np.stack((_stf(normal, normal), _stf(normal, velocity), _stf(velocity, velocity)))
+    return radius, radial_speed, speed_squared, potential, basis
+
+
+def _force_sources(binary, geometry):
+    radius, s, w, u, basis = geometry
     coefficients = np.array([
         (-30 * s**2 + 2 * u + 6 * w, 36 * s, -8),
         (210 * s**3 - 90 * s * w, -240 * s**2 - 16 * u + 48 * w, 60 * s),
@@ -34,21 +40,26 @@ def quadrupole_tail_sources(binary, state):
         ),
     ])
     # Section 4's total-derivative recurrence, with G and c explicit.
-    factors = binary.mu * gm / radius**np.array([3, 4, 6])
+    factors = binary.mu * (binary.G*binary.mass) / radius**np.array([3, 4, 6])
     return factors[:, None, None] * np.einsum("ab,bij->aij", coefficients, basis)
+
+
+def quadrupole_tail_sources(binary, state):
+    """Newtonian fourth, fifth and seventh derivatives on the instantaneous state."""
+    return _force_sources(binary, _tail_basis(binary, state[:6]))
+
+
+def _sixth_source(binary, geometry):
+    radius,s,w,u,basis = geometry
+    a = 2*(8*u**2-105*u*s**2+21*u*w-945*s**4+630*s**2*w-45*w**2)
+    b = 60*s*(6*u+35*s**2-15*w)
+    c = -4*(19*u+135*s**2-27*w)
+    return binary.mu*u/radius**4*(a*basis[0]+b*basis[1]+c*basis[2])
 
 
 def sixth_quadrupole(binary,state):
     """Newtonian sixth time derivative in Cartesian SH phase space."""
-    x, v = state[:3], state[3:6]
-    radius = np.linalg.norm(x)
-    normal = x/radius
-    s, w = normal@v, v@v
-    u = binary.G*binary.mass/radius
-    a = 2*(8*u**2-105*u*s**2+21*u*w-945*s**4+630*s**2*w-45*w**2)
-    b = 60*s*(6*u+35*s**2-15*w)
-    c = -4*(19*u+135*s**2-27*w)
-    return binary.mu*u/radius**4*(a*_stf(normal,normal)+b*_stf(normal,v)+c*_stf(v,v))
+    return _sixth_source(binary, _tail_basis(binary, state[:6]))
 
 
 def primitive_tail_panel(binary,source,states,width):
@@ -56,7 +67,10 @@ def primitive_tail_panel(binary,source,states,width):
     before,after = source(states[0]),source(states[-1])
     from .hereditary import _interpolate
     result = _interpolate((before,source(states[1]),after))
-    rate = (sixth_quadrupole(binary,states[-1])-sixth_quadrupole(binary,states[0]))/width
+    if before.shape == (5, 3, 3):
+        rate = (after[4] - before[4]) / width
+    else:
+        rate = (sixth_quadrupole(binary,states[-1])-sixth_quadrupole(binary,states[0]))/width
     result[1,2] = 6*rate-4*before[2]-2*after[2]
     result[2,2] = 3*(before[2]+after[2])-6*rate
     return result

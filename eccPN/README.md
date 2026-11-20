@@ -120,6 +120,34 @@ the 3.5PN source history supports 3PN, 3.5PN and the 4PN quadrupole. At
 3.5PN the extra memory includes the 4PN quadrupole term. At 4PN that term
 is already in the quadrupole.
 
+## Running a waveform on several CPU cores
+
+Pass the same `ProcessPoolExecutor` to `evolve` and `compute_radiation`.
+While the main process advances the orbit, the pool computes the source
+multipoles from steps that have passed the error test. The pool then
+shares the tail, memory and waveform calculations. The sums over the
+past are assembled in time order.
+
+For the flyby above, put the calculation in a script and replace the two
+calls with the following block.
+
+```python
+from concurrent.futures import ProcessPoolExecutor
+
+if __name__ == "__main__":
+    with ProcessPoolExecutor(max_workers=6) as pool:
+        trajectory = evolve(binary, initial, past, (incoming.cutoff, 1600.0),
+                            executor=pool, parallel_orbit=True)
+        wave = compute_radiation(trajectory, [950.0, 1000.0, 1050.0],
+                                 executor=pool)
+```
+
+This example uses up to eight CPU cores during evolution. Six belong to
+the pool, one advances the orbit and one handles the full-step error
+estimate when `parallel_orbit=True`. If your numerical libraries start
+their own threads, give each process one thread. The worker processes
+need access to the temporary directory used by the main process.
+
 <details>
 <summary>A quick example using just the local force</summary>
 

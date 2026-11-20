@@ -1,6 +1,6 @@
 """PN-graded canonical, instantaneous and formal memory STF maps."""
 
-from functools import cache
+from functools import cache, lru_cache
 from math import comb
 
 import numpy as np
@@ -18,6 +18,14 @@ _LEVI_CIVITA.flags.writeable = False
 @cache
 def _contraction_equation(tensors, rank):
     return ",".join("..." + indices for _, _, indices in tensors) + "->..." + "ijklmn"[:rank]
+
+
+@lru_cache(maxsize=256)
+def _contraction_path(equation, shapes):
+    # NumPy's planner uses operand dimensions. Reuse its chosen order so
+    # identical contractions keep the same floating-point reduction.
+    operands = [np.broadcast_to(0., shape) for shape in shapes]
+    return np.einsum_path(equation, *operands, optimize=True)[0]
 
 
 def _input(name, jet, index):
@@ -51,7 +59,8 @@ def _apply(binary, target, rows, moments, derivative_order, max_grade):
                     ))
                     values = [_LEVI_CIVITA if symbol == "epsilon" else next(factors)
                               for symbol, _, _ in tensors]
-                    row += comb(derivative_order, index) * np.einsum(equation, *values, optimize=True)
+                    path = _contraction_path(equation, tuple(value.shape for value in values))
+                    row += comb(derivative_order, index) * np.einsum(equation, *values, optimize=path)
                 result[total] = result.get(total, 0) + prefactor * row
     return {grade: stf_tensor(value, rank) for grade, value in result.items()}
 
