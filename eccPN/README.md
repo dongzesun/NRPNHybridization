@@ -8,7 +8,7 @@ post-Newtonian (PN) model adds corrections in powers of $v/c$ to Newtonian gravi
 Install with `python -m pip install ./eccPN` from the NRPNHybridization root.
 Requires Python 3.10 or later, NumPy and SciPy.
 
-## Following the orbit
+## Evolving the orbit
 
 In standard harmonic coordinates, the separation
 $\mathbf x=\mathbf y_1-\mathbf y_2$ and relative velocity $\mathbf v$ obey $d\mathbf x/dt=\mathbf v$ and
